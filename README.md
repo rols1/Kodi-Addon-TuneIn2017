@@ -20,7 +20,7 @@ INSTALLATION:
 - Addon öffen und Addon-Einstellungen anpassen.
 - [bebilderte Anleitung](https://www.kodinerds.net/index.php/Thread/14234-Wie-installiert-man-Addons-die-nicht-über-den-Addon-Browser-verfügbar-sind/?page=Thread&threadID=14234)
 
-## english:
+### english:
 - Download zip-file from https://github.com/rols1/Kodi-Addon-TuneIn2017/releases/latest
 - choose downloaded zip-file with your Kodi-Browser
 - start addon and make the appropriate settings
@@ -48,7 +48,7 @@ Options:
 * Search
 * Download Option with Streamripper: [see more](https://github.com/rols1/TuneIn2017/wiki/Download-Option-with-Streamripper) 
 * Favourites and Folders (Tunein-Account required)
-* MyRadioStations - without any access to tunein (in combination with option StartWithMyRadioStations). Sample file with more infos comes with plugin in ```../plugin.audio.tunein2017/resources/myradiostations.txt```
+* MyRadioStations - without any access to tunein (in combination with option StartWithMyRadioStations). Sample file with more infos comes with plugin in ```../plugin.audio.tunein2017/resources/myradiostations-Mix.txt```
 * Local radio (manually setting, only effective in plugin)
 
 Credits:
