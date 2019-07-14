@@ -20,7 +20,7 @@ INSTALLATION:
 - Addon öffen und Addon-Einstellungen anpassen.
 - [bebilderte Anleitung](https://www.kodinerds.net/index.php/Thread/14234-Wie-installiert-man-Addons-die-nicht-über-den-Addon-Browser-verfügbar-sind/?page=Thread&threadID=14234)
 
-##english:
+## english:
 - Download zip-file from https://github.com/rols1/Kodi-Addon-TuneIn2017/releases/latest
 - choose downloaded zip-file with your Kodi-Browser
 - start addon and make the appropriate settings
