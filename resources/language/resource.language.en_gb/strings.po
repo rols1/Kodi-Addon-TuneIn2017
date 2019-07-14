@@ -1,0 +1,163 @@
+msgid ""
+msgstr ""
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: POEditor.com\n"
+"Project-Id-Version: TuneIn2017\n"
+"Info: only for Settings. Main translating by Addon\n"
+"Language: en_gb\n"
+
+#:
+msgctxt "#30202" 
+#msgctxt "This term is shown in Preferences as option to look for update at plugin-start"
+msgid "look for update at plugin-start"
+msgstr "look for update at plugin-start"
+
+#: 
+msgctxt "#30111" 
+msgctxt "This term is shown in Preferences for a listbox for setting the maximum number of items per page. "
+msgid "maximum number of items per page"
+msgstr "maximum number of items per page"
+
+#: 
+msgctxt "#30401" 
+msgctxt "This term is shown in Preferences for the checkbox \"Recordings by Streamripper\""
+msgid "Recordings by Streamripper"
+msgstr "Recordings by Streamripper"
+
+#: 
+msgctxt "#30402" 
+msgctxt "This term is shown in Preferences for the input-field for storing the path to the Programm Streamripper"
+msgid "complete path to program Streamripper"
+msgstr "complete path to program Streamripper"
+
+#: 
+msgctxt "#30403" 
+msgctxt "This term is shown in Preferences for the input-field for storing the path to the Download-Directory"
+msgid "complete path to Download-Directory"
+msgstr "complete path to Download-Directory"
+
+#: 
+msgctxt "#30203"
+msgctxt "Label for option-field in Preferences"
+msgid "Start of plugin only with Favourites (TuneIn-Account required)"
+msgstr "Start of plugin only with Favourites (TuneIn-Account required)"
+
+#: 
+msgctxt "#30301"
+msgctxt "Label for entry-field in Preferences"
+msgid "new folder for Favourites"
+msgstr "Neuer Ordner fuer Favoriten"
+
+#: 
+msgctxt "#30302"
+msgctxt "Label for entry-field in Preferences"
+msgid "Custom Url - Url:"
+msgstr "Custom Url - Url:"
+
+#: 
+msgctxt "#30303"
+msgctxt "Label for entry-field in Preferences"
+msgid "Custom Url: Name"
+msgstr "Custom Url: Name"
+
+#: 
+msgctxt "#30112" 
+msgctxt "Label for option-field in Preferences"
+msgid "Minimum Bitrate"
+msgstr "Minimum Bitrate"
+
+#: 
+msgctxt "#30204"
+msgctxt "Label for option-field in Preferences"
+msgid "Start of plugin only with My Radio Stations"
+msgstr "Start of plugin only with My Radio Stations"
+
+#: 
+msgctxt "#30117"
+msgctxt "Label for entry-field in Preferences"
+msgid "complete path to My Radio Stations"
+msgstr "complete path to My Radio Stations"
+
+#: 
+msgctxt "#30113" 
+msgctxt "Label for option-field in Preferences"
+msgid "maximum number of streams per station (can prevent timeouts)"
+msgstr "maximum number of streams per station (can prevent timeouts)"
+
+#: 
+msgctxt "#30114" 
+msgctxt "Label for option-field in Preferences"
+msgid "Favourites add/remove"
+msgstr "Favourites add/remove"
+
+#: 
+msgctxt "#30115" 
+msgctxt "description of of checkbox in Preferences"
+msgid "manually setting of Local Radio (menu By Location)"
+msgstr "manually setting of Local Radio (menu By Location)"
+
+#: 
+msgctxt "#30110" 
+msgctxt "Preferences General"
+msgid "plus AAC-Format"
+msgstr "plus AAC-Format"
+
+#: 
+msgctxt "#30116" 
+msgctxt "Preferences General"
+msgid "Show My Radiostations"
+msgstr "Show My Radiostations"
+
+#: 
+msgctxt "#30118" 
+msgctxt "Preferences General"
+msgid "System-Certifikat"
+msgstr "System-Certifikat"
+
+#: 
+msgctxt "#30119" 
+msgctxt "Preferences General"
+msgid "complete path to System-Certifikate"
+msgstr "complete path to System-Certifikate"
+
+#:
+msgctxt "#30200" 
+msgctxt "Preferences Category Label"
+msgid "Startup Settings"
+msgstr "Startup Settings"
+
+#: 
+msgctxt "#30201" 
+msgctxt "Startup Preferences"
+msgid "Turn debug logging on or off"
+msgstr "Turn debug logging on or off"
+
+#: 
+msgctxt "#30300" 
+msgctxt "Preferences Category Label"
+msgid "Favorit | Custom Url"
+msgstr "Favorit | Custom Url"
+
+msgctxt "#30501" 
+msgctxt "Cache Preferences"
+msgid "Days until deletion"
+msgstr "Days until deletion"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

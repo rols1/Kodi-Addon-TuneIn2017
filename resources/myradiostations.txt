@@ -1,0 +1,98 @@
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+# My Radiostations - Part of TuneIn2017
+#
+#	Format:
+#		# comment line
+#		# Stream-Url must start with http
+#		# Stream-Url can be a single url or a link to stream lists (.m3u or .pls)
+#
+#		My Station 1 | http://mystreamurl1.com:8000
+#		My Station 2 | http://mystreamurl2.com/listen.m3u
+#				
+#
+#	Place your own copy outside of the plugin and put the path in preferences
+#	(complete path to My Radiostations).
+#	Add / remove entries as you like.
+#	
+#	If you want start only with this stations switch the option in preferences.
+
+#	Examples are extracted from https://wiki.ubuntuusers.de/Internetradio/Stationen/
+
+# 	Not compatible formats: mmsh://..., .asf
+
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+######################################################################################
+# ##################### Mix - different playlist/audio formats #######################
+#
+friskyRadio (England) | http://www.friskyradio.com/frisky.m3u	# 4 x mp3
+#
+BFBS Radio 1  | http://tx.sharp-stream.com/icecast.php?i=ssvcbfbs1.aac   
+BFBS Radio 2 | http://tx.sharp-stream.com/icecast.php?i=ssvcbfbs2.aac   
+BFBS Gibraltar | http://tx.sharp-stream.com/icecast.php?i=ssvcbfbs7.aac  
+BFBS Scotland (Schottland) | http://tx.sharp-stream.com/icecast.php?i=ssvcbfbs18.aac
+#
+Atlantic Sound Factory | http://www.asfradio.com/launch.asp?p=pls
+Atlantic Sound Factory | http://www.asfradio.com/launch.asp?p=ram
+#
+Radio X (Basel) | http://mp3.radiox.ch:8000/standard.ogg.m3u	
+Radio X (Basel) | http://mp3.radiox.ch:8000/standard.aac.m3u	
+#
+Frequence 3 (France) | http://streams.frequence3.net/mp3-192.m3u
+#
+Dolfijn FM (Germany) | http://85.214.231.253:8080/stream.mp3
+Querfunk  (Germany, Karlsruhe) | http://mp3.querfunk.de/qfhi
+RundFunk Meißner Eschwege (Germany) | http://s8.pop-stream.de:8650/listen.pls
+Radio Unerhört Marburg (Germany) | http://stream.radio-rum.de:8000/rum.mp3.m3u
+bigFM (Germany) | http://srv05.bigstreams.de/bigfm-mp3-64.m3u
+#
+
+######################################################################################
+# ######################### Radio stations from ARDundZDF ############################
+# 
+NDR 90.3 Hamburg Sounds | http://addrad.io/4WRJv3
+NDR 1 Niedersachsen | http://ndr-ndr1niedersachsen-hannover.cast.addradio.de/ndr/ndr1niedersachsen/hannover/mp3/128/stream.mp3	
+NDR 1 Welle Nord |  http://ndr-ndr1wellenord-kiel.cast.addradio.de/ndr/ndr1wellenord/kiel/mp3/128/stream.mp3
+
+RBB Antenne Brandenburg | https://rbb-antennebrandenburg-live.sslcast.addradio.de/rbb/antennebrandenburg/live/mp3/128/stream.mp3
+RBB Fritz | https://rbb-fritz-live.sslcast.addradio.de/rbb/fritz/live/mp3/128/stream.mp3
+RBB radioeins | https://rbb-radioeins-live.sslcast.addradio.de/rbb/radioeins/live/mp3/48/stream.mp3
+
+SWR3 | https://swr-swr3-live.sslcast.addradio.de/swr/swr3/live/mp3/128/stream.mp3
+SWR4 Rheinland-Pfalz | https://swr-swr4-rp.sslcast.addradio.de/swr/swr4/rp/mp3/128/stream.mp3
+
+HR 3 |https://hr-hr3-live.sslcast.addradio.de/hr/hr3/live/mp3/128/stream.mp3
+HR YOU-FM | https://hr-youfm-live.sslcast.addradio.de/hr/youfm/live/mp3/128/stream.mp3
+
+Bayern 1 | http://br-br1-obb.cast.addradio.de/br/br1/obb/mp3/128/stream.mp3
+Bayern 3 | http://br-br3-live.cast.addradio.de/br/br3/live/mp3/128/stream.mp3
+
+######################################################################################
+# ####################### Soma FM https://somafm.com/ ################################
+# For more Stations do a search in Plugin with "somafm"
+# 
+SomaFM: Space Station Soma | http://opml.radiotime.com/Tune.ashx?id=s53125
+SomaFM: Drone Zone | http://opml.radiotime.com/Tune.ashx?id=s51002
+SomaFM: Xmas in Frisko | http://opml.radiotime.com/Tune.ashx?id=s95241
+SomaFM: Dub Step Beyond | http://opml.radiotime.com/Tune.ashx?id=s169654
+SomaFM: Groove Salad | http://opml.radiotime.com/Tune.ashx?id=s2591
+SomaFM: Earwaves | http://opml.radiotime.com/Tune.ashx?id=s206474
+
+######################################################################################
+
+################## only for debugging - not available Url ############################
+# 
+# SUBFLOW.NET (England) | http://www.subflow.net:8004/listen.pls # Name or service not known	
+# Bassdrive (England) | http://shouthostdirect13.streams.bassdrive.com:8202 # Name or service not known 
+# British Forces Broadcasting Service (Gibraltar) | http://tx.sharp-stream.com/icecast.php?i=ssvcbfbs7.aac # slowly answers, Timeouts
+# 87.7 Bailrigg FM | http://stream.radio.lancs.ac.uk/32.mp3.m3u # HTTP Error 401: Authentication Required
+# Ylen Klassinen | http://mediau.yle.fi/liveklassinen?MSWMExt=.asf # .asf no playable container/codec configuration found
+# Ylen Klassinen | mmsh://mediau.yle.fi/liveklassinen?MSWMExt=.asf # mmsh:// in Plex not available
+#
+######################################################################################
+
+
+
+

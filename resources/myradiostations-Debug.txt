@@ -1,0 +1,42 @@
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+# My Radiostations - Part of TuneIn2017
+#
+#	Format:
+#		# comment line
+#		# Stream-Url must start with http
+#		# Stream-Url can be a single url or a link to stream lists (.m3u or .pls)
+#
+#		My Station 1 | http://mystreamurl1.com:8000
+#		My Station 2 | http://mystreamurl2.com/listen.m3u
+#				
+#
+#	Place your own copy in addon or outside and put the path in preferences
+#	(complete path to My Radiostations).
+#	Add / remove entries as you like.
+#	
+#	If you want start only with this stations switch the option in addon-settings.
+
+#	Examples are extracted from https://wiki.ubuntuusers.de/Internetradio/Stationen/
+
+# 	Not compatible formats: mmsh://..., .asf
+
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+################## only for debugging - not available Url ############################
+# 
+SUBFLOW.NET (England) | http://www.subflow.net:8004/listen.pls # Name or service not known	
+Bassdrive (England) | http://shouthostdirect13.streams.bassdrive.com:8202 # Name or service not known 
+British Forces Broadcasting Service (Gibraltar) | http://tx.sharp-stream.com/icecast.php?i=ssvcbfbs7.aac # slowly answers, Timeouts
+87.7 Bailrigg FM | http://stream.radio.lancs.ac.uk/32.mp3.m3u # HTTP Error 401: Authentication Required
+
+# .asf-stream in Kodi playable, but PlayerAudio-Notice "stalled" and exits
+Ylen Klassinen | http://mediau.yle.fi/liveklassinen?MSWMExt=.asf # .asf, Plex: no playable container/codec configuration found
+Ylen Klassinen | mmsh://mediau.yle.fi/liveklassinen?MSWMExt=.asf # mmsh:// in Plex not available
+#
+######################################################################################
+
+
+
+

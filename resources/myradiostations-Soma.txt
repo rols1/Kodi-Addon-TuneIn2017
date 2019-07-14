@@ -1,0 +1,44 @@
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+# My Radiostations - Part of TuneIn2017
+#
+#	Format:
+#		# comment line
+#		# Stream-Url must start with http
+#		# Stream-Url can be a single url or a link to stream lists (.m3u or .pls)
+#
+#		My Station 1 | http://mystreamurl1.com:8000
+#		My Station 2 | http://mystreamurl2.com/listen.m3u
+#				
+#
+#	Place your own copy outside of the plugin and put the path in preferences
+#	(complete path to My Radiostations).
+#	Add / remove entries as you like.
+#	
+#	If you want start only with this stations switch the option in preferences.
+
+#	Examples are extracted from https://wiki.ubuntuusers.de/Internetradio/Stationen/
+
+# 	Not compatible formats: mmsh://..., .asf
+
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+######################################################################################
+# ####################### Soma FM https://somafm.com/ ################################
+# For more Stations do a search in Plugin with "somafm"
+# 
+SomaFM: Space Station Soma | http://opml.radiotime.com/Tune.ashx?id=s53125
+SomaFM: Drone Zone | http://opml.radiotime.com/Tune.ashx?id=s51002
+SomaFM: Xmas in Frisko | http://opml.radiotime.com/Tune.ashx?id=s95241
+SomaFM: Dub Step Beyond | http://opml.radiotime.com/Tune.ashx?id=s169654
+SomaFM: Groove Salad | http://opml.radiotime.com/Tune.ashx?id=s2591
+SomaFM: Earwaves | http://opml.radiotime.com/Tune.ashx?id=s206474
+
+######################################################################################
+
+
+
+
+
+

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<settings>
+   <category label="248">
+		<setting label="248" type="select"  
+		values="Afrikaans/af|Albanian/sq|Amharic/am|Arabic/ar/ar_SA|Armenian/hy|Azerbaijani/az|Basque/eu|Bengali/bn|Bulgarian/bg|Catalan/ca|Chinese (Hong Kong)/zh_HK|Chinese (Taiwan)/zh_TW|Chinese/zh_CN|Croatian/hr|Czech/cs/cs_CZ|Danish/da/da_DK/Author: Tommy Mikkelsen|Dutch/nl/nl_NL|English/en/en_US|English/en/en_GB/Author: rs|Estonian/et|Filipino/fil|Finnish/fi/fi_FI|French (Canada)/fr_CA|French/fr/fr_FR/Author: Joyfik|Galician/gl|Georgian/ka|German/de/de_DE/Author: rols1| Greek/el/el_GR|Gujarati/gu|Hebrew/iw|Hindi/hi/hi_IN|Hungarian/hu/hu_HU|Icelandic/is|Indonesian/id|Italian/it/it_IT/Author: Alessio79|Japanese/ja/ja_JP|Kannada/kn|Kazakh/kk|Khmer/km|Korean/ko/ko_KR|Kyrgyz/ky|Lao/lo|Latvian/lv|Lithuanian/lt|Macedonian/mk|Malay/ms|Malayalam/ml|Marathi/mr|Mongolian/mn|Myanmar (Burmese)/my|Nepali/ne|Norwegian/no|Persian/fa|Polish/pl/pl_PL/Author: Przemo|Portuguese (Brazil)/pt|Portuguese (Portugal)/pt_PT|Punjabi/pa|Romanian/ro|Russian/ru/ru_RU|Serbian/sr|Sinhala/si|Slovak/sk|Slovenian/sl|Spanish (Latin America)/es_419|Spanish (Spain)/es|Swahili/sw|Swedish/sv|Tamil/ta|Telugu/te|Thai/th|Turkish/tr/tr_TR|Ukrainian/uk/uk_UA/Author: Vlad (not ready)|Urdu/ur|Uzbek/uz|Vietnamese/vi|Zulu/zu"  
+		default="German/de/de_DE" id="language"/>
+	</category>
+		
+   <category label="TuneIn">
+ 		<setting label="1014" type="text" id="username" />
+		<setting label="733"  type="text" id="passwort" />
+		<setting label="560"  type="text" id="serialid" enable="false"/>
+	</category>
+	
+    <category label="16000">
+		<setting label="30110" type="bool" id="PlusAAC"  default="true"/>
+		<setting label="30111" type="select" values="15|25|50|100|500"  id="maxPageContent" default="25"/>
+		<setting label="30112" type="select" values="0|32|64|96|128|192|256|320" id="minBitrate" default="0"/>
+		<setting label="30113"  type="select" values="1|2|3|4|5|6|10" id="maxStreamsPerStation" default="3"/>
+		<setting label="30114" type="bool" id="UseFavourites" />
+		<setting type="sep"/>
+			<setting label="30115" type="bool" id="UseMyLocation" />
+		<setting type="sep"/>
+		<setting label="30116" type="bool" id="UseMyRadioStations"  default="true" />
+		<setting label="30117" type="file" id="MyRadioStations" default=""/>
+		<setting type="sep"/>
+			<setting label="30118" type="bool" id="UseSystemCertifikat"  default="false"/>
+			<setting label="30119" type="folder" option="writeable" source=""  id="SystemCertifikat"  default="/etc/certbot/live/myDomain/fullchain.pem" />
+	</category>
+	
+	<category label="30200">
+    		<setting label="30201" type="bool" id="pref_info_debug" default="false"/>
+		<setting label="30202"  type="bool"  id="InfoUpdate" default="true" />
+		<setting type="sep"/>
+		<setting label="30203" type="bool" id="StartWithFavourits" default="false" />
+		<setting label="30204" type="bool" id="StartWithMyRadioStations" default="false" />
+	</category>
+	
+	<category label="30300">
+		<setting label="30301"  type="text" id="folder" default="Favorit 1"/>
+		<setting label="30302" type="text" id="customUrl" default="http://myradio.com/stream.mp3" />
+		<setting label="30303" type="text" id="customName" default="MyRadio 1" />
+	</category>
+		
+	<category label="36428">
+	<setting label="30401"  type="bool" id="UseRecording" default="false"/>
+	<setting label="30402" type="executable" id="StreamripperPath" default="/usr/bin/streamripper"/>
+	<setting label="30403" type="folder" option="writeable" source=""  id="DownloadDir"  default="/tmp"/>
+	</category>
+	
+	 <category label="439">
+	<setting label="30501" type="select" values="1|10|30|100" default="30" id="DICT_store_days"/>
+</category> 
+
+		
+</settings>
