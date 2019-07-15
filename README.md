@@ -29,8 +29,8 @@ INSTALLATION:
 
 Want to help translate this plugin?
 ===================  
-https://poeditor.com/join/project/SKrMQklJVu
-This page contains pictures and context-descriptions for the terms:
+https://poeditor.com/join/project/SKrMQklJVu <br>
+This page contains pictures and context-descriptions for the terms:<br>
 https://github.com/rols1/TuneIn2017/wiki/Pictures-and-Contexts-for-the-Localisation-Project
 
 ### Contributors:
