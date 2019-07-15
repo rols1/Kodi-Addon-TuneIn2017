@@ -6,7 +6,7 @@ Download aktuelle Version: https://github.com/rols1/Kodi-Addon-TuneIn2017/releas
 ![Downloads](https://img.shields.io/github/downloads/rols1/Kodi-Addon-TuneIn2017/total.svg "Downloads")
 
 #### Rückmeldungen willkommen / Feedeback welcome: 
-Support-Thread: https://www.kodinerds.net/index.php/Thread/66559-RELEASE-Kodi-Addon-TuneIn2017
+Support-Thread: https://www.kodinerds.net/index.php/Thread/66559-RELEASE-Kodi-Addon-TuneIn2017 <br>
 EMail: rols1@gmx.de 
   
 #### Functions tested Linux/Kodi 18.2, Win7/Kodi 18.1, Android 7.0/Kodi 18.1, Raspi 3b+/LibreELEC 9.0.1
