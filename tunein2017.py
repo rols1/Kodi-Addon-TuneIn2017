@@ -35,7 +35,7 @@ repl_json_chars=util.repl_json_chars; mystrip=util.mystrip; DirectoryNavigator=u
 stringextract=util.stringextract; blockextract=util.blockextract; my_rfind=util.my_rfind; 
 cleanhtml=util.cleanhtml; decode_url=util.decode_url; unescape=util.unescape; serial_random=util.serial_random; 
 transl_json=util.transl_json; repl_json_chars=util.repl_json_chars; get_keyboard_input=util.get_keyboard_input; 
-L=util.L; PlayAudio=util.PlayAudio;
+L=util.L; PlayAudio=util.PlayAudio; 
 
 # +++++ TuneIn2017  - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
@@ -205,6 +205,7 @@ def ValidatePrefs():
 def Main():
 	PLog('Main:')
 	
+#-----------------------------										# 1. Init
 	# nützliche Debugging-Variablen:
 	PLog('Addon-Version: ' + VERSION); PLog('Addon-Datum: ' + VDATE)	
 	PLog(OS_DETECT)	
@@ -212,48 +213,12 @@ def Main():
 	PLog('Kodi-Version: %s'  % KODI_VERSION)
 	
 	ValidatePrefs()
-	if Dict('load', 'PID'):						# PID-Liste initialisieren, falls leer
-		pass
+	if Dict('load', 'PID'):											# PID-Liste initialisieren, 
+		pass														# 	falls leer
 	else:
 		PID = []		
 		Dict('store', 'PID', PID)
 
-	title = 'Durchstoebern'
-	title = L(title)
-			
-	li = xbmcgui.ListItem(NAME)
-	
-	tagline = L('Suche Station / Titel')
-	fparams="&fparams={'query': ''}"
-	addDir(li=li, label=title, action="dirList", dirID="Search", 
-		fanart=R(ICON_SEARCH), thumb=R(ICON_SEARCH), tagline=tagline, fparams=fparams)
-		
-	if 	not SETTINGS.getSetting('MyRadioStations'):						# mit Muster vorbelegen
-		MyRadioStations =  os.path.join("%s", "myradiostations-Mix.txt") % RESOURCES_PATH
-		SETTINGS.setSetting('MyRadioStations', MyRadioStations)
-		
-	MyRadioStations = SETTINGS.getSetting('MyRadioStations')			# eigene Liste mit Radiostationen, 
-	PLog('MyRadioStations: ' + str(MyRadioStations))					# (Muster in Resources)
-	if  SETTINGS.getSetting('UseMyRadioStations')	== 'true':
-		MyRadioStations = MyRadioStations.strip()	
-		if os.path.exists(MyRadioStations):
-				title = L("Meine Radiostationen")
-				summ = MyRadioStations
-				fparams="&fparams={'path': '%s'}" % urllib2.quote(MyRadioStations)
-				addDir(li=li, label=title, action="dirList", dirID="ListMRS", 
-					fanart=R(ICON_MYRADIO), thumb=R(ICON_MYRADIO), summary=summ, fparams=fparams)
-				
-				# nur MyRadioStations + Updater-Modul einbinden
-				if SETTINGS.getSetting('StartWithMyRadioStations') == "true":	 								
-					li = Menu_update(li)
-					xbmcplugin.endOfDirectory(HANDLE)								
-		else:				
-			msg1 = L("Meine Radiostationen") + ': ' + L("Datei nicht gefunden")	
-			msg2 = MyRadioStations
-			msg3 = L('Bitte den Eintrag in Einstellungen ueberpruefen!')
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
-				
-		
 	username = SETTINGS.getSetting('username')						# Privat - nicht loggen
 	passwort = SETTINGS.getSetting('passwort')						# dto.
 	PLog("%s | %s" % (len(username), len(passwort)))				# nur Länge - Debug
@@ -265,30 +230,63 @@ def Main():
 	PLog('serial-ID: %s' % str(Dict('load','serial')))
 	SETTINGS.setSetting('serialid', serial)												
 	                  		
+	if 	not SETTINGS.getSetting('MyRadioStations'):						# mit Muster vorbelegen
+		MyRadioStations =  os.path.join("%s", "myradiostations-Mix.txt") % RESOURCES_PATH
+		SETTINGS.setSetting('MyRadioStations', MyRadioStations)
+		
+#-----------------------------										# 2. Menü
+	title = 'Durchstoebern'
+	title = L(title)
+			
+	li = xbmcgui.ListItem(NAME)
+	li = home(li)													# Home-Button / Refresh	
+	
+	tagline = L('Suche Station / Titel')							# Suche
+	fparams="&fparams={'query': ''}"
+	addDir(li=li, label=title, action="dirList", dirID="Search", 
+		fanart=R(ICON_SEARCH), thumb=R(ICON_SEARCH), tagline=tagline, fparams=fparams)
+		
 	if len(username) > 0:
 		my_title = u'%s' % L('Meine Favoriten')
 		my_url = USER_URL % username								# nicht serial-ID! Verknüpfung mit Account kann fehlen
-		if SETTINGS.getSetting('StartWithFavourits') == "true":		# nur Favoriten + Updater-Modul einbinden
+		Dict('store','my_url', my_url)								# Verwend. in Favourit
+		if SETTINGS.getSetting('StartWithFavourits') == "true":		# Favoriten-Menü direkt + Updater-Modul einbinden
 			li, cnt = GetContent( url=my_url, title=my_title, offset=0, li=li)
 			li 		= Menu_update(li)
-			xbmcplugin.endOfDirectory(HANDLE)
-		else:														# Standard-Menü
+			xbmcplugin.endOfDirectory(HANDLE)						# Ende
+		else:														# Favoriten-Button
 			fparams="&fparams={'url': '%s', 'title': '%s', 'offset': '0'}"  %\
 				(urllib2.quote(my_url), urllib2.quote(my_title))
 			addDir(li=li, label=my_title, action="dirList", dirID="GetContent", 
 				fanart=R('icon-tunein2017.png'), thumb=R('icon-tunein2017.png'), fparams=fparams)
 		
+	MyRadioStations = SETTINGS.getSetting('MyRadioStations')		# eigene Liste mit Radiostationen, 
+	PLog('MyRadioStations: ' + str(MyRadioStations))				# (Muster in Resources)
+	if  SETTINGS.getSetting('UseMyRadioStations')	== 'true':
+		MyRadioStations = MyRadioStations.strip()	
+		if os.path.exists(MyRadioStations):
+				title = L("Meine Radiostationen")
+				summ = MyRadioStations
+				fparams="&fparams={'path': '%s'}" % urllib2.quote(MyRadioStations)
+				addDir(li=li, label=title, action="dirList", dirID="ListMRS", 
+					fanart=R(ICON_MYRADIO), thumb=R(ICON_MYRADIO), summary=summ, fparams=fparams)
+				
+				# nur MyRadioStations + Updater-Modul einbinden
+				if SETTINGS.getSetting('StartWithMyRadioStations') == "true":	# Nachrang hinter StartWithFavourits 								
+					li = Menu_update(li)
+					xbmcplugin.endOfDirectory(HANDLE)				# Ende						
+		else:				
+			msg1 = L("Meine Radiostationen") + ': ' + L("Datei nicht gefunden")	
+			msg2 = MyRadioStations
+			msg3 = L('Bitte den Eintrag in Einstellungen ueberpruefen!')
+			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+				
 	formats = 'mp3,aac'	
 	PLog(SETTINGS.getSetting('PlusAAC'))								
 	if  SETTINGS.getSetting('PlusAAC') == "false":					# Performance, aac nicht bei allen Sendern 
 		formats = 'mp3'
 	Dict('store', 'formats', formats) 								# Verwendung: Trend, opml- und api-Calls
 
-	if SETTINGS.getSetting('UsesSystemCertifikat') == 'true':		# Vorabtest
-		if os.path.exists(SETTINGS.getSetting('SystemCertifikat')) == "false":
-			msg = 'System-Certifikate ' + L("nicht gefunden") + ': ' + SETTINGS.getSetting('SystemCertifikat')	
-			PLog(msg)	
-	
 	page, msg = RequestTunein(FunctionName='Main', url=ROOT_URL)	# Hauptmenü von Webseite
 	PLog(len(page))
 
@@ -423,7 +421,7 @@ def Menu_update(li):
 #----------------------------------------------------------------
 def home(li):							# Home-Button
 	PLog('home:')	
-	title = 'Home' 	
+	title = 'Home / Refresh' 	
 	fparams="&fparams={}"
 	addDir(li=li, label=title, action="dirList", dirID="Main", 
 		fanart=R('home.png'), thumb=R('home.png'), summary=title, tagline=NAME, fparams=fparams)
@@ -538,6 +536,7 @@ def SetLocation(url, title, region, myLocationRemove):
 def GetContent(url, title, offset=0, li=''):
 	PLog('GetContent:'); PLog(url); PLog(offset); PLog(li);
 	offset = int(offset)
+	title = UtfToStr(title)
 	title_org = title
 	oc_title2 = title
 	url_org = url
@@ -625,6 +624,7 @@ def GetContent(url, title, offset=0, li=''):
 						fanart=R(MENU_CUSTOM_ADD), thumb=R(MENU_CUSTOM_ADD), summary=summ, fparams=fparams)
 						
 		xbmcplugin.endOfDirectory(HANDLE)
+		return		# ohne return weiter trotz endOfDirectory!
 
 	# ------------------------------------------------------------------	
 	# Anpassung RECENTS_URL an Formate (Einstellungen) und serial-ID		RECENTS_URL
@@ -715,6 +715,7 @@ def GetContent(url, title, offset=0, li=''):
 		PLog(delnr)				
 	PLog(len(indices))
 		
+	subtitle=''; 	
 	li_cnt=0										# Anzahl items in loop - (getrennt für Links + Stations)
 	for index in indices:		
 		# PLog('index: ' + index)		
@@ -879,14 +880,14 @@ def GetContent(url, title, offset=0, li=''):
 								
 		# break	# Debug Stop
 	PLog('li_cnt: ' + str(li_cnt))	
-	if li_cnt == 0 and endOfDirectory == True:	# Hinweis nur beim Listing hier
-		if subtitle:					# ev. Hinweis auf künftige Sendung
-			title_org = title_org + " | %s" % subtitle	
-		msg1 = L('keine Eintraege gefunden') + ": " + title_org 
-		PLog(msg1)
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
-		
 	if endOfDirectory == True:
+		if li_cnt == 0:
+			if subtitle:					# Hinweis auf künftige Sendung möglich (keine akt. Sendung)
+				title_org = title_org + " | %s" % subtitle	
+			msg1 = L('keine Eintraege gefunden') + ": " + title_org 
+			msg1 = UtfToStr(msg1)
+			PLog(msg1)
+			xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')	
 		xbmcplugin.endOfDirectory(HANDLE)
 	else:
 		return li, li_cnt	
@@ -1644,8 +1645,8 @@ def SearchInProfile(ID, preset_id):
 #	Hinzufügen ohne Ordnerauswahl wie in Tunein - Zielordner ist autom. General, 
 #		anschl. Verschieben: Button in StationList -> SearchInFolders -> 
 #		FolderMenu -> Favourit (hier zusätzl. SearchInProfile erforderlich)
-def Favourit(ID, preset_id, folderId, includeOnDeck=None):		
-	PLog('Favourit')
+def Favourit(ID, preset_id, folderId):		
+	PLog('Favourit:')
 	PLog('ID: ' + ID); PLog('preset_id: ' + preset_id); PLog('folderId: ' + folderId);
 	serial = Dict('load', 'serial')
 	loc_browser = str(Dict('load', 'loc_browser'))
@@ -1665,10 +1666,10 @@ def Favourit(ID, preset_id, folderId, includeOnDeck=None):
 	query_url = 'https://opml.radiotime.com/Account.ashx?c=query&partnerId=%s&serial=%s' % (partnerId,serial)
 	# PLog(query_url)
 	page, msg = RequestTunein(FunctionName='Favourit - association-test', url=query_url)	# 1. Query
-	if page == '':	
+	if page == '':							# Netzwerk-Problem
 		msg1 = msg
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')							
-		return
+		return	
 
 	PLog('Fav-Query: ' + page[:10])				 
 	tname  = stringextract('text="', '"', page)	# Bsp. <outline type="text" text="testuser"/>
@@ -1690,6 +1691,7 @@ def Favourit(ID, preset_id, folderId, includeOnDeck=None):
 		if page == '':	
 			msg1 = msg
 			PLog(msg1)
+			PLog('Join-Call fehlgeschlagen')
 			xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
 			return
 									
@@ -1740,6 +1742,7 @@ def Favourit(ID, preset_id, folderId, includeOnDeck=None):
 	if page == '':	
 		msg1 = msg
 		PLog(msg1)
+		PLog('%s - Render-Call fehlgeschlagen' % ID)
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
 		return 
 	# PLog('Fav add/remove: ' + page)
@@ -1765,7 +1768,6 @@ def Favourit(ID, preset_id, folderId, includeOnDeck=None):
 				
 		PLog(msg1)
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
-		return 
 
 #-----------------------------
 # Direktaufruf von GetContent (mit li) oder rekursiv (ohne li), falls 
@@ -1883,7 +1885,6 @@ def Folder(ID, title, foldername, folderId):
 		msg1 = L('fehlgeschlagen') + ' | Tunein: ' + title			
 		PLog(msg1)
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
-		return
 	else:
 		if ID == 'addFolder':							# 'add'
 			msg1 = L("Ordner") + ' ' + L("hinzugefuegt")
@@ -1891,7 +1892,11 @@ def Folder(ID, title, foldername, folderId):
 			msg1 = L("Ordner") + ' ' + L("entfernt")	
 		PLog(msg1)
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
-		return
+
+	my_title = u'%s' % L('Meine Favoriten')								# -> Menü Favoriten
+	my_url = Dict('load','my_url')
+	PLog("my_url: " + my_url)
+	GetContent( url=my_url, title=my_title, offset=0)
 
 	return
 #-----------------------------
