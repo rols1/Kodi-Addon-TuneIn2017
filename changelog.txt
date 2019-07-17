@@ -5,6 +5,8 @@ CHANGE HISTORY 	Kodi-Addon-TuneIn2017 (vormals Plugin für den Plexmediaserver)
 			https://www.kodinerds.net/index.php/Thread/66559-RELEASE-Kodi-Addon-TuneIn2017
 			Plex-Forum:
 			https://forums.plex.tv/discussion/288260/rel-tunein2017
+
+17.07.2019	1.3.3	Main-Menu / Updater: Fix for jump to Main after update.	
 			
 16.07.2019	1.3.2	PlayAudio (Modul util_tunein2017): callback-function outsourced for multiple 
 			use. 	

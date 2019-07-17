@@ -80,7 +80,7 @@ def update_available(VERSION):
 	except:
 		pass
 	return (False, '', '', '', '', '')
-            
+           
 ################################################################################
 def update(url, ver):
 	PLog('update:')	
@@ -109,7 +109,8 @@ def update(url, ver):
 			msg1 = 'Update fehlgeschlagen'
 			msg2 = 'Error: ' + str(exception)
 												
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		# xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		return tunein2017.Main()									# für Kodi springen wir direkt
 	else:
 		msg1 = 'Update fehlgeschlagen'
 		msg2 =  'Version ' + ver + 'nicht gefunden!'

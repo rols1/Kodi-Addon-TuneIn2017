@@ -39,7 +39,7 @@ L=util.L; PlayAudio=util.PlayAudio; Callback=util.Callback;
 
 # +++++ TuneIn2017  - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.3.2'	
+VERSION =  '1.3.3'	
 VDATE = '17.07.2019'
 
 # 
@@ -338,8 +338,10 @@ def Main():
 				fanart=R(MENU_RECORDS), thumb=R(MENU_RECORDS), fparams=fparams)
 						       
 #-----------------------------	
-	li = Menu_update(li)												# Updater-Modul einbinden
+	li = Menu_update(li)											# Updater-Modul einbinden
+	xbmcplugin.endOfDirectory(HANDLE)
 #-----------------------------	
+	'''
 	# Lang_Test=True					# Menü-Test Plugin-Sprachdatei
 	Lang_Test=False		
 	if Lang_Test:
@@ -348,6 +350,7 @@ def Main():
 			fanart=R('lang_gnome.png'), thumb=R('lang_gnome.png'), summary='LangTest', fparams=fparams)
 	
 	xbmcplugin.endOfDirectory(HANDLE)
+	'''					
 						
 ####################################################################################################
 # LangTest testet aktuelle Plugin-Sprachdatei, z.B. en.json (Lang_Test=True).
