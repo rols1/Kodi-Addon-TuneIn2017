@@ -26,15 +26,31 @@
 
 ################## only for debugging - not available Url ############################
 # 
-SUBFLOW.NET (England) | http://www.subflow.net:8004/listen.pls # Name or service not known	
-Bassdrive (England) | http://shouthostdirect13.streams.bassdrive.com:8202 # Name or service not known 
-British Forces Broadcasting Service (Gibraltar) | http://tx.sharp-stream.com/icecast.php?i=ssvcbfbs7.aac # slowly answers, Timeouts
-87.7 Bailrigg FM | http://stream.radio.lancs.ac.uk/32.mp3.m3u # HTTP Error 401: Authentication Required
+# Name or service not known:
+SUBFLOW.NET (England) | http://www.subflow.net:8004/listen.pls 	
+Bassdrive (England) | http://shouthostdirect13.streams.bassdrive.com:8202 
 
-# .asf-stream in Kodi playable, but PlayerAudio-Notice "stalled" and exits
-Ylen Klassinen | http://mediau.yle.fi/liveklassinen?MSWMExt=.asf # .asf, Plex: no playable container/codec configuration found
-Ylen Klassinen | mmsh://mediau.yle.fi/liveklassinen?MSWMExt=.asf # mmsh:// in Plex not available
-#
+# slowly answers, Timeouts / Rekursion in PlayAudio mit Callback:
+British Forces Broadcasting Service (Gibraltar) | http://tx.sharp-stream.com/icecast.php?i=ssvcbfbs7.aac 
+
+# HTTP Error 401: Authentication Required:
+87.7 Bailrigg FM | http://stream.radio.lancs.ac.uk/32.mp3.m3u 
+
+# .asf, Plex: no playable container/codec configuration found,
+# in Kodi playable, but PlayerAudio-Notice "stalled" and exits
+Ylen Klassinen | http://mediau.yle.fi/liveklassinen?MSWMExt=.asf
+
+# mmsh:// in Plex not available / Rekursion in PlayAudio mit Callback:
+Ylen Klassinen | mmsh://mediau.yle.fi/liveklassinen?MSWMExt=.asf 
+
+# Verbindungsaufbau abgelehnt:
+SomaFMSpaceStation | http://listen.radionomy.com/SomaFMSpaceStation.m3u 
+
+# Phantasiestation (example from settings) - Addon plays harp-music:
+MyRadio 1 | http://myradio.com/stream.mp3
+
+# .aac-Stream, aber ohne Rekursion wie British Forces Broadcasting Service:
+ANTENNE BAYERN	| http://www.antenne.de/webradio/antenne.aac.pls
 ######################################################################################
 
 

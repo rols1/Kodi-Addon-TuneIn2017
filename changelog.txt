@@ -1,11 +1,17 @@
 CHANGE HISTORY 	Kodi-Addon-TuneIn2017 (vormals Plugin für den Plexmediaserver)
 --------------	Releases: Releases: https://github.com/rols1/Kodi-Addon-TuneIn2017/releases/latest	
 --------------	
-			Kodi-Forum, Support:
-			https://www.kodinerds.net/index.php/Thread/
+			Support Forum Kodinerds:
+			https://www.kodinerds.net/index.php/Thread/66559-RELEASE-Kodi-Addon-TuneIn2017
 			Plex-Forum:
 			https://forums.plex.tv/discussion/288260/rel-tunein2017
 			
+16.07.2019	1.3.2	PlayAudio (Modul util_tunein2017): callback-function outsourced for multiple 
+			use. 	
+			Exception-handling: "Exception, err" replaced with "Exception as err".
+			Languages (PO-files): fix comment lines. 
+			Title for menu Search changed (browse tunein -> search).
+			Callback in PlayAudio:.asf- and .aac-streams excluded (rekursion possible).
 
 13.07.2019	1.3.1	Migration to Kodi:
 			Settings:  UseSystemCertifikat, Debug, Cache/Löschfristen hinzugefügt.

@@ -35,7 +35,7 @@ repl_json_chars=util.repl_json_chars; mystrip=util.mystrip; DirectoryNavigator=u
 stringextract=util.stringextract; blockextract=util.blockextract; my_rfind=util.my_rfind; 
 cleanhtml=util.cleanhtml; decode_url=util.decode_url; unescape=util.unescape; serial_random=util.serial_random; 
 transl_json=util.transl_json; repl_json_chars=util.repl_json_chars; get_keyboard_input=util.get_keyboard_input; 
-L=util.L; PlayAudio=util.PlayAudio; 
+L=util.L; PlayAudio=util.PlayAudio; Callback=util.Callback; 
 
 # +++++ TuneIn2017  - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
@@ -235,12 +235,12 @@ def Main():
 		SETTINGS.setSetting('MyRadioStations', MyRadioStations)
 		
 #-----------------------------										# 2. Menü
-	title = 'Durchstoebern'
-	title = L(title)
+	# title = L('Durchstoebern')									# Plex: oc-title2
 			
-	li = xbmcgui.ListItem(NAME)
+	li = xbmcgui.ListItem()
 	li = home(li)													# Home-Button / Refresh	
 	
+	title = L('Suche')
 	tagline = L('Suche Station / Titel')							# Suche
 	fparams="&fparams={'query': ''}"
 	addDir(li=li, label=title, action="dirList", dirID="Search", 
@@ -266,7 +266,7 @@ def Main():
 		MyRadioStations = MyRadioStations.strip()	
 		if os.path.exists(MyRadioStations):
 				title = L("Meine Radiostationen")
-				summ = MyRadioStations
+				summ = os.path.basename(MyRadioStations)
 				fparams="&fparams={'path': '%s'}" % urllib2.quote(MyRadioStations)
 				addDir(li=li, label=title, action="dirList", dirID="ListMRS", 
 					fanart=R(ICON_MYRADIO), thumb=R(ICON_MYRADIO), summary=summ, fparams=fparams)
@@ -494,8 +494,8 @@ def get_presetUrls(oc, outline):						# Auswertung presetUrls für GetContent
 	for rubrik in rubriken:	 # presetUrls ohne bitrate + subtext, type=link. Behandeln wie typ == 'audio'
 		typ,local_url,text,image,key,subtext,bitrate,preset_id = get_details(line=rubrik)	# xml extrahieren
 		subtext = 'CustomURL'
-		bitrate = 'unknown'		# dummy für PHT -> Blank in StationList
-		typ = 'unknown'			# dummy für PHT
+		bitrate = 'unknown'		# dummy 
+		typ = 'unknown'			# dummy 
 		oc.add(DirectoryObject(
 			key = Callback(StationList, url=local_url, title=text, summ=subtext, image=image, typ=typ, bitrate=bitrate,
 			preset_id=preset_id),
@@ -842,8 +842,6 @@ def GetContent(url, title, offset=0, li=''):
 			if len(summ) < 11 and descr:	# summary: falls Datum mit description ergänzen
 				summ = summ + ' | %s' % descr
 			tagline	= FollowText			# Bsp. 377,5K Favoriten od. 16:23 (Topic)
-			if tagline == '':				# PHT: leere Parameter absichern 
-				tagline = ' '
 							
 			title=UtfToStr(title); summ = UtfToStr(summ); local_url=UtfToStr(local_url);
 			image=UtfToStr(image); preset_id=UtfToStr(preset_id);
@@ -851,7 +849,7 @@ def GetContent(url, title, offset=0, li=''):
 			summ=repl_json_chars(summ); title=repl_json_chars(title); 
 				
 			PLog('Satz_Station/Topic:') 								
-			# bitrate: PHT-dummy -> Blank in StationList		
+			# bitrate: dummy 	
 			fparams="&fparams={'url': '%s', 'title': '%s', 'summ': '%s', 'image': '%s', 'typ': 'Station', 'bitrate': 'unknown',  'preset_id': '%s'}"  %\
 				(urllib2.quote(local_url), urllib2.quote(title), urllib2.quote(summ), urllib2.quote(image), preset_id)
 			addDir(li=li, label=title, action="dirList", dirID="StationList", 
@@ -959,7 +957,7 @@ def RequestTunein(FunctionName, url, GetOnlyHeader=None):
 		msg=''			
 		try:																# Step 2: urllib2.Request mit Zertifikat
 			PLog("RequestTunein, step 2, called from %s" % FunctionName)
-			cafile = os.path.join("%s", "xbmc_cacert.pem") % RESOURCES_PATH # von OpenPHT
+			cafile = os.path.join("%s", "xbmc_cacert.pem") % RESOURCES_PATH # 
 			if SETTINGS.getSetting('UseSystemCertifikat') == "true":	# Bsp. "/etc/certbot/live/rols1.xxx.de/fullchain.pem"
 				if os.path.exists(SETTINGS.getSetting('SystemCertifikat')) == "true":	
 					cafile = SETTINGS.getSetting('SystemCertifikat')		# Vorabtest path.exists in Main
@@ -1017,7 +1015,7 @@ def RequestTunein(FunctionName, url, GetOnlyHeader=None):
 def StationList(url, title, image, summ, typ, bitrate, preset_id):
 	PLog('StationList: ' + url)
 	
-	# Callback-Params für PlayAudio
+	# Callback-Params für PlayAudio, RecordStart, RecordStop
 	title=UtfToStr(title); summ = UtfToStr(summ);
 	fparams="{'url': '%s', 'title': '%s', 'summ': '%s', 'image': '%s', 'typ': '%s', 'bitrate': 'unknown',  'preset_id': '%s'}"  %\
 				(urllib2.quote(url), urllib2.quote(title), urllib2.quote(summ), urllib2.quote(image), typ, preset_id)
@@ -1025,7 +1023,6 @@ def StationList(url, title, image, summ, typ, bitrate, preset_id):
 
 	PLog(title);PLog(image);PLog(summ);PLog(typ);PLog(bitrate);PLog(preset_id)
 	title_org=title; summ_org=summ; bitrate_org=bitrate; typ_org=typ		# sichern
-	bitrate = bitrate.replace('unknown', '')	#							# PHT-dummy entf. 
 	
 	li = xbmcgui.ListItem()
 	li = home(li)							# Home
@@ -1129,7 +1126,7 @@ def StationList(url, title, image, summ, typ, bitrate, preset_id):
 			fparams=fparams, summary=summ)
 
 		title = L("Aufnahme") + ' ' + L("beenden")		
-		fparams="&fparams={'url': '%s', 'title': '%s', 'summ': '%s'}" %\
+		fparams="&fparams={'url': '%s', 'title': '%s', 'summ': '%s', 'CB': 'StationList'}" %\
 			(urllib.quote_plus(url), urllib.quote_plus(title),  urllib.quote_plus(summ))
 		addDir(li=li, label=title, action="dirList", dirID="RecordStop", fanart=R(ICON_STOP), thumb=R(ICON_STOP), 
 			fparams=fparams, summary=summ)
@@ -1399,23 +1396,15 @@ def get_details(line):		# line=opml-Ergebnis im xml-Format, mittels Stringfunkti
 	typ='';local_url='';text='';image='';key='';subtext='';bitrate='';preset_id='';guide_id='';playing=''
 	
 	typ 		= stringextract('type="', '"', line)
-	if typ == '':
-		typ = '?'
 	local_url 	= stringextract('URL="', '"', line)
 	text 		= stringextract('text="', '"', line)
 	image 		= stringextract('image="', '"', line)
 	if image == '':
 		image = R(ICON) 
 	key	 		= stringextract('key="', '"', line)
-	subtext 	= stringextract('subtext="', '"', line)		# PHT: leere Parameter absichern 
-	if subtext == '':
-		subtext = 'unknown'
-	bitrate 	= stringextract('bitrate="', '"', line)		# PHT: leere Parameter absichern 
-	if bitrate == '':
-		bitrate = 'unknown'
+	subtext 	= stringextract('subtext="', '"', line)		
+	bitrate 	= stringextract('bitrate="', '"', line)		
 	preset_id  = stringextract('preset_id="', '"', line)	# Test auf 'u..' in FolderMenuList,
-	if preset_id == '':										# daher Blank für PHT
-		preset_id = ' '
 	guide_id 	= stringextract('guide_id="', '"', line)	# Bsp. "f3"
 	playing 	= stringextract('playing="', '"', line)
 	if 	playing == subtext:									# Doppel summ. + tagline vermeiden
@@ -1822,8 +1811,6 @@ def FolderMenuList(url, title, li=''):
 				fanart=image, thumb=image, fparams=fparams)
 			
 		if typ == 'audio':							# Station
-			subtext = subtext.replace('unknown', '  ')	# PHT-dummy 
-			playing = playing.replace('unknown', '  ')	# PHT-dummy
 			 						
 			fparams="&fparams={'url': '%s', 'title': '%s', 'summ': '%s', 'image': '%s', 'typ': 'Station', 'bitrate': '%s', 'preset_id': '%s'}"  %\
 				(urllib2.quote(local_url), urllib2.quote(text), urllib2.quote(subtext), urllib2.quote(image),
@@ -2126,7 +2113,7 @@ def SingleMRS(name, url, max_streams, image):
 #									Recording-Funktionen
 ####################################################################################################
 # 
-def RecordStart(url,title,title_org,image,summ,typ,bitrate):			# Aufnahme Start 
+def RecordStart(url,title,title_org,image,summ,typ,bitrate, CB=''):		# Aufnahme Start 
 	PLog('RecordStart')
 	PLog(sys.platform)
 	
@@ -2187,7 +2174,7 @@ def RecordStart(url,title,title_org,image,summ,typ,bitrate):			# Aufnahme Start
 	PID_lines = Dict('load', 'PID')
 	PLog(PID_lines)
 	if PID_lines:
-		for PID_line in PID_lines:							# Prüfung auf exist. Aufnahme, spez. für PHT
+		for PID_line in PID_lines:							# Prüfung auf exist. Aufnahme
 			PLog(PID_line)									# Aufbau: Pid|Url|Sender|Info
 			pid_url = PID_line.split('|')[1]
 			if pid_url == url:	
@@ -2205,6 +2192,7 @@ def RecordStart(url,title,title_org,image,summ,typ,bitrate):			# Aufnahme Start
 	# PHT-Problem (Linux + Windows): return ObjectContainer nach Dict['PID'].append führt PHT direkt wieder hierher 
 	# 	(vor append OK) - Problem der Stackverwaltung im Framwork? Den erneuten Durchlauf von PHT fangen wir oben in 
 	#	Prüfung auf exist. Aufnahme ab.
+	# PHT-Problem  in Kodi nicht existent
 	call=''
 	try:
 		PLog(OS_DETECT)	
@@ -2234,10 +2222,10 @@ def RecordStart(url,title,title_org,image,summ,typ,bitrate):			# Aufnahme Start
 	msg1 = L('Aufnahme') + ' ' + L('fehlgeschlagen') + '\n' + L('Ursache unbekannt')
 	PLog(msg1)	
 	xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
-	return 		
+#	return 		
 	 	
 #-----------------------------
-def RecordStop(url,title,summ):							# Aufnahme Stop
+def RecordStop(url,title,summ, CB=''):					# Aufnahme Stop
 	PLog('RecordStop:')
 	
 	pid = ''
@@ -2255,7 +2243,8 @@ def RecordStop(url,title,summ):							# Aufnahme Stop
 		msg1 = url + ': ' + L('keine laufende Aufnahme gefunden')
 		PLog(msg1)
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
-		return 		
+		# if CB:	Callback(CB)		# nicht genutzt
+		return			
 			
 	# Problem kill unter Linux: da wir hier Popen aus Sicherheitsgründen ohne shell ausführen, hinterlässt kill 
 	#	einen Zombie. Dies ist aber zu vernachlässigen, da aktuelle Distr. Zombies nach wenigen Sekunden autom.
@@ -2269,7 +2258,7 @@ def RecordStop(url,title,summ):							# Aufnahme Stop
 		if 'linux' in sys.platform:		# Windows: 	object has no attribute 'SIGKILL'						
 			os.kill(pid, signal.SIGKILL)	
 		pidExist = True
-	except OSError, err:
+	except OSError as err:
 		pidExist = False
 		error='Error: ' + str(err)
 		PLog(error)
@@ -2283,7 +2272,7 @@ def RecordStop(url,title,summ):							# Aufnahme Stop
 			
 	PID_lines.remove(PID_line)		# Eintrag Prozessliste entfernen - unabhängig vom Erfolg
 	PLog(PID_lines)
-	Dict('store', 'PID', PID_lines)	# PHT springt vor Return wieder zum Anfang RecordStop, PID_line ist entfernt
+	Dict('store', 'PID', PID_lines)	
 	xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
 	return 		
 					
@@ -2293,6 +2282,12 @@ def RecordsList(title):			# title=L("laufende Aufnahmen")
 	PLog('RecordsList')
 	li = xbmcgui.ListItem()
 	li = home(li)						# Home-Button
+	
+	# Callback-Params für RecordStop
+	title=UtfToStr(title); 
+	fparams="{'title': '%s'}"  % (urllib2.quote(title))
+	Dict('store', 'Args_RecordsList', fparams)				
+	
 	
 	PID_lines = Dict('load', 'PID')	
 	for PID_line in PID_lines:							# Prüfung auf exist. Aufnahme
@@ -2306,7 +2301,7 @@ def RecordsList(title):			# title=L("laufende Aufnahmen")
 		if not 'unknown' in pid_summ:
 			title_new = title_new + ' | ' + pid_summ
 		summ_new = pid_url + ' | ' + 'PID: ' + pid			
-		fparams="&fparams={'url': '%s', 'title': '%s', 'summ': '%s'}" %\
+		fparams="&fparams={'url': '%s', 'title': '%s', 'summ': '%s', 'CB': 'RecordsList'}" %\
 			(urllib.quote_plus(pid_url), urllib.quote_plus(pid_sender),  urllib.quote_plus(pid_summ))
 		addDir(li=li, label=title_new, action="dirList", dirID="RecordStop", fanart=R(ICON_STOP), thumb=R(ICON_STOP), 
 			fparams=fparams, summary=summ_new)
@@ -2491,17 +2486,17 @@ def getStreamMeta(address):
 		error=''
 		return {"status": status, "metadata": metadata, "hasPortNumber": hasPortNumber, "shoutcast": shoutcast, "error": error}
 
-	except urllib2.HTTPError, e:	
+	except urllib2.HTTPError as e:	
 		error='Error, HTTP-Error = ' + str(e.code)
 		PLog(error)
 		return {"status": status, "metadata": None, "hasPortNumber": hasPortNumber, "shoutcast": shoutcast, "error": error}
 
-	except urllib2.URLError, e:						# Bsp. RANA FM 88.5 http://216.221.73.213:8000
+	except urllib2.URLError as e:						# Bsp. RANA FM 88.5 http://216.221.73.213:8000
 		error='Error, URL-Error: ' + str(e.reason)
 		PLog(error)
 		return {"status": status, "metadata": None, "hasPortNumber": hasPortNumber, "shoutcast": shoutcast, "error": error}
 
-	except Exception, err:
+	except Exception as err:
 		error='Error: ' + str(err)
 		PLog(error)
 		return {"status": status, "metadata": None, "hasPortNumber": hasPortNumber, "shoutcast": shoutcast, "error": error}
@@ -2600,7 +2595,7 @@ def shoutcastCheck(response, headers, itsOld):
 			title = re.sub("&artist=.*", "", title)
 			title = re.sub("http://.*", "", title)
 			title.rstrip()
-		except Exception, err:
+		except Exception as err:
 			PLog("songtitle error: " + str(err))
 			title = content[metaint:].split("'")[1]
 
@@ -2700,6 +2695,12 @@ fadr = getattr(Modul_Main, 'StationList')
 Dict('store', 'StationList', fadr)
 fadr = getattr(Modul_Main, 'SingleMRS')	
 Dict('store', 'SingleMRS', fadr)
+fadr = getattr(Modul_Main, 'RecordsList')	
+Dict('store', 'RecordsList', fadr)
+fadr = getattr(Modul_Main, 'RecordStart')	
+Dict('store', 'RecordsList', fadr)
+fadr = getattr(Modul_Main, 'RecordStop')	
+Dict('store', 'RecordsList', fadr)
 
 PLog('Addon: Start')
 if __name__ == '__main__':

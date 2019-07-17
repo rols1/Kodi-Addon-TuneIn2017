@@ -10,138 +10,138 @@ msgstr ""
 
 #:
 msgctxt "#30202" 
-#msgctxt "This term is shown in Preferences as option to look for update at plugin-start"
+#: "This term is shown in Preferences as option to look for update at plugin-start"
 msgid "look for update at plugin-start"
 msgstr "Sprawdź aktualizacje podczas uruchomienia wtyczki"
 
 #: 
 msgctxt "#30111" 
-msgctxt "This term is shown in Preferences for a listbox for setting the maximum number of items per page. "
+#: "This term is shown in Preferences for a listbox for setting the maximum number of items per page. "
 msgid "maximum number of items per page"
 msgstr "maksymalna ilość przedmiotów na stronie"
 
 #: 
 msgctxt "#30401" 
-msgctxt "This term is shown in Preferences for the checkbox \"Recordings by Streamripper\""
+#: "This term is shown in Preferences for the checkbox \"Recordings by Streamripper\""
 msgid "Recordings by Streamripper"
 msgstr "Nagrane przez Streamripper"
 
 #: 
 msgctxt "#30402" 
-msgctxt "This term is shown in Preferences for the input-field for storing the path to the Programm Streamripper"
+#: "This term is shown in Preferences for the input-field for storing the path to the Programm Streamripper"
 msgid "complete path to program Streamripper"
 msgstr "ścieżka do programu Streamripper"
 
 #: 
 msgctxt "#30403" 
-msgctxt "This term is shown in Preferences for the input-field for storing the path to the Download-Directory"
+#: "This term is shown in Preferences for the input-field for storing the path to the Download-Directory"
 msgid "complete path to Download-Directory"
 msgstr "ścieżka do katalogu pobrań"
 
 #: 
 msgctxt "#30203"
-msgctxt "Label for option-field in Preferences"
+#: "Label for option-field in Preferences"
 msgid "Start of plugin only with Favourites (TuneIn-Account required)"
 msgstr "Początek wtyczki tylko z Ulubionymi (wymagane konto TuneIn)"
 
 #: 
 msgctxt "#30301"
-msgctxt "Label for entry-field in Preferences"
+#: "Label for entry-field in Preferences"
 msgid "new folder for Favourites"
 msgstr "nowy folder dla Ulubionych"
 
 #: 
 msgctxt "#30302"
-msgctxt "Label for entry-field in Preferences"
+#: "Label for entry-field in Preferences"
 msgid "Custom Url - Url:"
 msgstr "Własny adres Url - Url:"
 
 #: 
 msgctxt "#30303"
-msgctxt "Label for entry-field in Preferences"
+#: "Label for entry-field in Preferences"
 msgid "Custom Url: Name"
 msgstr "Własny adres Url: nazwa"
 
 #: 
 msgctxt "#30112" 
-msgctxt "Label for option-field in Preferences"
+#: "Label for option-field in Preferences"
 msgid "Minimum Bitrate"
 msgstr "Minimalny bitrate"
 
 #: 
 msgctxt "#30204"
-msgctxt "Label for option-field in Preferences"
+#: "Label for option-field in Preferences"
 msgid "Start of plugin only with My Radio Stations"
 msgstr "Uruchom wtyczkę tylko w stacjach radiowych"
 
 #: 
 msgctxt "#30117"
-msgctxt "Label for entry-field in Preferences"
+#: "Label for entry-field in Preferences"
 msgid "complete path to My Radio Stations"
 msgstr "pełna trasa do My Radio Stations"
 
 #: 
 msgctxt "#30113" 
-msgctxt "Label for option-field in Preferences"
+#: "Label for option-field in Preferences"
 msgid "maximum number of streams per station (can prevent timeouts)"
 msgstr "maksymalna liczba strumieni na stację (może zapobiegać timeoutom)"
 
 #: 
 msgctxt "#30114" 
-msgctxt "Label for option-field in Preferences"
+#: "Label for option-field in Preferences"
 msgid "Favourites add/remove"
 msgstr "Ulubione dodawanie/usuwanie"
 
 #: 
 msgctxt "#30115" 
-msgctxt "description of of checkbox in Preferences"
+#: "description of of checkbox in Preferences"
 msgid "manually setting of Local Radio (menu By Location)"
 msgstr "Ręcznie ustaw lokalne radio (menu Miejsca)"
 
 #: 
 msgctxt "#30110" 
-msgctxt "Settings General"
+#: "Settings General"
 msgid "plus AAC-Format"
 msgstr "plus AAC-Format"
 
 #: 
 msgctxt "#30116" 
-msgctxt "Settings General"
+#: "Settings General"
 msgid "Show My Radiostations"
 msgstr "Pokaż moje stacje radiowe"
 
 #: 
 msgctxt "#30118" 
-msgctxt "Settings General"
+#: "Settings General"
 msgid "System-Certifikat"
 msgstr "Certyfikat systemu"
 
 #: 
 msgctxt "#30119" 
-msgctxt "Settings General"
+#: "Settings General"
 msgid "complete path to System-Certifikate"
 msgstr "pełna ścieżka do certyfikatu systemowego"
 
 #:
 msgctxt "#30200" 
-msgctxt "Settings Category Label"
+#: "Settings Category Label"
 msgid "Startup Settings"
 msgstr "Ustawienia uruchamiania"
 
 #: 
 msgctxt "#30201" 
-msgctxt "Startup Settings"
+#: "Startup Settings"
 msgid "Turn debug logging on or off"
 msgstr "Włącz lub wyłącz rejestrowanie debugowania"
 
 #: 
 msgctxt "#30300" 
-msgctxt "Settings Category Label"
+#: "Settings Category Label"
 msgid "Favorit | Custom Url"
 msgstr "ulubiony | Własny adres Url"
 
 msgctxt "#30501" 
-msgctxt "Cache Settings"
+#: "Cache Settings"
 msgid "Days until deletion"
 msgstr "Okres usuwania (dni)"
 

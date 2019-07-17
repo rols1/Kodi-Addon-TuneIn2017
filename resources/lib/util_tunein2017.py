@@ -708,32 +708,38 @@ def PlayAudio(url, title, thumb, Plot, header=None, url_template=None, FavCall='
 	 	
 	xbmc.Player().play(url, li, False)			# Player nicht mehr spezifizieren (0,1,2 - deprecated)
 
-	# Callback - Rücksprung zum Aufrufer
-	#	Grund: CGUIMediaWindow::GetDirectory - vermutl. wegen direkt-Call aus PlayAudio_pre 
-	#	Dict(CB) enthält die Parameter für die Funktion CB
-	#	Die Ermittlung der Funktionsadressen im Haupt-PRG ist zwar möglich, aber nicht das Speichern
-	#		im pickle-Format. Daher nehmen wir hier die Zuordnung manuell vor (das router-Verfahren entf.)
-	if '.asf' not in url:								# mediau.yle.fi/liveklassinen?MSWMExt=.asf -> Rekursion
-		if CB:											# Bsp. StationList
-			func = Dict('load', CB)						# Funktionsadresse (Fuß Haupt-PRG)
-			PLog(func)
-			func_pars = Dict('load', "Args_%s" % CB)	# Funktionsparams
-			PLog("func_pars: " + func_pars)
-			if func_pars:
-				mydict = get_params(func_pars) 
-				func(**mydict)							# Sprung zur Funktion
+	if '.asf' not in url and '.aac' not in url:	# Rekursion möglich, s. myradiostations-Debug.txt
+		if CB:									# Bsp. StationList
+			Callback(CB)						# 
 			
 #----------------------------------------------------------------
-# func_pars -> dict wie in router
-def get_params(func_pars):  						 # Dict fparams -> list
-	PLog('get_params:')
-	func_pars = urllib.unquote_plus(func_pars)
+# Callback - Rücksprung zum Aufrufer
+#	Grund: CGUIMediaWindow::GetDirectory bei direkt-Calls aus Funktionen ohne Listitem.
+#	Dict(CB) enthält die Parameter für die Funktion CB
+#	Die Ermittlung der Funktionsadressen erfolgt im Haupt-PRG, (unterhalb router). 
+#	Die dazugehörigen Parameter werden in der Funktion CB unmittelbar nach dem Aufruf
+#		in Dict('ARGS_Funktionsname') gespeichert.
+#	 
+#	Hier werden die Parameter wieder geladen + wie in router in ein json-dict
+#		konvertiert.
+#	Schließlich folgt der Aufruf der Funktion mit Übergabe des Parameter-dicts.
+# 
+def Callback(CB):  						
+	PLog('Callback:')
 	
-	func_pars = func_pars.replace("'", "\"")		# json.loads-kompatible string-Rahmen
-	func_pars = func_pars.replace('\\', '\\\\')		# json.loads-kompatible Windows-Pfade
+	func = Dict('load', CB)						# Funktionsadresse (Fuß Haupt-PRG)
+	PLog(func)
+	func_pars = Dict('load', "Args_%s" % CB)	# Funktionsparameter
+	func_pars = urllib.unquote_plus(func_pars)
+	PLog("func_pars: " + func_pars)		
+												# unc_pars -> dict wie in router
+	func_pars = func_pars.replace("'", "\"")	# json.loads-kompatible string-Rahmen
+	func_pars = func_pars.replace('\\', '\\\\')	# json.loads-kompatible Windows-Pfade
 	mydict = json.loads(func_pars)
-	PLog("mydict: " + str(mydict)); PLog(type(mydict))
-	return mydict
+	PLog("mydict: " + str(mydict)); 
+	PLog('jump to: ' + CB)
+	func(**mydict)								# Sprung zur Funktion
+	return 
 	
 
 ####################################################################################################
