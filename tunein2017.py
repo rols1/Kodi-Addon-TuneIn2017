@@ -39,8 +39,8 @@ L=util.L; PlayAudio=util.PlayAudio; Callback=util.Callback;
 
 # +++++ TuneIn2017  - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.3.3'	
-VDATE = '17.07.2019'
+VERSION =  '1.3.4'	
+VDATE = '18.07.2019'
 
 # 
 #	
@@ -510,7 +510,7 @@ def get_presetUrls(oc, outline):						# Auswertung presetUrls für GetContent
 #-----------------------------
 # SetLocation (Aufruf GetContent): Region für Lokales Radiomanuell setzen/entfernen
 def SetLocation(url, title, region, myLocationRemove):	
-	PLog('SetLocation')
+	PLog('SetLocation:')
 	PLog('myLocationRemove: ' + myLocationRemove)
 
 	if myLocationRemove == 'True':
@@ -646,19 +646,21 @@ def GetContent(url, title, offset=0, li=''):
 				url = Dict('load', 'myLocation')		
 				skip_SetLocation = True
 				myLocationRemove = True
-				region = stringextract('/radio/', '-r', Dict('load', 'myLocation'))
-				PLog(region)
+				region = stringextract('/radio/', '-r', url)
 				oc_title2 = oc_title2 + ' (%s)' % region
+				oc_title2=UtfToStr(oc_title2)
+				PLog("region: %s, oc_title2: %s" % (region, oc_title2) )
 	
-		
 	if myLocationRemove:							# Local Radio: Remove-Button
 		if SETTINGS.getSetting('UseMyLocation') == "true":	
 			if Dict('load', 'myLocation'):			# Region gesetzt
 				summ = L('neu setzen im Menue Orte')
 				thumb=R(ICON_MYLOCATION_REMOVE)
 				info_title = L('entferne Lokales Radio') + ': >%s<' % region
+				
+				
 				fparams="&fparams={'url': '%s', 'title': '%s', 'region': '%s', 'myLocationRemove': 'True'}"  %\
-					(urllib2.quote(url), urllib2.quote(info_title), region)
+					(urllib2.quote(url), urllib2.quote(info_title), urllib2.quote(region))
 				addDir(li=li, label=info_title, action="dirList", dirID="SetLocation", 
 					fanart=thumb, thumb=thumb, summary=summ, tagline=oc_title2, fparams=fparams)
 							
@@ -710,9 +712,8 @@ def GetContent(url, title, offset=0, li=''):
 
 	indices = blockextract('"index":', page)
 	page_cnt = len(indices)
-	PLog('indices: %s, max_count: %s' % (str(page_cnt), str(max_count)))
+	PLog('indices: %d, max_count: %d, offset: %d' % (page_cnt, max_count, offset))
 	if 	max_count:									# '' = 'Mehr..'-Option ausgeschaltet?
-		page_cnt = page_cnt 
 		delnr = min(page_cnt, offset)
 		del indices[:delnr]
 		PLog(delnr)				
@@ -781,6 +782,7 @@ def GetContent(url, title, offset=0, li=''):
 			seoName = ''
 											
 		mytype = mytype.title()
+		title=UtfToStr(title); title=repl_json_chars(title) 
 	# ------------------------------------------------------------------	
 	# 																	Callback Link
 	# ------------------------------------------------------------------	
@@ -817,7 +819,7 @@ def GetContent(url, title, offset=0, li=''):
 				#	return li
 				continue
 											
-			#PLog('Link_url: ' + local_url); # PLog(image);	# Bei Bedarf
+			PLog('Link_url: %s, url_org: %s' % (local_url, url_org)); # PLog(image);	# Bei Bedarf
 			if url == local_url:
 				PLog('skip: url=local_url')
 				continue
@@ -825,10 +827,14 @@ def GetContent(url, title, offset=0, li=''):
 				PLog('skip: empty local_url')
 				continue			
 			
+			link_offset = offset				# Reset offset bei Verzeichniswechsel
+			if local_url != url_org:			
+				link_offset = 0
+				
 			summ 	= 	subtitle			# summary -> subtitle od. FollowText
 			summ_mehr = L('Mehr...')
 			fparams="&fparams={'url': '%s', 'title': '%s', 'offset': '%s'}"  %\
-				(urllib2.quote(local_url), urllib2.quote(title), offset)
+				(urllib2.quote(local_url), urllib2.quote(title), link_offset)
 			addDir(li=li, label=title, action="dirList", dirID="GetContent", 
 				fanart=R(ICON), thumb=R(ICON), summary=summ_mehr, fparams=fparams)
 			li_cnt = li_cnt + 1	
@@ -846,10 +852,10 @@ def GetContent(url, title, offset=0, li=''):
 				summ = summ + ' | %s' % descr
 			tagline	= FollowText			# Bsp. 377,5K Favoriten od. 16:23 (Topic)
 							
-			title=UtfToStr(title); summ = UtfToStr(summ); local_url=UtfToStr(local_url);
+			summ = UtfToStr(summ); local_url=UtfToStr(local_url);		# title s.o.
 			image=UtfToStr(image); preset_id=UtfToStr(preset_id);
 			
-			summ=repl_json_chars(summ); title=repl_json_chars(title); 
+			summ=repl_json_chars(summ); 
 				
 			PLog('Satz_Station/Topic:') 								
 			# bitrate: dummy 	

@@ -109,12 +109,12 @@ def update(url, ver):
 			msg1 = 'Update fehlgeschlagen'
 			msg2 = 'Error: ' + str(exception)
 												
-		# xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
-		return tunein2017.Main()									# für Kodi springen wir direkt
+		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
 	else:
 		msg1 = 'Update fehlgeschlagen'
 		msg2 =  'Version ' + ver + 'nicht gefunden!'
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+	return
 
 ################################################################################
 # save_restore:  Cache sichern / wieder herstellen
