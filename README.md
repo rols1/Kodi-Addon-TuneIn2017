@@ -61,10 +61,10 @@ Credits:
  
 Bilder / Pictures:
 ===================  
-![img](https://github.com/rols1/PluginPictures/blob/master/Misc/Menu.png?raw=true)
+![img](https://github.com/rols1/PluginPictures/blob/master/Kodi/TuneIn2017/Hauptmenue.png)
 
-![img](https://us.v-cdn.net/6025034/uploads/editor/wr/9d299awck10x.png)
+![img](https://github.com/rols1/PluginPictures/blob/master/Kodi/TuneIn2017/Station_Ottava_Menu.png)
 
-![img](https://us.v-cdn.net/6025034/uploads/editor/o3/mru0m2pe6lfn.png)
+![img](https://github.com/rols1/PluginPictures/blob/master/Kodi/TuneIn2017/Station_Ottava_Player.png)
 
 
