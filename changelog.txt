@@ -6,6 +6,10 @@ CHANGE HISTORY 	Kodi-Addon-TuneIn2017 (vormals Plugin für den Plexmediaserver)
 			Plex-Forum:
 			https://forums.plex.tv/discussion/288260/rel-tunein2017
 
+19.07.2019	1.3.5	Updatefunction: code of Menu_update relocated to main menu ("new update available"
+			was shown again after update).
+			Settings: value 20 to maxStreamsPerStation added (Sonic Universe offers 16 streams).	
+
 18.07.2019	1.3.4	GetContent: reset offset on directory change (fix missing entries).
 			GetContent: remove json-incompatible chars from title.
 			GetContent: UtfToStr for oc_title2 (fix codec-error).

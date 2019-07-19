@@ -39,8 +39,8 @@ L=util.L; PlayAudio=util.PlayAudio; Callback=util.Callback;
 
 # +++++ TuneIn2017  - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.3.4'	
-VDATE = '18.07.2019'
+VERSION =  '1.3.5'	
+VDATE = '19.07.2019'
 
 # 
 #	
@@ -338,10 +338,35 @@ def Main():
 				fanart=R(MENU_RECORDS), thumb=R(MENU_RECORDS), fparams=fparams)
 						       
 #-----------------------------	
-	li = Menu_update(li)											# Updater-Modul einbinden
-	xbmcplugin.endOfDirectory(HANDLE)
+#	li = Menu_update(li)											# Updater-Modul einbinden
+
+	repo_url = 'https://github.com/{0}/releases/'.format(GITHUB_REPOSITORY)
+	call_update = False
+	if SETTINGS.getSetting('InfoUpdate') == 'true': 	# Updatehinweis beim Start des Addons 
+		ret = updater.update_available(VERSION)
+		int_lv = ret[0]			# Version Github
+		int_lc = ret[1]			# Version aktuell
+		latest_version = ret[2]	# Version Github, Format 1.4.1
+		
+		if int_lv > int_lc:								# Update-Button "installieren" zeigen
+			call_update = True
+			title = L('neues Update vorhanden') +  ' - ' + L('jetzt installieren')
+			summary = L('Plugin Version:') + " " + VERSION + ', Github Version: ' + latest_version
+			# Bsp.: https://github.com/rols1/Kodi-Addon-ARDundZDF/releases/download/0.5.4/Kodi-Addon-ARDundZDF.zip
+			url = 'https://github.com/{0}/releases/download/{1}/{2}.zip'.format(GITHUB_REPOSITORY, latest_version, REPO_NAME)
+			fparams="&fparams={'url': '%s', 'ver': '%s'}" % (urllib.quote_plus(url), latest_version) 
+			addDir(li=li, label=title, action="dirList", dirID="resources.lib.updater.update", fanart=R(ICON_UPDATER_NEW), 
+				thumb=R(ICON_UPDATER_NEW), fparams=fparams, summary=summary)
+			
+	if call_update == False:							# Update-Button "Suche" zeigen	
+		title = L('Plugin Update') + " | " + L('Plugin Version:') + VERSION + ' - ' + VDATE 	 
+		summary=L('Suche nach neuen Updates starten')
+		tagline=L('Bezugsquelle') + ': ' + REPO_URL			
+		fparams="&fparams={'title': 'Addon-Update'}"
+		addDir(li=li, label=title, action="dirList", dirID="SearchUpdate", fanart=R(ICON_MAIN_UPDATER), 
+			thumb=R(ICON_MAIN_UPDATER), fparams=fparams, summary=summary, tagline=tagline)
+					
 #-----------------------------	
-	'''
 	# Lang_Test=True					# Menü-Test Plugin-Sprachdatei
 	Lang_Test=False		
 	if Lang_Test:
@@ -350,7 +375,6 @@ def Main():
 			fanart=R('lang_gnome.png'), thumb=R('lang_gnome.png'), summary='LangTest', fparams=fparams)
 	
 	xbmcplugin.endOfDirectory(HANDLE)
-	'''					
 						
 ####################################################################################################
 # LangTest testet aktuelle Plugin-Sprachdatei, z.B. en.json (Lang_Test=True).
@@ -390,37 +414,7 @@ def dummy():
 	xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
 	
 	xbmcplugin.endOfDirectory(HANDLE)
-#----------------------------------------------------------------
-def Menu_update(li):
-	PLog('Menu_update:')
-		
-	repo_url = 'https://github.com/{0}/releases/'.format(GITHUB_REPOSITORY)
-	call_update = False
-	if SETTINGS.getSetting('InfoUpdate') == 'true': # Updatehinweis beim Start des Addons 
-		ret = updater.update_available(VERSION)
-		int_lv = ret[0]			# Version Github
-		int_lc = ret[1]			# Version aktuell
-		latest_version = ret[2]	# Version Github, Format 1.4.1
-		
-		if int_lv > int_lc:								# Update-Button "installieren" zeigen
-			call_update = True
-			title = L('neues Update vorhanden') +  ' - ' + L('jetzt installieren')
-			summary = L('Plugin Version:') + " " + VERSION + ', Github Version: ' + latest_version
-			# Bsp.: https://github.com/rols1/Kodi-Addon-ARDundZDF/releases/download/0.5.4/Kodi-Addon-ARDundZDF.zip
-			url = 'https://github.com/{0}/releases/download/{1}/{2}.zip'.format(GITHUB_REPOSITORY, latest_version, REPO_NAME)
-			fparams="&fparams={'url': '%s', 'ver': '%s'}" % (urllib.quote_plus(url), latest_version) 
-			addDir(li=li, label=title, action="dirList", dirID="resources.lib.updater.update", fanart=R(ICON_UPDATER_NEW), 
-				thumb=R(ICON_UPDATER_NEW), fparams=fparams, summary=summary)
-			
-	if call_update == False:							# Update-Button "Suche" zeigen	
-		title = L('Plugin Update') + " | " + L('Plugin Version:') + VERSION + ' - ' + VDATE 	 
-		summary=L('Suche nach neuen Updates starten')
-		tagline=L('Bezugsquelle') + ': ' + REPO_URL			
-		fparams="&fparams={'title': 'Addon-Update'}"
-		addDir(li=li, label=title, action="dirList", dirID="SearchUpdate", fanart=R(ICON_MAIN_UPDATER), 
-			thumb=R(ICON_MAIN_UPDATER), fparams=fparams, summary=summary, tagline=tagline)
-				
-	return li
+
 #----------------------------------------------------------------
 def home(li):							# Home-Button
 	PLog('home:')	
@@ -657,8 +651,7 @@ def GetContent(url, title, offset=0, li=''):
 				summ = L('neu setzen im Menue Orte')
 				thumb=R(ICON_MYLOCATION_REMOVE)
 				info_title = L('entferne Lokales Radio') + ': >%s<' % region
-				
-				
+							
 				fparams="&fparams={'url': '%s', 'title': '%s', 'region': '%s', 'myLocationRemove': 'True'}"  %\
 					(urllib2.quote(url), urllib2.quote(info_title), urllib2.quote(region))
 				addDir(li=li, label=info_title, action="dirList", dirID="SetLocation", 
@@ -1185,16 +1178,13 @@ def StreamTests(url_list,summ_org):
 	PLog('StreamTests:');
 	summ = ''
 	
-	max_streams = 0								# Default: keine Begrenzung
-	if SETTINGS.getSetting('maxStreamsPerStation') == "true":
-		max_streams = int(SETTINGS.getSetting('maxStreamsPerStation'))	# max. Anzahl Einträge ab offset
+	max_streams = int(SETTINGS.getSetting('maxStreamsPerStation'))	# max. Anzahl Streams per Station
 	PLog('max_streams: ' + str(max_streams))
 	
 	lines = url_list.splitlines()
 	err_flag = False; err=''					# Auswertung nach Schleife	
 	url_list = []
 	line_cnt = 0								# Einzelzählung
-	max_streams = int(max_streams)
 	for line in lines:
 		line_cnt = line_cnt + 1			
 		PLog('line %s (max. %s): %s' % (line_cnt, str(max_streams), line))

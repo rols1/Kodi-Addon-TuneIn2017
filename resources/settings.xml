@@ -16,7 +16,7 @@
 		<setting label="30110" type="bool" id="PlusAAC"  default="true"/>
 		<setting label="30111" type="select" values="15|25|50|100|500"  id="maxPageContent" default="25"/>
 		<setting label="30112" type="select" values="0|32|64|96|128|192|256|320" id="minBitrate" default="0"/>
-		<setting label="30113"  type="select" values="1|2|3|4|5|6|10" id="maxStreamsPerStation" default="3"/>
+		<setting label="30113"  type="select" values="1|2|3|4|5|6|10|20" id="maxStreamsPerStation" default="3"/>
 		<setting label="30114" type="bool" id="UseFavourites" />
 		<setting type="sep"/>
 			<setting label="30115" type="bool" id="UseMyLocation" />
