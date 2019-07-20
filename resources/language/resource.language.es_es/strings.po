@@ -30,7 +30,7 @@ msgstr "Grabaciones con Streamripper"
 msgctxt "#30402" 
 #: "This term is shown in Preferences for the input-field for storing the path to the Programm Streamripper"
 msgid "complete path to program Streamripper"
-msgstr "complete path to program Streamripper"
+msgstr "Ruta completa del programa Streamripper"
 
 #: 
 msgctxt "#30403" 
