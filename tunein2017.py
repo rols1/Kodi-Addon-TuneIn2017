@@ -39,8 +39,8 @@ L=util.L; PlayAudio=util.PlayAudio; Callback=util.Callback;
 
 # +++++ TuneIn2017  - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.3.5'	
-VDATE = '19.07.2019'
+VERSION =  '1.3.6'	
+VDATE = '20.07.2019'
 
 # 
 #	
@@ -115,7 +115,8 @@ GITHUB_REPOSITORY 	= 'rols1/' + REPO_NAME
 REPO_URL 			= 'https://github.com/{0}/releases/latest'.format(GITHUB_REPOSITORY)
 
 # Globale Variablen für Tunein:
-partnerId		= 'RadioTime'
+# partnerId		= 'RadioTime'	ab 19.07.2019 auf akt. Wert erweitert 
+partnerId		= 'RadioTime&version=3.34&itemUrlScheme=secure&reqAttempt=1'
 
 # Start-Variablen aus Plex-Version
 UrlopenTimeout = 3			# Timeout sec, 18.10.2017 von 6 auf 3
@@ -374,7 +375,7 @@ def Main():
 		addDir(li=li, label='LangTest', action="dirList", dirID="LangTest", 
 			fanart=R('lang_gnome.png'), thumb=R('lang_gnome.png'), summary='LangTest', fparams=fparams)
 	
-	xbmcplugin.endOfDirectory(HANDLE)
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 						
 ####################################################################################################
 # LangTest testet aktuelle Plugin-Sprachdatei, z.B. en.json (Lang_Test=True).
@@ -837,7 +838,9 @@ def GetContent(url, title, offset=0, li=''):
 		if mytype == 'Station' or mytype == 'Topic':					
 			if preset_id.startswith('p'):
 				preset_id = guideId				# mp3-Quelle in guideId., Bsp. t109814382
-			local_url = 'http://opml.radiotime.com/Tune.ashx?id=%s&formats=%s' % (preset_id, Dict('load', 'formats'))
+			# local_url = 'http://opml.radiotime.com/Tune.ashx?id=%s&formats=%s' % (preset_id, Dict('load', 'formats'))
+			# 19.07.2019: nach IP-Sperre Call erweitert mit serial + partnerId - s. StationList
+			local_url = 'http://opml.radiotime.com/Tune.ashx?id=%s&formats=%s&serial=%s&partnerId=%s' % (preset_id, Dict('load', 'formats'), serial, partnerId)
 			#PLog('Station_url: ' + local_url);	# PLog(image);	# Bei Bedarf
 			
 			summ 	= 	subtitle			# summary -> subtitle od. FollowText
@@ -1024,7 +1027,8 @@ def StationList(url, title, image, summ, typ, bitrate, preset_id):
 	Dict('store', 'Args_StationList', fparams)				
 
 	PLog(title);PLog(image);PLog(summ);PLog(typ);PLog(bitrate);PLog(preset_id)
-	title_org=title; summ_org=summ; bitrate_org=bitrate; typ_org=typ		# sichern
+	title_org=title; summ_org=summ; bitrate_org=bitrate; 					# sichern
+	typ_org=typ; url_org=url		
 	
 	li = xbmcgui.ListItem()
 	li = home(li)							# Home
@@ -1049,6 +1053,26 @@ def StationList(url, title, image, summ, typ, bitrate, preset_id):
 			xbmcplugin.endOfDirectory(HANDLE)
 			return li
 		if ': 400' in cont:				# passiert (manchmal) bei 'neuer Versuch' (mit preset_id)
+			# Check TV-Sender? Falls ja, liefert Call master.m3u8 im json-Format 
+			#	format: hls notwendig, sonst notcompatible-Error
+			# Hinw.: nach ca. 5 fehlerhaften Calls  war meine IP-Adresse (nicht nur serial-ID) für weitere 
+			# 	opml-Calls gesperrt. opml-Calls in GetContent waren erst wieder nach Erweiterung des  Calls
+			#	mit serial + aktueller partnerId möglich. Test nach ca. 1 Std. ohne Erweit.: Sperre dauert an.
+			#	
+			serial = Dict('load', 'serial')	
+			audience = '%3Ball%3BVZ_Altice%3B'	# unquote:	;all;VZ_Altice; (ganzer Call aus chrome-dev-tools)		
+			tvaudio_url = 'https://opml.radiotime.com/Tune.ashx?audience=%s&id=%s&render=json&formats=mp3,aac,hls&type=station&serial=%s&partnerId=%s' % (audience, preset_id, serial, partnerId)
+			cont, msg = RequestTunein(FunctionName='StationList, tvaudio-Call', url=tvaudio_url)
+			PLog(cont)
+			if "/master.m3u8" in cont:  # ausgeben
+				url = stringextract('url": "', '"', cont)
+				audio_url = get_tv_audio_url(url)				
+				if audio_url:
+					return PlayAudio(url=audio_url, title=title, thumb=image, Plot=summ, CB='')
+				else:
+					url = url_org					# Fehler-Url: Tunein-Url
+					cont = title_org
+
 			msg1 = L("keinen Stream gefunden zu") 
 			msg2 = url
 			msg3 = 'Tunein: %s' % cont
@@ -1389,6 +1413,33 @@ def get_m3u(url):               # m3u extrahieren - Inhalte mehrerer Links werde
 	PLog(pls[:100])
 	return pls
     
+#-----------------------------
+# get_tv_audio_url: extrahiert aus master.m3u8-Datei die Audio-Url -
+#	wir nehmen den ersten Treffer (2 bei 3sat vorhanden, ohne Detailinfo)
+#	
+def get_tv_audio_url(url):
+	PLog('get_tv_audio_url:')
+	page, msg = RequestTunein(FunctionName='get_tv_audio_url', url=url)
+	lines = page.splitlines()
+	lines.pop(0)		# 1. Zeile entfernen (#EXTM3U)
+	
+	i = 0
+	for line in lines:
+		if 'BANDWIDTH=' in line:
+			Bandwith = stringextract('BANDWIDTH=', ',', line)
+			PLog(Bandwith)
+			try:
+				Bandwith = int(Bandwith)
+				if Bandwith <=  100000: 
+					audio_url = lines[i + 1]
+					PLog(audio_url)
+					if audio_url.startswith('http'): 		# Check
+						return audio_url
+			except Exception as exception:					
+				PLog(str(exception))
+		i = i + 1			
+	return ''
+
 #-----------------------------
 def get_details(line):		# line=opml-Ergebnis im xml-Format, mittels Stringfunktionen extrahieren 
 	# PLog('get_details')	# 

@@ -740,7 +740,6 @@ def Callback(CB):
 	PLog('jump to: ' + CB)
 	func(**mydict)								# Sprung zur Funktion
 	return 
-	
 
 ####################################################################################################
 
