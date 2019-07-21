@@ -59,8 +59,8 @@ msgstr "Własny adres Url - Url:"
 #: 
 msgctxt "#30303"
 #: "Label for entry-field in Preferences"
-msgid "Custom Url: Name"
-msgstr "Własny adres Url: nazwa"
+msgid "Custom Url - Name:"
+msgstr "Własny adres Url - nazwa:"
 
 #: 
 msgctxt "#30112" 

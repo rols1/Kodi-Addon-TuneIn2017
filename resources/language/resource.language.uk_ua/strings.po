@@ -59,7 +59,7 @@ msgstr "Спеціальний URL - Url:"
 #: 
 msgctxt "#30303"
 #: "Label for entry-field in Preferences"
-msgid "Custom Url - Name"
+msgid "Custom Url - Name:"
 msgstr "Спеціальний URL - називати:"
 
 #: 

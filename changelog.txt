@@ -6,6 +6,14 @@ CHANGE HISTORY 	Kodi-Addon-TuneIn2017 (vormals Plugin für den Plexmediaserver)
 			Plex-Forum:
 			https://forums.plex.tv/discussion/288260/rel-tunein2017
 			
+21.07.2019	1.3.7	Function L: changed  split-def. from ':' to '":' (safer)
+			Fix Lang-entry #30303 (format like #30302).
+			POEditor: remove example in terms Custom Url (too long for Kodi-Settings).
+			Github https://github.com/rols1/TuneIn2017: new language-terms for Kodi
+			version in wicki added with description and pics.
+			PlayAudio_pre: catch further http-Error (now 'HTTP Error' and HTTPError').
+			Make streams available where Tune.ashx refers to json files that contain 
+			the stream data for the player.  	
 			
 20.07.2019	1.3.6	Update language-files: Spanish (Tengoalhot).
 			Expanded for TV-Audio (master.m3u8-streams, hls): special opml-audience-call 

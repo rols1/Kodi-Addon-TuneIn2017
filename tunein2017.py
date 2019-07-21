@@ -39,8 +39,8 @@ L=util.L; PlayAudio=util.PlayAudio; Callback=util.Callback;
 
 # +++++ TuneIn2017  - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.3.6'	
-VDATE = '20.07.2019'
+VERSION =  '1.3.7'	
+VDATE = '21.07.2019'
 
 # 
 #	
@@ -464,6 +464,7 @@ def Search(query=''):
 	li = home(li)						# Home-Button
 	
 	query = query.strip()
+	oc_title2 = L('Suche nach') + ' >%s<' % query
 	PLog(SearchWeb)
 	if SearchWeb == True:
 		query = urllib2.quote(query)										# Web-Variante
@@ -532,7 +533,7 @@ def SetLocation(url, title, region, myLocationRemove):
 #	Unterscheidung Link / Station mittels mytype ("type")
 #
 def GetContent(url, title, offset=0, li=''):
-	PLog('GetContent:'); PLog(url); PLog(offset); PLog(li);
+	PLog('GetContent:'); PLog(url); PLog(offset); PLog(title); PLog(li);
 	offset = int(offset)
 	title = UtfToStr(title)
 	title_org = title
@@ -1102,6 +1103,16 @@ def StationList(url, title, image, summ, typ, bitrate, preset_id):
 			msg2 = "%s %s" % (msg, title)
 			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
 			return li
+			
+	# if '&render=json' in cont:				# Bsp.: Space Station Soma - mehrere Stream-Urls, die 
+	if '&render=json' in cont:					# 	auf eine json-Datei verweisen, die Details + Audio-
+		cont = get_ice_json(cont)					#	Url enthält
+		PLog('ice_json: ' + cont)
+		if cont == '':
+			msg1 = L('keinen Stream gefunden zu') 
+			msg2 = "%s %s" % (msg, title)
+			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+			return li			
 
 	#	StreamTests ausgelagert zur Mehrfachnutzung (ListMRS)
 	url_list, err_flag = StreamTests(cont,summ_org)	
@@ -1414,6 +1425,28 @@ def get_m3u(url):               # m3u extrahieren - Inhalte mehrerer Links werde
 	return pls
     
 #-----------------------------
+def get_ice_json(url):               # Streamdetails aus json-Datei ermitteln
+	PLog('get_ice_json: ' + url)		
+	urls =url.splitlines()	
+	
+	stream_urls = []
+	for url in urls:
+		if url.startswith('http') and '&render=json' in url:
+			try:									
+				req, msg = RequestTunein(FunctionName='get_ice_json', url=url)
+				req = urllib2.unquote(req).strip()	
+				# PLog(req)	
+			except: 	
+				req=''
+			stream_url = stringextract('"Url": "', '",', req)		# 1. Treffer, mehrere möglich
+			if stream_url.startswith('http'):
+				stream_urls.append(stream_url)	
+	
+	stream_urls = '\n'.join(stream_urls)	
+	PLog(stream_urls[:100])
+	return stream_urls
+			
+#-----------------------------
 # get_tv_audio_url: extrahiert aus master.m3u8-Datei die Audio-Url -
 #	wir nehmen den ersten Treffer (2 bei 3sat vorhanden, ohne Detailinfo)
 #	
@@ -1517,7 +1550,7 @@ def PlayAudio_pre(url, title, thumb, Plot, header=None, url_template=None, FavCa
 	elif 'text/html' in str(page):
 		PLog('Error: Textpage ' + url)					# mp3: not a stream - this is a text page
 		url =  os.path.join("%s", 'Sounds', 'textpage.mp3') % (RESOURCES_PATH)			
-	elif 'HTTP Error' in msg:					# beliebiger HTTP-error
+	elif 'HTTP Error' in msg or 'HTTPError' in msg:		# beliebiger HTTP-error
 		url=GetLocalUrl()
 		PLog('HTTP Error in msg')
 		
@@ -1657,9 +1690,9 @@ def SearchInProfile(ID, preset_id):
 	if ID == 'favoriteId':
 		page, msg = RequestTunein(FunctionName='SearchInProfile: favoriteId suchen', url=url)
 		if page == '':
-			error_txt = msg.decode(encoding="utf-8", errors="ignore")
-			PLog(error_txt)
-			return ObjectContainer(header=L('Fehler'), message=error_txt)		
+			msg1 = msg
+			xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+			return li
 		PLog(page[:10])				
 		
 		indices = blockextract('"Index"', page)
@@ -1967,7 +2000,6 @@ def FolderMenu(title, ID, preset_id, checkFiles=None):
 				folderId 	= stringextract('guide_id="', '"', rubrik)	# Bsp. "f3"
 				furl 		=  stringextract('URL="', '"', rubrik)
 				furl		= unescape(furl)							# wie in SearchInFolders
-				items_cnt 	= L('nicht gefunden')
 				page, msg = RequestTunein(FunctionName='FolderMenu: %s, Inhalt laden' % foldername, url=furl)	
 				items_cnt =  len(blockextract('URL=', page))		# outline unscharf
 				PLog(items_cnt)

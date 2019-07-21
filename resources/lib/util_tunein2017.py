@@ -646,7 +646,7 @@ def L(string):
 	lines = lines.splitlines()
 	lstring = ''	
 	for line in lines:
-		term1 = line.split(':')[0].strip()
+		term1 = line.split('":')[0].strip()
 		term1 = term1.strip()
 		term1 = term1.replace('"', '')			# Hochkommata entfernen
 		# PLog(term1)
