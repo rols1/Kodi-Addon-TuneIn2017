@@ -9,15 +9,17 @@
   <extension point="xbmc.addon.metadata">
 	<summary lang="de">tunein.com-Addon für Kodi</summary>
 	<summary lang="en">tunein.com-addon for Kodi</summary>
+	<summary lang="es">Complemento de tunein.com para Kodi</summary>
 	<description lang="de">Favoriten und Ordner (Tunein-Account erforderlich), Download-Option mit Streamripper, Standalone-Option StartWithMyRadioStations (Beispieldatei enthalten)</description>
+	<description lang="es">Favoritos y carpetas de favoritos (se requiere cuenta en TuneIn). Opción de descarga con el programa Streamripper. Opción independiente para iniciar con Mis Emisoras de Radio (se incluye archivo de muestra).</description>
 	<platform>all</platform>
-         <source>https://github.com/rols1/Kodi-Addon-TuneIn2017</source>
+        <source>https://github.com/rols1/Kodi-Addon-TuneIn2017</source>
         <forum>https://www.kodinerds.net/index.php/Thread//</forum>
 	<license>The MIT License (MIT)</license>
 	<language>"de_DE"</language>
  	<email>rols1@gmx.de</email>
         <assets>
-             <icon>icon.png</icon>
+            <icon>icon.png</icon>
             <fanart>fanart.png</fanart>           
      </assets>
    </extension>
