@@ -39,8 +39,8 @@ L=util.L; PlayAudio=util.PlayAudio; Callback=util.Callback;
 
 # +++++ TuneIn2017  - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.3.7'	
-VDATE = '21.07.2019'
+VERSION =  '1.4.0'	
+VDATE = '24.07.2019'
 
 # 
 #	
@@ -316,8 +316,10 @@ def Main():
 			title = key.title()
 		title = title.replace('\u002F', '/')
 		title = unescape(title)
-		if title == 'Premium':
-			continue
+		
+		#if title == 'Premium':										# zu Testzwecken wieder eingeblendet
+		#	continue
+		
 		categories = 'Category'
 		if key == 'recents':										# Recents: Url-Anpassung erforderlich
 			categories = None
@@ -426,8 +428,8 @@ def home(li):							# Home-Button
 	
 	return li
 #-----------------------------	
-def getMenuIcon(key):	# gibt zum key passendes Icon aus MENU_ICON zurück
-	icon = ICON			# Fallback
+def getMenuIcon(key):	# gibt zum key passendes Icon aus MENU_ICON zurück	
+	icon = ''			#
 	for icon in MENU_ICON:
 		if key == 'local':
 			icon = R('menu-lokale.png')
@@ -449,6 +451,8 @@ def getMenuIcon(key):	# gibt zum key passendes Icon aus MENU_ICON zurück
 			icon = R('menu-orte.png')
 		elif key == 'languages':
 			icon = R('menu-sprachen.png')
+		elif key == 'premium':
+			icon = R('menu-pro.png')
 	return icon	
 #-----------------------------
 def Search(query=''):
@@ -506,7 +510,7 @@ def get_presetUrls(oc, outline):						# Auswertung presetUrls für GetContent
 #-----------------------------
 # SetLocation (Aufruf GetContent): Region für Lokales Radiomanuell setzen/entfernen
 def SetLocation(url, title, region, myLocationRemove):	
-	PLog('SetLocation:')
+	PLog('SetLocation: %s' % region)
 	PLog('myLocationRemove: ' + myLocationRemove)
 
 	if myLocationRemove == 'True':
@@ -703,7 +707,8 @@ def GetContent(url, title, offset=0, li=''):
 		page = (page.replace('"Title"','"title"').replace('"Image"','"image"').replace('"Category"','"category"')
 			.replace('"FollowText"','"followText"').replace('"ShareText"','"shareText"').replace('"Id"','"id"')
 			.replace('Type','type').replace('ContainerType','containerType').replace('Token','token')
-			.replace('Subtitle','subtitle').replace('Index','index').replace('GuideId','guideId').replace('"Url"','"url"'))			
+			.replace('Subtitle','subtitle').replace('Index','index').replace('GuideId','guideId').replace('"Url"','"url"')
+			.replace('Duration','duration'))			
 
 	indices = blockextract('"index":', page)
 	page_cnt = len(indices)
@@ -742,6 +747,7 @@ def GetContent(url, title, offset=0, li=''):
 			descr		= stringextract('"text":"', '"', index)		# description
 		descr	= (descr.replace('\u002F', '/').replace('\u003E', '').replace('\u003C', '')
 			.replace('\\r\\n', ' '))
+		duration	= stringextract('"duration":"', '"', index)
 
 		#if 'Religious Music' in index:									# Debug: Datensatz
 		#	PLog(index)
@@ -769,7 +775,7 @@ def GetContent(url, title, offset=0, li=''):
 			
 		PLog('Vars:') 	
 		PLog("%s | %s | %s | %s | %s | %s | %s"	% (myindex,mytype,title,subtitle,publishTime,seoName,FollowText))
-		PLog("%s | %s | %s | %s | %s | %s"		% (ShareText,descr,linkfilter,preset_id,guideId,path))
+		PLog("%s | %s | %s | %s | %s | %s | %s"	% (ShareText,descr,linkfilter,preset_id,guideId,path,duration))
 			
 		if title in ShareText or subtitle in ShareText:		# Ergänzung: Höre .. auf TuneIn
 			ShareText = ''			
@@ -807,17 +813,37 @@ def GetContent(url, title, offset=0, li=''):
 					link_list.remove(link)								# Sätze mit ident. linkfilter möglich
 					break
 					
-			if not url_found: 											# selten: Link zu Main Menu, Bsp. Podcast
+			if not url_found: 					# Tunein-Info, übersetzt -  mögl.: will be available on ..
 				msg1 = ('skip: no preset_id in link for: %s | %s' % (title,preset_id)) 
 				PLog(msg1); PLog(preset_id); PLog(local_url)
-				# xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')	# nur Debug
-				#	return li
+				if 'index":1,"type":"Prompt"' in page:
+					pos = page.find('index":1,"type":"Prompt"')
+					PLog(pos)
+					msg2 = page[pos:pos+200]
+					msg2 = stringextract('title":"', '"', msg2)
+					msg1 = title
+					PLog(msg2)
+					xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
 				continue
 											
 			PLog('Link_url: %s, url_org: %s' % (local_url, url_org)); # PLog(image);	# Bei Bedarf
-			if url == local_url:
+			if url == local_url:					# Rekursion vermeiden
+				'''
+				PLog('try_with_guideId')			# nicht genutzt - viele nicht verfügbare Stationen
+				if guideId:							# wie Tunein-Web: erneuter Versuch mit guideId
+					url = 'https://api.tunein.com/profiles/%s/contents?formats=mp3,aac,ogg,hls&serial=%s&partnerId=%s' % (guideId, serial, partnerId)	
+					GetContent(url=url, title=title_org, li=li)
+					return	
+				else:
+				'''
+				PLog('skip: url=local_url')									
+				continue
+		
+			if url == local_url:					# Rekursion vermeiden
 				PLog('skip: url=local_url')
 				continue
+				
+				
 			if local_url == '':					# bei Programmcontainern möglich 
 				PLog('skip: empty local_url')
 				continue			
@@ -847,8 +873,16 @@ def GetContent(url, title, offset=0, li=''):
 			summ 	= 	subtitle			# summary -> subtitle od. FollowText
 			if len(summ) < 11 and descr:	# summary: falls Datum mit description ergänzen
 				summ = summ + ' | %s' % descr
-			tagline	= FollowText			# Bsp. 377,5K Favoriten od. 16:23 (Topic)
-							
+				
+			tagline = FollowText			# Bsp. 377,5K Favoriten od. 16:23 (Topic)
+			if duration:
+				tagline = ' %s | %s' % (duration, FollowText)
+			if title == '':					# Bsp. Lokale Nachrichten / Das Magazin
+				title = seoName
+					
+			if tagline.endswith('| '): tagline = tagline[:-3]	# Ende:   | löschen
+			summ = summ.replace(' |', '')						# Start:  | löschen
+			
 			summ = UtfToStr(summ); local_url=UtfToStr(local_url);		# title s.o.
 			image=UtfToStr(image); preset_id=UtfToStr(preset_id);
 			
@@ -892,7 +926,8 @@ def GetContent(url, title, offset=0, li=''):
 			msg1 = UtfToStr(msg1)
 			PLog(msg1)
 			xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')	
-		xbmcplugin.endOfDirectory(HANDLE)
+			return li						# verursacht zwar Directory-Error, bleibt aber in der Liste.
+		xbmcplugin.endOfDirectory(HANDLE) 
 	else:
 		return li, li_cnt	
 	
@@ -949,7 +984,7 @@ def RequestTunein(FunctionName, url, GetOnlyHeader=None):
 				page = f.read()
 				PLog(len(page))
 			ret.close()
-			PLog(page[:100])
+			PLog(page[:160])
 	except Exception as exception:
 		error_txt = "RequestTunein: %s-1: " % FunctionName  + repr(exception) 
 		error_txt = error_txt + ' | ' + url				 			 	 
@@ -1059,17 +1094,27 @@ def StationList(url, title, image, summ, typ, bitrate, preset_id):
 			# Hinw.: nach ca. 5 fehlerhaften Calls  war meine IP-Adresse (nicht nur serial-ID) für weitere 
 			# 	opml-Calls gesperrt. opml-Calls in GetContent waren erst wieder nach Erweiterung des  Calls
 			#	mit serial + aktueller partnerId möglich. Test nach ca. 1 Std. ohne Erweit.: Sperre dauert an.
-			#	
+			#
+			# Bsp.: China CRI Hit FM  - #STATUS: 400, tvaudio-Call ergibt json mit m3u8-Url
+			#	Verwertbare Streams geben wir direkt aus, ohne Headercheck. 
+			# Bei vielen chinesischen Sendern ergibt der tvaudio-Call notcompatible.enUS.mp3 - diesen geben wir
+			#	NICHT als audio aus, da häufig durch Firewall verursacht.
 			serial = Dict('load', 'serial')	
 			audience = '%3Ball%3BVZ_Altice%3B'	# unquote:	;all;VZ_Altice; (ganzer Call aus chrome-dev-tools)		
-			tvaudio_url = 'https://opml.radiotime.com/Tune.ashx?audience=%s&id=%s&render=json&formats=mp3,aac,hls&type=station&serial=%s&partnerId=%s' % (audience, preset_id, serial, partnerId)
+			tvaudio_url = 'https://opml.radiotime.com/Tune.ashx?audience=%s&id=%s&render=json&formats=mp3,aac,ogg,hls&type=station&serial=%s&partnerId=%s' % (audience, preset_id, serial, partnerId)
 			cont, msg = RequestTunein(FunctionName='StationList, tvaudio-Call', url=tvaudio_url)
-			PLog(cont)
-			if "/master.m3u8" in cont:  # ausgeben
-				url = stringextract('url": "', '"', cont)
-				audio_url = get_tv_audio_url(url)				
+			# PLog(cont)
+			if 'url":' in cont:  											# json auswerten 
+				json_url = stringextract('url": "', '"', cont) 				# mp3, m3u8 (auch andere?)
+				PLog("json_url: " + json_url)
+				if 'Audio/notcompatible' in  json_url:						# nach 400er-Error keine Audioausgabe
+					audio_url = ''
+				else:														# verm. mp3
+					audio_url = json_url
+				if "master.m3u8" in json_url or '.m3u8' in json_url: 		# m3u8 weiter auswerten
+					audio_url = get_tv_audio_url(url=json_url)				
 				if audio_url:
-					return PlayAudio(url=audio_url, title=title, thumb=image, Plot=summ, CB='')
+					return PlayAudio(url=audio_url, title=title, thumb=image, Plot=summ, CB='')	# direkt
 				else:
 					url = url_org					# Fehler-Url: Tunein-Url
 					cont = title_org
@@ -1104,7 +1149,7 @@ def StationList(url, title, image, summ, typ, bitrate, preset_id):
 			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
 			return li
 			
-	# if '&render=json' in cont:				# Bsp.: Space Station Soma - mehrere Stream-Urls, die 
+												# Bsp.: Space Station Soma - mehrere Stream-Urls, die 
 	if '&render=json' in cont:					# 	auf eine json-Datei verweisen, die Details + Audio-
 		cont = get_ice_json(cont)					#	Url enthält
 		PLog('ice_json: ' + cont)
@@ -1307,6 +1352,7 @@ def StreamTests(url_list,summ_org):
 #-----------------------------
 def get_pls(url):               # Playlist extrahieren
 	PLog('get_pls: ' + url)
+	url_org = url
 	
 	# erlaubte Playlist-Formate - Endungen oder Fragmente der Url:
 	#	Bsp. http://www.asfradio.com/launch.asp?p=pls
@@ -1321,16 +1367,21 @@ def get_pls(url):               # Playlist extrahieren
 		if url.startswith('http') == False:		# Sicherung, falls Zeile keine Url enthält (bisher aber nicht gesehen)
 			continue
 		isInFormatList = False	
-		for pat in format_list:				# Url mit Playlists
+		for pat in format_list:					# Url mit Playlists
 			if pat in url:	
 				isInFormatList = True		
 				break
-													# 1. Versuch (2-step)
+												# 1. Versuch (2-step)
 		if 	isInFormatList:	# .pls auch im Pfad möglich, Bsp. AFN: ../AFNE_WBN.pls?DIST=TuneIn&TGT=..
 			cont, msg = RequestTunein(FunctionName='get_pls - isInFormatList', url=url)
 		cont = cont.strip()
-		PLog('cont1: ' + cont)
+		if '.ts?sd=' in cont:					# skip Einzelstream: m3u8-Datei mit ts-Segmenten, 
+			pls = url_org						# 	Aufruf aus ListMRS möglich
+			PLog('skip m3u8 mit ts-Segmenten')
+			return pls	
 
+		PLog('cont1: ' + cont)
+		
 		# Zertifikate-Problem (vorwiegend unter Windows):
 		# Falls die Url im „Location“-Header-Feld eine neue HTTPS-Adresse enthält (Moved Temporarily), ist ein Zertifikat erforderlich.
 		# 	Performance: das große Mozilla-Zertifikat cacert.pem tauschen wir gegen /etc/ssl/ca-bundle.pem von linux (ca. halbe Größe).
@@ -1340,7 +1391,7 @@ def get_pls(url):               # Playlist extrahieren
 		#	Bsp.: KSJZ.db SmoothLounge, Playlist http://smoothlounge.com/streams/smoothlounge_128.pls
 		# Ansatz, falls dies unter Windows fehlschlägt: in der url-Liste nach einzelner HTP-Adresse (ohne .pls) suchen
 		
-		if cont == '':								# 2. Versuch
+		if cont == '':							# 2. Versuch
 			try:
 				req = urllib2.Request(url)
 				cafile = os.path.join("%s", "xbmc_cacert.pem") % RESOURCES_PATH
@@ -1447,8 +1498,13 @@ def get_ice_json(url):               # Streamdetails aus json-Datei ermitteln
 	return stream_urls
 			
 #-----------------------------
+# Aufruf: StationList nach #STATUS: 400
 # get_tv_audio_url: extrahiert aus master.m3u8-Datei die Audio-Url -
 #	wir nehmen den ersten Treffer (2 bei 3sat vorhanden, ohne Detailinfo)
+# 22.07.2019 Auswertung von BANDWIDTH auf CODECS umgestellt (wg. unter-
+#	schiedlicher Bandbreiten)
+#	TV: 	CODECS="avc1.77.30, mp4a.40.2"
+#	Audio:	CODECS="mp4a.40.2"
 #	
 def get_tv_audio_url(url):
 	PLog('get_tv_audio_url:')
@@ -1456,22 +1512,23 @@ def get_tv_audio_url(url):
 	lines = page.splitlines()
 	lines.pop(0)		# 1. Zeile entfernen (#EXTM3U)
 	
-	i = 0
+	i = 0; audio_url=''
 	for line in lines:
-		if 'BANDWIDTH=' in line:
-			Bandwith = stringextract('BANDWIDTH=', ',', line)
-			PLog(Bandwith)
+		if 'CODECS=' in line:
+			Codecs = stringextract('CODECS="', '"', line)
+			PLog(Codecs)
 			try:
-				Bandwith = int(Bandwith)
-				if Bandwith <=  100000: 
+				if Codecs.startswith("mp4a"): 				#  "mp4a.40.2"
 					audio_url = lines[i + 1]
 					PLog(audio_url)
 					if audio_url.startswith('http'): 		# Check
 						return audio_url
-			except Exception as exception:					
+			except Exception as exception:	
+				audio_url=''				
 				PLog(str(exception))
-		i = i + 1			
-	return ''
+		i = i + 1
+				
+	return audio_url
 
 #-----------------------------
 def get_details(line):		# line=opml-Ergebnis im xml-Format, mittels Stringfunktionen extrahieren 
@@ -1912,6 +1969,7 @@ def Folder(ID, title, foldername, folderId):
 	PLog('Folder:')
 	PLog(ID); PLog(title); PLog(foldername); PLog(folderId);
 	serial = Dict('load', 'serial')
+	foldername = UtfToStr(foldername); 
 		
 	loc_browser = str(Dict('load', 'loc_browser'))			
 	headers = {'Accept-Language': "%s, en;q=0.8" % loc_browser}
@@ -2097,7 +2155,8 @@ def ListMRS(path):
 def SingleMRS(name, url, max_streams, image):										
 	PLog('SingleMRS:'); PLog(url) 
 	
-	# Callback-Params für PlayAudio
+	# Callback-Params für PlayAudio -z.Z. nicht genutzt (Rekursion bei gestörten Streams
+	#	beobachtet)
 	name=UtfToStr(name);
 	fparams="{'name': '%s', 'url': '%s',  'max_streams': '%s', 'image': '%s'}"  %\
 				(urllib2.quote(name), urllib2.quote(url), max_streams, urllib2.quote(image))
@@ -2184,7 +2243,8 @@ def SingleMRS(name, url, max_streams, image):
 		
 		PLog('Satz:')
 		PLog(url)
-		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'CB': 'SingleMRS'}" %\
+		# z.Z. ohne Callback (s.o.)
+		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'CB': ''}" %\
 			(urllib.quote_plus(url), urllib.quote_plus(title), urllib.quote_plus(image), urllib.quote_plus(Plot))
 		addDir(li=li, label=title, action="dirList", dirID="PlayAudio_pre", fanart=image, thumb=image, fparams=fparams, 
 			summary=summ)
@@ -2378,11 +2438,12 @@ def RecordsList(title):			# title=L("laufende Aufnahmen")
 		pid_url = PID_line.split('|')[1]
 		pid_sender = PID_line.split('|')[2]
 		pid_summ = PID_line.split('|')[3]
-		pid_summ = pid_summ.decode(encoding="utf-8", errors="ignore")
 		title_new = L('beenden') + ': ' + pid_sender 
 		if not 'unknown' in pid_summ:
 			title_new = title_new + ' | ' + pid_summ
-		summ_new = pid_url + ' | ' + 'PID: ' + pid			
+		summ_new = pid_url + ' | ' + 'PID: ' + pid	
+				
+		pid_sender = UtfToStr(pid_sender); pid_summ = UtfToStr(pid_summ);  		
 		fparams="&fparams={'url': '%s', 'title': '%s', 'summ': '%s', 'CB': 'RecordsList'}" %\
 			(urllib.quote_plus(pid_url), urllib.quote_plus(pid_sender),  urllib.quote_plus(pid_summ))
 		addDir(li=li, label=title_new, action="dirList", dirID="RecordStop", fanart=R(ICON_STOP), thumb=R(ICON_STOP), 

@@ -5,19 +5,37 @@ CHANGE HISTORY 	Kodi-Addon-TuneIn2017 (vormals Plugin für den Plexmediaserver)
 			https://www.kodinerds.net/index.php/Thread/66559-RELEASE-Kodi-Addon-TuneIn2017
 			Plex-Forum:
 			https://forums.plex.tv/discussion/288260/rel-tunein2017
+
+
+24.07.2019	1.4.0	Menu Premium added for testing.
+			GetContent: duration added for tagline, combinded with FollowText.
+			GetContent: fix needless | in tagline + summary. 
+			GetContent: empty title replaced with seoName. 
+
+23.07.2019	1.3.9	GetContent: recognition if a programm is available later then now -
+			extraction of the tunein text message. 
+			RecordsList: UtfToStr for pid_sender and pid_summ (fix codec-error).
+			Folder: UtfToStr for pid_foldername (fix codec-error). 
 			
-21.07.2019	1.3.7	Function L: changed  split-def. from ':' to '":' (safer)
+22.07.2019	1.3.8	My Radiostations: new list added with audio streams of german tv-stations.
+			StationList: Check on TV-Streams after a #400-Error extended (now master.m3u8-,
+			.m3u8-, mp3- and other Url's).
+			get_tv_audio_url: analysis changed from BANDWIDTH to CODECS (more reliable). 
+			get_pls: skip m3u8-file with ts-segments (not a playlist).
+			SetLocation: logging region added.			
+			
+21.07.2019	1.3.7	Function L: changed  split-def. from ':' to '":' (safer).
 			Fix Lang-entry #30303 (format like #30302).
 			POEditor: remove example in terms Custom Url (too long for Kodi-Settings).
 			Github https://github.com/rols1/TuneIn2017: new language-terms for Kodi
 			version in wicki added with description and pics.
 			PlayAudio_pre: catch further http-Error (now 'HTTP Error' and HTTPError').
 			Make streams available where Tune.ashx refers to json files that contain 
-			the stream data for the player.  	
+			the stream data for the player (function get_tv_audio_url). 	
 			
 20.07.2019	1.3.6	Update language-files: Spanish (Tengoalhot).
 			Expanded for TV-Audio (master.m3u8-streams, hls): special opml-audience-call 
-			added in StationList and direct jump to PlayAudio.
+			added in StationList and direct jump to PlayAudio (new function get_tv_audio_url)
 			Global Var partnerId set to current value in Web.
 
 19.07.2019	1.3.5	Updatefunction: code of Menu_update relocated to main menu ("new update available"
