@@ -12,6 +12,7 @@ import base64 			# url-Kodierung für Kontextmenüs
 import json				# json -> Textstrings
 import pickle			# persistente Variablen/Objekte
 import re				# u.a. Reguläre Ausdrücke, z.B. in CalculateDuration
+import base64			# zusätzliche url-Kodierung für addDir/router
 	
 import xbmc, xbmcplugin, xbmcgui, xbmcaddon
 
@@ -289,7 +290,7 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 	fparams=UtfToStr(fparams);
 	
 	li.setLabel(label)			# Kodi Benutzeroberfläche: Arial-basiert für arabic-Font erf.
-	# PLog('summary, tagline: %s, %s' % (summary, tagline))
+	PLog('summary, tagline: %s, %s' % (summary, tagline))
 	Plot = ''
 	if tagline:								
 		Plot = tagline
@@ -312,30 +313,6 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 	url = PLUGIN_URL+"?action="+action+"&dirID="+dirID+"&fanart="+fanart+"&thumb="+thumb+urllib.quote_plus(fparams)
 	PLog("addDir_url: " + urllib.unquote_plus(url))
 		
-	
-	if SETTINGS.getSetting('pref_watchlist') ==  'true':	# Merkliste verwenden 
-		if cmenu:											# Kontextmenüs Merkliste hinzufügen	
-			Plot = Plot.replace('\n', '||')		# || Code für LF (\n scheitert in router)
-			# PLog('Plot: ' + Plot)
-			fparams_add = "&fparams={'action': 'add', 'name': '%s', 'thumb': '%s', 'Plot': '%s', 'url': '%s'}" \
-				%   (label, thumb,  urllib.quote_plus(Plot), base64.b64encode(urllib.quote_plus(url)))
-				#%   (label, thumb,  urllib.quote_plus(Plot), urllib.quote_plus(url))
-				# %   (label, thumb,  base64.b64encode(url))#möglich: 'Incorrect padding' error 
-			fparams_add = urllib.quote_plus(fparams_add)
-
-			fparams_del = "&fparams={'action': 'del', 'name': '%s'}" \
-				%   (label)									# name reicht für del
-				# %   (label, thumb,  base64.b64encode(url))
-			fparams_del = urllib.quote_plus(fparams_del)	
-
-			li.addContextMenuItems([('Zur Merkliste hinzufügen', 'RunAddon(%s, ?action=dirList&dirID=Watch%s)' \
-				% (ADDON_ID, fparams_add)), ('Aus Merkliste entfernen', 'RunAddon(%s, ?action=dirList&dirID=Watch%s)' \
-				% (ADDON_ID, fparams_del))])
-		else:
-			pass											# Kontextmenü entfernen klappt so nicht
-			#li.addContextMenuItems([('Zur Merkliste hinzufügen', 'RunAddon(%s, ?action=dirList&dirID=dummy)' \
-			#	% (ADDON_ID))], replaceItems=True)
-
 		
 	xbmcplugin.addDirectoryItem(handle=HANDLE,url=url,listitem=li,isFolder=isFolder)
 	
@@ -679,6 +656,7 @@ def L(string):
 #		redirect-Url: 	dg-ndr-https-dus-dtag-cdn.sslcast.addradio.de/ndr/ndr1niedersachsen/..
 #		replaced-Url: 	dg-ndr-http-dus-dtag-cdn.cast.addradio.de/ndr/ndr1niedersachsen/..
 # url_template gesetzt von RadioAnstalten (Radio-Live-Sender)
+#
 # 18.06.2019 Kodi 17.6:  die template-Lösung funktioniert nicht mehr - dto. Redirect - 
 #				Code für beides entfernt. Hilft ab er nur bei wenigen Sendern.
 #				Neue Kodivers. ansch. nicht betroffen, Kodi 18.2. OK
@@ -708,13 +686,17 @@ def PlayAudio(url, title, thumb, Plot, header=None, url_template=None, FavCall='
 	 	
 	xbmc.Player().play(url, li, False)			# Player nicht mehr spezifizieren (0,1,2 - deprecated)
 
-	if '.asf' not in url and '.aac' not in url:	# Rekursion möglich, s. myradiostations-Debug.txt
-		if CB:									# Bsp. StationList
-			Callback(CB)						# 
+	# 08.08.2019 Verzicht auf Callback - weiteres Problem: falsche Kodierung der unicode-Strings
+	#	(Plot, summary, tagline). base64-Behandlung möglich (s. convBase64), aber aufwändig - den 
+	#	GetDirectory-Error nehmen wir in Kauf (nicht schön, aber unschädlich).
+	
+	#if '.asf' not in url and '.aac' not in url:# Rekursion möglich, s. myradiostations-Debug.txt
+	#	if CB:									# Bsp. StationList
+	#		Callback(CB)						# 
 			
 #----------------------------------------------------------------
 # Callback - Rücksprung zum Aufrufer
-#	Grund: CGUIMediaWindow::GetDirectory bei direkt-Calls aus Funktionen ohne Listitem.
+#	Grund: CGUIMediaWindow::GetDirectory error bei direkt-Calls aus Funktionen ohne Listitem.
 #	Dict(CB) enthält die Parameter für die Funktion CB
 #	Die Ermittlung der Funktionsadressen erfolgt im Haupt-PRG, (unterhalb router). 
 #	Die dazugehörigen Parameter werden in der Funktion CB unmittelbar nach dem Aufruf

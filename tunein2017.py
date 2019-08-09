@@ -22,6 +22,7 @@ import sys				# Plattformerkennung
 import re				# u.a. Reguläre Ausdrücke, z.B. in CalculateDuration
 import json				# json -> Textstrings
 from urlparse import urlparse # Check Portnummer in Url
+import base64			# zusätzliche url-Kodierung für addDir/router
 
 import resources.lib.updater 			as updater		
 
@@ -39,8 +40,8 @@ L=util.L; PlayAudio=util.PlayAudio; Callback=util.Callback;
 
 # +++++ TuneIn2017  - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.4.0'	
-VDATE = '24.07.2019'
+VERSION =  '1.4.1'	
+VDATE = '08.08.2019'
 
 # 
 #	
@@ -491,23 +492,7 @@ def Search(query=''):
 		
 	xbmcplugin.endOfDirectory(HANDLE)	
 #-----------------------------
-def get_presetUrls(oc, outline):						# Auswertung presetUrls für GetContent
-	PLog('get_presetUrls')
-	rubriken = blockextract('<outline type', outline)	# restliche outlines 
-	for rubrik in rubriken:	 # presetUrls ohne bitrate + subtext, type=link. Behandeln wie typ == 'audio'
-		typ,local_url,text,image,key,subtext,bitrate,preset_id = get_details(line=rubrik)	# xml extrahieren
-		subtext = 'CustomURL'
-		bitrate = 'unknown'		# dummy 
-		typ = 'unknown'			# dummy 
-		oc.add(DirectoryObject(
-			key = Callback(StationList, url=local_url, title=text, summ=subtext, image=image, typ=typ, bitrate=bitrate,
-			preset_id=preset_id),
-			title = text, summary=subtext,  tagline=local_url, thumb = image 
-		))  
-	PLog(len(oc))	
-	xbmcplugin.endOfDirectory(HANDLE)					
-	
-#-----------------------------
+
 # SetLocation (Aufruf GetContent): Region für Lokales Radiomanuell setzen/entfernen
 def SetLocation(url, title, region, myLocationRemove):	
 	PLog('SetLocation: %s' % region)
@@ -597,23 +582,24 @@ def GetContent(url, title, offset=0, li=''):
 			# Einstellungen:  Felder Custom Url/Name müssen ausgefüllt sein, Custom Url mit http starten
 			#	Custom Url wird hier nur hinzugefügt - Verschieben + Löschen erfolgt als Favorit in
 			#		StationList 
-			if SETTINGS.getSetting('customUrl') == "true" or SETTINGS.getSetting('customName') == "true": 
+			# Achtung: Entfernen der Custom Url nicht einzeln möglich, nur zusammen mit einem Ordner dto.
+			#			Web).
+				
+			customUrl 	= SETTINGS.getSetting('customUrl').strip()
+			customName = SETTINGS.getSetting('customName').strip()
+			if customUrl or customName: 								# ungeprüft!
 				# Custom Url/Name - ausgefüllt 
-				customUrl 	= SETTINGS.getSetting('customUrl').strip()
-				customName = SETTINGS.getSetting('customName').strip()			# ungeprüft!
 				sidExist,foldername,guide_id,foldercnt = SearchInFolders(preset_id=customUrl, ID=customUrl) 
 				PLog(sidExist)
 				PLog('customUrl: ' + customUrl); PLog(customName)
 				if customUrl == '' or customName == '':
 					error_txt = L("Custom Url") + ': ' + L("Eintrag fehlt fuer Url oder Name")
-					msg1 = error_txt.decode(encoding="utf-8")
 					PLog(msg1)
 					xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
 					return li
 				
 				if customUrl.startswith('http') == False: 
 					error_txt = L('Custom Url muss mit http beginnen')
-					msg1 = error_txt.decode(encoding="utf-8", errors="ignore")
 					PLog(msg1)
 					xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
 					return li
@@ -623,7 +609,7 @@ def GetContent(url, title, offset=0, li=''):
 					summ = customName + ' | ' + customUrl
 					fparams="&fparams={'ID': 'addcustom', 'preset_id': '%s', 'folderId': '%s'}"  %\
 						(urllib2.quote(customUrl), urllib2.quote(customName))
-					addDir(li=li, label=text, action="dirList", dirID="Favourit", 
+					addDir(li=li, label=title, action="dirList", dirID="Favourit", 
 						fanart=R(MENU_CUSTOM_ADD), thumb=R(MENU_CUSTOM_ADD), summary=summ, fparams=fparams)
 						
 		xbmcplugin.endOfDirectory(HANDLE)
@@ -1190,11 +1176,11 @@ def StationList(url, title, image, summ, typ, bitrate, preset_id):
 			fmt='aac'
 		title = title_org + ' | Stream %s | %s'  % (str(i), fmt)
 		i=i+1
-		PLog(url)
-		title=UtfToStr(title); summ = UtfToStr(summ); 
+		title=UtfToStr(title); summ = UtfToStr(summ);
+		PLog(url); PLog(summ); 
 																# Play-Button
 		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sid': '%s', 'CB': 'StationList'}" %\
-			(urllib.quote_plus(url), urllib.quote_plus(title), urllib.quote_plus(image), urllib.quote_plus(summ), preset_id)
+			(urllib.quote_plus(url), urllib.quote_plus(title), urllib.quote_plus(image), urllib2.quote(summ), preset_id)
 		addDir(li=li, label=title, action="dirList", dirID="PlayAudio_pre", fanart=image, thumb=image, 
 			fparams=fparams, summary=summ)
 		PLog("fparams: " + fparams)	
@@ -1316,7 +1302,7 @@ def StreamTests(url_list,summ_org):
 						url = '%s;' % url
 					else:								# Stream mit Portnummer, aber ohne / am Urlende - Berücksichtigung
 						#  Icecast-Server. :
-						PLog("ret.get('shoutcast'): " + ret.get('shoutcast'))
+						PLog('ret.get shoutcast: ' + ret.get('shoutcast'))
 						if 'Icecast' in ret.get('shoutcast'): 			# Bsp.  Sender Hi On Line,
 							pass										# 		http://mediaserv33.live-streams.nl:8036
 						else:											#  Bsp. Holland FM Gran Canaria,
@@ -1344,7 +1330,9 @@ def StreamTests(url_list,summ_org):
 								url = '%s/;' % url	
 																		
 			PLog('append: ' + url)	
-			url_list.append(url + '|||' + summ)		# Liste für PlayAudio_pre				
+			PLog(summ); 					
+			url_list.append(url + '|||' + summ)		# Liste für PlayAudio_pre	
+				
 			if max_streams:							# Limit gesetzt?
 				if line_cnt >= max_streams:
 					break 
@@ -1582,7 +1570,7 @@ def get_details(line):		# line=opml-Ergebnis im xml-Format, mittels Stringfunkti
 # 	CB enthält den Callback für PlayAudio (Verhinderung CGUIMediaWindow-Error)
 #
 def PlayAudio_pre(url, title, thumb, Plot, header=None, url_template=None, FavCall='', sid=None, CB=''):
-	PLog('PlayAudio_pre:'); PLog(url); PLog(sid)
+	PLog('PlayAudio_pre:'); PLog(url); PLog(sid); PLog(Plot);
 
 	if url is None or url == '':			# sollte hier nicht vorkommen
 		PLog('Url fehlt!')
@@ -1649,6 +1637,19 @@ def PlayAudio_pre(url, title, thumb, Plot, header=None, url_template=None, FavCa
 	# reguläre Ausgabe:
 	return PlayAudio(url, title, thumb, Plot, header, url_template, FavCall, CB)
 
+#-------------------------------------------------------
+# convBase64 dekodiert base64-String für ShowFavs bzw. gibt False zurück
+#	Base64 füllt den String mittels padding am Ende (=) auf ein Mehrfaches von 4 auf.
+# aus https://stackoverflow.com/questions/12315398/verify-is-a-string-is-encoded-in-base64-python	
+def convBase64(s):
+	PLog('convBase64:')
+	try:
+		if len(s.strip()) % 4 == 0:
+			return base64.decodestring(s)
+	except Exception:
+		pass
+	return False
+			
 #-----------------------------
 #	Google-Translation-Url (lokalisiert) - funktioniert mit PMS nicht
 #		in Kodi bisher nicht getestet.
@@ -1781,6 +1782,8 @@ def Favourit(ID, preset_id, folderId):
 	loc_browser = str(Dict('load', 'loc_browser'))
 	username = str(SETTINGS.getSetting('username'))	# ev. None (Plex)
 	password = str(SETTINGS.getSetting('passwort'))
+	username = username.strip()						# Blanks verhindern
+	password = password.strip()						
 			
 	headers = {'Accept-Language': "%s, en;q=0.8" % loc_browser}
 	
@@ -1822,17 +1825,17 @@ def Favourit(ID, preset_id, folderId):
 			PLog(msg1)
 			PLog('Join-Call fehlgeschlagen')
 			xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
-			return
+			# return
 									
 		# PLog('Fav-Join: ' + page)	# bei Bedarf
 		
 		status  = stringextract('<status>', '</status>', page)
 		PLog(status)
-		if '200' != status:								# 
+		if '200' not in status:								# 
 			title  = stringextract('<title>', '</title>', page)
 			if title == '':
 				title  = 'status ' + status
-			msg = L('Problem mit Username / Passwort') + ' | Tunein: ' + title	
+			msg = L('Problem mit Username / Passwort') 
 			msg1 = msg
 			PLog(msg1)
 			xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
@@ -2727,7 +2730,7 @@ def shoutcastCheck(response, headers, itsOld):
 		PLog("icy metaint: " + str(metaint))
 		read_buffer = metaint + 255
 		content = response.read(read_buffer)
-		# Data.SaveObject("/tmp/icy_content",content)	# Debug
+		# RSave("/tmp/icy_content", content)	# Debug
 
 		start = "StreamTitle='"
 		end = "';"
@@ -2797,11 +2800,11 @@ def router(paramstring):
 					# Keine /n verwenden (json.loads: need more than 1 value to unpack)
 					func_pars = func_pars.replace("'", "\"")		# json.loads-kompatible string-Rahmen
 					func_pars = func_pars.replace('\\', '\\\\')		# json.loads-kompatible Windows-Pfade
-					func_pars = func_pars.decode(encoding="utf-8")  
+					# func_pars = func_pars.decode(encoding="utf-8")# entf. in Kodi
 					
 					PLog("json.loads func_pars: " + func_pars)
 					PLog('json.loads func_pars type: ' + str(type(func_pars)))
-					func_pars = func_pars.encode("utf-8")			# entf.
+					# func_pars = func_pars.encode("utf-8")			# entf. in Kodi
 					mydict = json.loads(func_pars)
 					PLog("mydict: " + str(mydict)); PLog(type(mydict))
 				except:
