@@ -1,10 +1,17 @@
-CHANGE HISTORY 	Kodi-Addon-TuneIn2017 (vormals Plugin für den Plexmediaserver)
+CHANGE HISTORY 	Kodi-Addon-TuneIn2017 (previosly plugin for Plexmediaserver)
 --------------	Releases: Releases: https://github.com/rols1/Kodi-Addon-TuneIn2017/releases/latest	
---------------	
+--------------	Wicki: https://github.com/rols1/TuneIn2017/wiki
+
 			Support Forum Kodinerds:
 			https://www.kodinerds.net/index.php/Thread/66559-RELEASE-Kodi-Addon-TuneIn2017
 			Plex-Forum:
 			https://forums.plex.tv/discussion/288260/rel-tunein2017
+
+
+22.08.2019	1.4.2	myradiostations-TV-Audio.txt: zdf-stations removed (audio streams no longer
+			available) - ZDF, 3sat, phoenix, ZDFneo, ZDFinfo
+			RequestTunein: fixed error_txt on exceptions (wrong string-concatenating).
+			GetContent: switch cacheToDisc=true in endOfDirectory-call (performance).
 
 08.08.2019	1.4.1	PlayAudio: Callback (prevents GetDirectory-Error) switched off (problem
 			with string-coding). We accept the GetDirectory-Error (not nice but harmless).
@@ -16,6 +23,7 @@ CHANGE HISTORY 	Kodi-Addon-TuneIn2017 (vormals Plugin für den Plexmediaserver)
 			"problem mit username / passwort".
 			GetContent: Fix extracting Setting('customUrl') and Setting('customName') -
 			was used as bool not string.
+			get_tv_audio_url: return '' if line contains a chunklist (not streamlink). 
 			
 24.07.2019	1.4.0	Menu Premium added for testing.
 			GetContent: duration added for tagline, combinded with FollowText.

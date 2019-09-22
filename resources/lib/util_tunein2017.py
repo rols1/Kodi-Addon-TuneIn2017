@@ -287,6 +287,7 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 	
 	label=UtfToStr(label); thumb=UtfToStr(thumb); fanart=UtfToStr(fanart); 
 	summary=UtfToStr(summary); tagline=UtfToStr(tagline); 
+	
 	fparams=UtfToStr(fparams);
 	
 	li.setLabel(label)			# Kodi Benutzeroberfläche: Arial-basiert für arabic-Font erf.

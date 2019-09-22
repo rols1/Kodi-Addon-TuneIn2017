@@ -40,8 +40,8 @@ L=util.L; PlayAudio=util.PlayAudio; Callback=util.Callback;
 
 # +++++ TuneIn2017  - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.4.1'	
-VDATE = '08.08.2019'
+VERSION =  '1.4.2'	
+VDATE = '22.09.2019'
 
 # 
 #	
@@ -55,7 +55,7 @@ VDATE = '08.08.2019'
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
 # INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR 
-# PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE 
+# PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 08.08.2019	1.4.1	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE 
 # FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 # DEALINGS IN THE SOFTWARE.
@@ -612,7 +612,7 @@ def GetContent(url, title, offset=0, li=''):
 					addDir(li=li, label=title, action="dirList", dirID="Favourit", 
 						fanart=R(MENU_CUSTOM_ADD), thumb=R(MENU_CUSTOM_ADD), summary=summ, fparams=fparams)
 						
-		xbmcplugin.endOfDirectory(HANDLE)
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 		return		# ohne return weiter trotz endOfDirectory!
 
 	# ------------------------------------------------------------------	
@@ -913,7 +913,7 @@ def GetContent(url, title, offset=0, li=''):
 			PLog(msg1)
 			xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')	
 			return li						# verursacht zwar Directory-Error, bleibt aber in der Liste.
-		xbmcplugin.endOfDirectory(HANDLE) 
+		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True) 
 	else:
 		return li, li_cnt	
 	
@@ -933,7 +933,7 @@ def GetContent(url, title, offset=0, li=''):
 #
 def RequestTunein(FunctionName, url, GetOnlyHeader=None):
 	PLog('RequestTunein: ' + url)
-	
+
 	msg=''
 	loc = Dict('load', 'loc')						# Bsp. fr, 	loc_browser nicht benötigt
 	PLog('loc: ' + loc)	
@@ -972,7 +972,7 @@ def RequestTunein(FunctionName, url, GetOnlyHeader=None):
 			ret.close()
 			PLog(page[:160])
 	except Exception as exception:
-		error_txt = "RequestTunein: %s-1: " % FunctionName  + repr(exception) 
+		error_txt = "RequestTunein: %s-1: %s" % (FunctionName, repr(exception))
 		error_txt = error_txt + ' | ' + url				 			 	 
 		msg =  error_txt
 		PLog(msg)
@@ -1004,7 +1004,7 @@ def RequestTunein(FunctionName, url, GetOnlyHeader=None):
 			else:
 				page = ret.read()
 		except Exception as exception:
-			error_txt = "RequestTunein: %s-2: " % FunctionName  + repr(exception) 
+			error_txt = "RequestTunein: %s-2: %s" % (FunctionName, repr(exception)) 
 			error_txt = error_txt + ' | ' + url				 			 	 
 			msg =  error_txt
 			PLog(msg)
@@ -1511,6 +1511,8 @@ def get_tv_audio_url(url):
 					PLog(audio_url)
 					if audio_url.startswith('http'): 		# Check
 						return audio_url
+					else:
+						return ''							# möglich: chunklist_w1000637126.m3u8 
 			except Exception as exception:	
 				audio_url=''				
 				PLog(str(exception))
