@@ -40,6 +40,7 @@
 		<setting label="30301"  type="text" id="folder" default="Favorit 1"/>
 		<setting label="30302" type="text" id="customUrl" default="http://myradio.com/stream.mp3" />
 		<setting label="30303" type="text" id="customName" default="MyRadio 1" />
+		<setting label="30205" type="bool" id="trynewsearch" default="true" />
 	</category>
 		
 	<category label="36428">

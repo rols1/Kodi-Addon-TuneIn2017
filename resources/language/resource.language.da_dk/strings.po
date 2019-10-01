@@ -145,6 +145,12 @@ msgctxt "#30501"
 msgid "Days until deletion"
 msgstr "Dage indtil sletning"
 
+msgctxt "#30205" 
+#: "Label for bool-field in Preferences "
+msgid "station not compatible? Try a new search"
+msgstr "Station understøttes ikke? Start en ny søgning"
+
+
 
 
 

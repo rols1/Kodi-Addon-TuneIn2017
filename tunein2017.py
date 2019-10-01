@@ -40,8 +40,8 @@ L=util.L; PlayAudio=util.PlayAudio; Callback=util.Callback;
 
 # +++++ TuneIn2017  - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.4.2'	
-VDATE = '22.09.2019'
+VERSION =  '1.4.3'	
+VDATE = '01.10.2019'
 
 # 
 #	
@@ -104,8 +104,8 @@ MENU_ICON 	=  	{'menu-lokale.png', 'menu-musik.png', 'menu-sport.png', 'menu-new
 # ab 18.04.2018, Version 1.1.9: Inhalte von Webseite statt opml-Browse-Call,
 #	zusätzliche API-Calls: api.tunein.com/categories, api.tunein.com/profiles.
 #	opml-Calls weiter verwendet für Fav's, Folders, audience_url, Account-Queries.
-#	formats=mp3,aac,ogg,flash,html
-# ROOT_URL 	= 'https://opml.radiotime.com/Browse.ashx?formats=%s'
+#	formats=mp3,aac,ogg,flash,html - festgelegt in Main
+# alte ROOT_URL 	= 'https://opml.radiotime.com/Browse.ashx?formats=%s'
 BASE_URL	= 'https://tunein.com'
 ROOT_URL 	= 'https://tunein.com/radio/home/'						
 USER_URL 	= 'https://opml.radiotime.com/Browse.ashx?c=presets&partnerId=RadioTime&username=%s'
@@ -283,10 +283,10 @@ def Main():
 			msg3 = L('Bitte den Eintrag in Einstellungen ueberpruefen!')
 			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
 				
-	formats = 'mp3,aac'	
+	formats = 'mp3,aac,ogg,flash,html,hls'
 	PLog(SETTINGS.getSetting('PlusAAC'))								
 	if  SETTINGS.getSetting('PlusAAC') == "false":					# Performance, aac nicht bei allen Sendern 
-		formats = 'mp3'
+		formats = formats.replace(',aac', '')
 	Dict('store', 'formats', formats) 								# Verwendung: Trend, opml- und api-Calls
 
 	page, msg = RequestTunein(FunctionName='Main', url=ROOT_URL)	# Hauptmenü von Webseite
@@ -1178,7 +1178,7 @@ def StationList(url, title, image, summ, typ, bitrate, preset_id):
 		i=i+1
 		title=UtfToStr(title); summ = UtfToStr(summ);
 		PLog(url); PLog(summ); 
-																# Play-Button
+																		# Play-Button
 		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sid': '%s', 'CB': 'StationList'}" %\
 			(urllib.quote_plus(url), urllib.quote_plus(title), urllib.quote_plus(image), urllib2.quote(summ), preset_id)
 		addDir(li=li, label=title, action="dirList", dirID="PlayAudio_pre", fanart=image, thumb=image, 
@@ -1572,7 +1572,7 @@ def get_details(line):		# line=opml-Ergebnis im xml-Format, mittels Stringfunkti
 # 	CB enthält den Callback für PlayAudio (Verhinderung CGUIMediaWindow-Error)
 #
 def PlayAudio_pre(url, title, thumb, Plot, header=None, url_template=None, FavCall='', sid=None, CB=''):
-	PLog('PlayAudio_pre:'); PLog(url); PLog(sid); PLog(Plot);
+	PLog('PlayAudio_pre:'); PLog(title); PLog(url); PLog(sid); PLog(Plot);
 
 	if url is None or url == '':			# sollte hier nicht vorkommen
 		PLog('Url fehlt!')
@@ -1583,9 +1583,21 @@ def PlayAudio_pre(url, title, thumb, Plot, header=None, url_template=None, FavCa
 	if "/myradio.com/stream.mp3" in url:	# Scherzkeks: Einstellungen-Beispiel kopiert
 		url =  os.path.join("%s", 'Sounds', 'tonleiter_harfe.mp3') % (RESOURCES_PATH)			
 		return PlayAudio(url, title, thumb, Plot, header, url_template, FavCall, CB)	# Ausgabe Tonleiter
-	if 'notcompatible.enUS.mp3' in url:
-		url =  os.path.join("%s", 'Sounds', 'notcompatible.enUS.mp3') % (RESOURCES_PATH)			
-		return PlayAudio(url, title, thumb, Plot, header, url_template, FavCall, CB)	# Ausgabe not_available
+	if 'notcompatible.enUS' or 'nostream.enUS' in url:
+		#url =  os.path.join("%s", 'Sounds', 'notcompatible.enUS.mp3') % (RESOURCES_PATH)			
+		# 30.09.2019 einige nichtkompatible Streams sind via Websuche erreichbar
+		# daher hier neuer Versuch - s. Settings
+		if SETTINGS.getSetting('trynewsearch') == "true":
+			query = title.split(' - ')[0]
+			msg1 = L('Suche kompatible Streams fuer')
+			msg2 = query
+			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+			url = 'https://tunein.com/search/?query=%s' % query		
+			PLog('url: ' + url)
+			Search(query)			
+			return
+		else:
+			return PlayAudio(url, title, thumb, Plot, header, url_template, FavCall, CB)	# Ausgabe not_available
 		
 	# Header-Check  
 	#	page hier Dict, PLog s. RequestTunein
@@ -1744,7 +1756,8 @@ def SearchInProfile(ID, preset_id):
 
 	sidExist,foldername,guide_id,foldercnt = SearchInFolders(preset_id, ID='preset_id') # vorhanden, Ordner-ID?
 	# url: Profil laden, Filter: Ordner favoriteId - nur json-Format möglich
-	url = 'https://api.tunein.com/profiles/me/follows?folderId=%s&filter=favorites&formats=mp3,aac,ogg,hls&serial=%s&partnerId=RadioTime' % (guide_id,serial)	
+	url = 'https://api.tunein.com/profiles/me/follows?folderId=%s&filter=favorites&formats=%s&serial=%s&partnerId=RadioTime' %\
+		(guide_id, Dict('load', 'formats'), serial)	
 		
 	favoriteId = guide_id
 	if ID == 'favoriteId':
@@ -1853,8 +1866,8 @@ def Favourit(ID, preset_id, folderId):
 	
 	if ID == 'addcustom':						# Custom  Url einfügen
 		folderId = urllib.quote(folderId)
-		fav_url = ('https://opml.radiotime.com/Preset.ashx?render=xml&c=add&name=%s&url=%s&render=xml&formats=mp3&serial=%s&partnerId=%s'
-				% (folderId, preset_id, serial,partnerId))	
+		fav_url = ('https://opml.radiotime.com/Preset.ashx?render=xml&c=add&name=%s&url=%s&render=xml&formats=%s&serial=%s&partnerId=%s'
+				% (folderId, preset_id, Dict('load', 'formats'), serial, partnerId))	
 
 	if ID == 'moveto':
 		folderId 	= folderId.split('f')[1]	# führendes 'f' entfernen, preset_number immer numerisch
@@ -1865,12 +1878,12 @@ def Favourit(ID, preset_id, folderId):
 			xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
 			return 
 		ID = 'move'		# Korrektur
-		fav_url = ('https://opml.radiotime.com/favorites.ashx?render=xml&c=%s&favoriteId=%s&folderId=%s&formats=mp3,aac,ogg,flash,html&serial=%s&partnerId=%s'
-				% (ID,favoriteId,folderId,serial,partnerId))
+		fav_url = ('https://opml.radiotime.com/favorites.ashx?render=xml&c=%s&favoriteId=%s&folderId=%s&formats=%s&serial=%s&partnerId=%s'
+				% (ID, favoriteId, folderId, Dict('load', 'formats'), serial, partnerId))
 				
 	if ID == 'add' or ID == 'remove':
-		fav_url = ('https://opml.radiotime.com/favorites.ashx?render=xml&c=%s&id=%s&formats=mp3,aac,ogg,flash,html&serial=%s&partnerId=%s' 
-				% (ID,preset_id,serial,partnerId))
+		fav_url = ('https://opml.radiotime.com/favorites.ashx?render=xml&c=%s&id=%s&formats=%s&serial=%s&partnerId=%s' 
+				% (ID, preset_id, Dict('load', 'formats'), serial, partnerId))
 
 	page, msg = RequestTunein(FunctionName="Favourit - ID=%s" % ID, url=fav_url)		# 3. Add / Remove
 	if page == '':	
@@ -1994,14 +2007,14 @@ def Folder(ID, title, foldername, folderId):
 	# 	Ersetzung: c=ID, name=foldername, serial=serial, partnerId=partnerId
 	#	
 	if ID == 'addFolder':
-		folder_url = ('https://opml.radiotime.com/favorites.ashx?render=xml&c=%s&name=%s&formats=mp3,aac,ogg,flash,html&serial=%s&partnerId=%s' 
-					% (ID,urllib2.quote(foldername),serial,partnerId))	
+		folder_url = ('https://opml.radiotime.com/favorites.ashx?render=xml&c=%s&name=%s&formats=%s&serial=%s&partnerId=%s' 
+					% (ID,urllib2.quote(foldername), Dict('load', 'formats'), serial, partnerId))	
 	else:
 		# bei 'removeFolder' wird name=foldername ersetzt durch folderId=folderId 
 		#
 		folderId = folderId.split('f')[1]	# führendes 'f' entfernen
-		folder_url = ('https://opml.radiotime.com/favorites.ashx?render=xml&c=%s&folderId=%s&formats=mp3,aac,ogg,flash,html&serial=%s&partnerId=%s' 
-					% (ID,folderId,serial,partnerId))	
+		folder_url = ('https://opml.radiotime.com/favorites.ashx?render=xml&c=%s&folderId=%s&formats=%s&serial=%s&partnerId=%s' 
+					% (ID, folderId, Dict('load', 'formats'), serial, partnerId))	
 						
 	page, msg = RequestTunein(FunctionName='Folder: %s' % ID, url=folder_url)
 	if page == '':
