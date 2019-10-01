@@ -8,6 +8,8 @@ CHANGE HISTORY 	Kodi-Addon-TuneIn2017 (previosly plugin for Plexmediaserver)
 			https://forums.plex.tv/discussion/288260/rel-tunein2017
 
 
+01.10.2019	1.4.4	PlayAudio_pre: fix forgotten url in if-statement.
+
 01.10.2019	1.4.3	format-Parameter for tunein-calls extended with 'hls' and 'mp3' - to get more
 			streams. Functions adjusted: Main, GetContent, SearchInProfile, Favourit, Folder.
 			PlayAudio_pre: in case of 'notcompatible'-errors in favorites make a search on 
