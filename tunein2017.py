@@ -40,7 +40,7 @@ L=util.L; PlayAudio=util.PlayAudio; Callback=util.Callback;
 
 # +++++ TuneIn2017  - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.4.3'	
+VERSION =  '1.4.4'	
 VDATE = '01.10.2019'
 
 # 
