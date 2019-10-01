@@ -1583,7 +1583,8 @@ def PlayAudio_pre(url, title, thumb, Plot, header=None, url_template=None, FavCa
 	if "/myradio.com/stream.mp3" in url:	# Scherzkeks: Einstellungen-Beispiel kopiert
 		url =  os.path.join("%s", 'Sounds', 'tonleiter_harfe.mp3') % (RESOURCES_PATH)			
 		return PlayAudio(url, title, thumb, Plot, header, url_template, FavCall, CB)	# Ausgabe Tonleiter
-	if 'notcompatible.enUS' or 'nostream.enUS' in url:
+
+	if 'notcompatible.enUS' in url or 'nostream.enUS' in url:
 		#url =  os.path.join("%s", 'Sounds', 'notcompatible.enUS.mp3') % (RESOURCES_PATH)			
 		# 30.09.2019 einige nichtkompatible Streams sind via Websuche erreichbar
 		# daher hier neuer Versuch - s. Settings
