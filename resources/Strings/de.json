@@ -85,7 +85,12 @@
 	"entferne Lokales Radio": "entferne Lokales Radio",
 	"Lokales Radio entfernt": "Lokales Radio entfernt",
 	"kompletter Pfad zum System-Zertifikat": "kompletter Pfad zum System-Zertifikat",
-	"Suche kompatible Streams fuer": "Suche kompatible Streams für"
+	"Suche kompatible Streams fuer": "Suche kompatible Streams für",
+    "Home / Refresh": "Home / Refresh",
+    "Stream": "Stream",
+    "Bitte Suchwort(e) eingeben": "Bitte Suchwort(e) eingeben",
+    "Addon Update auf Version": "Addon Update auf Version",
+    "Update erfolgreich - weiter zum aktuellen Addon": "Update erfolgreich - weiter zum aktuellen Addon"
 }
 
 

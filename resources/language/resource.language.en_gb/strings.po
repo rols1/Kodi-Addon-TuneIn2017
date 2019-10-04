@@ -146,7 +146,7 @@ msgid "Days until deletion"
 msgstr "Days until deletion"
 
 msgctxt "#30205" 
-#: "Label for bool-field in Preferences "
+#: "Label for bool-field in Preferences"
 msgid "station not compatible? Try a new search"
 msgstr "station not compatible? Try a new search"
 

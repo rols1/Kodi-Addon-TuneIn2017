@@ -40,8 +40,8 @@ L=util.L; PlayAudio=util.PlayAudio; Callback=util.Callback;
 
 # +++++ TuneIn2017  - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.4.3'	
-VDATE = '01.10.2019'
+VERSION =  '1.4.5'	
+VDATE = '04.10.2019'
 
 # 
 #	
@@ -422,7 +422,7 @@ def dummy():
 #----------------------------------------------------------------
 def home(li):							# Home-Button
 	PLog('home:')	
-	title = 'Home / Refresh' 	
+	title = L('Home / Refresh') 	
 	fparams="&fparams={}"
 	addDir(li=li, label=title, action="dirList", dirID="Main", 
 		fanart=R('home.png'), thumb=R('home.png'), summary=title, tagline=NAME, fparams=fparams)
@@ -605,7 +605,7 @@ def GetContent(url, title, offset=0, li=''):
 					return li
 						
 				if sidExist == False:									# schon vorhanden?
-					title = L('Custom Url') + ' ' + L('hinzufuegen')	# hinzufuegen immer in Ordner General	
+					title = L('Custom Url') + ' | ' + L('hinzufuegen')	# hinzufuegen immer in Ordner General	
 					summ = customName + ' | ' + customUrl
 					fparams="&fparams={'ID': 'addcustom', 'preset_id': '%s', 'folderId': '%s'}"  %\
 						(urllib2.quote(customUrl), urllib2.quote(customName))
@@ -1174,7 +1174,7 @@ def StationList(url, title, image, summ, typ, bitrate, preset_id):
 		fmt='mp3'								# Format nicht immer  sichtbar - Bsp. http://addrad.io/4WRMHX. Ermittlung
 		if 'aac' in url:						#	 in getStreamMeta (contenttype) hier bisher nicht genutzt
 			fmt='aac'
-		title = title_org + ' | Stream %s | %s'  % (str(i), fmt)
+		title = title_org + ' | %s %s | %s'  % (L("Stream"), str(i), fmt)
 		i=i+1
 		title=UtfToStr(title); summ = UtfToStr(summ);
 		PLog(url); PLog(summ); 
@@ -1186,14 +1186,14 @@ def StationList(url, title, image, summ, typ, bitrate, preset_id):
 		PLog("fparams: " + fparams)	
 			
 	if SETTINGS.getSetting('UseRecording') == "true":			# Aufnahme- und Stop-Button
-		title = L("Aufnahme") + ' ' + L("starten")		
+		title = L("Aufnahme") + ' | ' + L("starten")		
 		fparams="&fparams={'url': '%s', 'title': '%s', 'title_org': '%s', 'image': '%s', 'summ': '%s', 'typ': '%s', 'bitrate': '%s'}" %\
 			(urllib.quote_plus(url), urllib.quote_plus(title),  urllib.quote_plus(title_org),urllib.quote_plus(image), 
 			urllib.quote_plus(summ), typ_org, bitrate_org)
 		addDir(li=li, label=title, action="dirList", dirID="RecordStart", fanart=R(ICON_RECORD), thumb=R(ICON_RECORD), 
 			fparams=fparams, summary=summ)
 
-		title = L("Aufnahme") + ' ' + L("beenden")		
+		title = L("Aufnahme") + ' | ' + L("beenden")		
 		fparams="&fparams={'url': '%s', 'title': '%s', 'summ': '%s', 'CB': 'StationList'}" %\
 			(urllib.quote_plus(url), urllib.quote_plus(title),  urllib.quote_plus(summ))
 		addDir(li=li, label=title, action="dirList", dirID="RecordStop", fanart=R(ICON_STOP), thumb=R(ICON_STOP), 
@@ -1208,19 +1208,19 @@ def StationList(url, title, image, summ, typ, bitrate, preset_id):
 			PLog('foldercnt: ' + foldercnt)
 			PLog(summ)
 			if sidExist == False:		
-				title = L("Favorit") + ' ' + L("hinzufuegen")	# hinzufuegen immer in Ordner General	
+				title = L("Favorit") + ' | ' + L("hinzufuegen")	# hinzufuegen immer in Ordner General	
 				fparams="&fparams={'ID': 'add', 'preset_id': '%s', 'folderId': 'dummy'}" % preset_id
 				addDir(li=li, label=title, action="dirList", dirID="Favourit", fanart=R(ICON_FAV_ADD), thumb=R(ICON_FAV_ADD), 
 					fparams=fparams, summary=summ)
 					
 			if sidExist == True:	
 				summ =title_org	+ ' | ' + L('Ordner') + ': ' + 	foldername	# hier nur Station + Ordner angeben,
-				title = L("Favorit") + ' ' + L("entfernen")					#  Server + Song entfallen
+				title = L("Favorit") + ' | ' + L("entfernen")					#  Server + Song entfallen
 				fparams="&fparams={'ID': 'remove', 'preset_id': '%s', 'folderId': 'dummy'}" % preset_id
 				addDir(li=li, label=title, action="dirList", dirID="Favourit", fanart=R(ICON_FAV_REMOVE), 
 					thumb=R(ICON_FAV_REMOVE), fparams=fparams, summary=summ)
 
-				title = L("Favorit") + ' ' + L("verschieben")	# preset_number ist Position im Ordner
+				title = L("Favorit") + ' | ' + L("verschieben")	# preset_number ist Position im Ordner
 				summ = L('Ordner zum Verschieben auswaehlen')				
 				fparams="&fparams={ 'title': '%s', 'ID': 'moveto', 'preset_id': '%s'}" %\
 					(urllib.quote_plus(title), preset_id)
@@ -2253,7 +2253,7 @@ def SingleMRS(name, url, max_streams, image):
 			fmt='asf'
 		if url.endswith('.ogg') : 				# .ogg in http://mp3.radiox.ch:8000/standard.ogg.m3u
 			fmt='ogg'
-		title = name + ' | Stream %s | %s'  % (str(i), fmt)
+		title = name + ' | %s %s | %s'  % (L("Stream"), str(i), fmt)
 		i=i+1
 
 		Plot = summ

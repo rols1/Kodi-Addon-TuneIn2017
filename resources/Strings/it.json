@@ -78,5 +78,10 @@
 "Plugin Update": "Aggiornamento Plugin",
 "Plugin Version:": "Versione Plugin",
 "Plugin aktuell": "Plugin Aggiornato",
-"Suche kompatible Streams fuer": "Cerca flussi compatibili per"
+"Suche kompatible Streams fuer": "Cerca flussi compatibili per",
+    "Home / Refresh": "Home / Refresh",
+    "Stream": "Stream",
+    "Bitte Suchwort(e) eingeben": "Please enter search word(s)",
+    "Addon Update auf Version": "Addon update to version",
+    "Update erfolgreich - weiter zum aktuellen Addon": "Update successful - continue to current addon"
 }

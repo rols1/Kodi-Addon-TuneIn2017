@@ -148,7 +148,7 @@ msgstr "Días hasta el borrado"
 msgctxt "#30205" 
 #: "Label for bool-field in Preferences "
 msgid "station not compatible? Try a new search"
-msgstr "estación no compatible? Intenta una nueva búsqueda"
+msgstr "Iniciar nueva búsqueda si la emisora no es compatible"
 
 
 

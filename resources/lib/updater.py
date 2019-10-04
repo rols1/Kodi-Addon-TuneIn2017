@@ -86,8 +86,8 @@ def update(url, ver):
 	PLog('update:')	
 	
 	if ver:		
-		msg1 = 'Addon Update auf  Version {0}'.format(ver)
-		msg2 = 'Update erfolgreich - weiter zum aktuellen Addon'  	# Kodi: kein Neustart notw.
+		msg1 = L('Addon Update auf Version') + " %s" % ver
+		msg2 = L('Update erfolgreich - weiter zum aktuellen Addon')  	# Kodi: kein Neustart notw.
 		try:
 			dest_path 	= xbmc.translatePath("special://home/addons/")
 			PLog('Mark1')

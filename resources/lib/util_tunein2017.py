@@ -600,7 +600,7 @@ def seconds_translate(seconds):
 # Holt User-Eingabe für Suche ab
 #	s.a. get_query (für Search , ZDF_Search)
 def get_keyboard_input():
-	kb = xbmc.Keyboard('', 'Bitte Suchwort(e) eingeben')
+	kb = xbmc.Keyboard('', L('Bitte Suchwort(e) eingeben'))
 	kb.doModal() # Onscreen keyboard
 	if kb.isConfirmed() == False:
 		return ""
