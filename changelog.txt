@@ -7,6 +7,12 @@ CHANGE HISTORY 	Kodi-Addon-TuneIn2017 (previosly plugin for Plexmediaserver)
 			Plex-Forum:
 			https://forums.plex.tv/discussion/288260/rel-tunein2017
 
+04.10.2019	1.4.5	Update language-files: Spanish (Patrizia).
+			Update Lang-terms in main prg (Main, home, StationList, PlayAudio_pre,
+			GetContent, )
+			Update Lang-terms in modul update. 	
+			Update Lang-terms in modul util.
+			Update Lang-terms on PoEditor. 	
 
 01.10.2019	1.4.4	PlayAudio_pre: fix forgotten url in if-statement.
 
