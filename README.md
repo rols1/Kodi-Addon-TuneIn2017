@@ -1,6 +1,6 @@
 TuneIn2017
 ==================
-tunein.com-Addon für Kodi (vormals Plugin für den Plexmediaserver)
+tunein.com-Addon für Kodi (vormals Plugin für den Plexmediaserver)[https://github.com/rols1/TuneIn2017].
 
 Download aktuelle Version: https://github.com/rols1/Kodi-Addon-TuneIn2017/releases
 ![Downloads](https://img.shields.io/github/downloads/rols1/Kodi-Addon-TuneIn2017/total.svg "Downloads")
