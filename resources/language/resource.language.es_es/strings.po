@@ -18,7 +18,7 @@ msgstr "Buscar actualizaciones al inicio"
 msgctxt "#30111" 
 #: "This term is shown in Preferences for a listbox for setting the maximum number of items per page. "
 msgid "maximum number of items per page"
-msgstr "Número máximo de elementos por página"
+msgstr "Máximo número de elementos por página"
 
 #: 
 msgctxt "#30401" 
@@ -30,7 +30,7 @@ msgstr "Grabaciones con Streamripper"
 msgctxt "#30402" 
 #: "This term is shown in Preferences for the input-field for storing the path to the Programm Streamripper"
 msgid "complete path to program Streamripper"
-msgstr "Ruta completa del programa Streamripper"
+msgstr "complete path to program Streamripper"
 
 #: 
 msgctxt "#30403" 
@@ -42,25 +42,25 @@ msgstr "Ruta completa de la carpeta de descarga"
 msgctxt "#30203"
 #: "Label for option-field in Preferences"
 msgid "Start of plugin only with Favourites (TuneIn-Account required)"
-msgstr "Iniciar el complemento solo con Favoritos (se precisa cuenta en TuneIn)"
+msgstr "Iniciar el complemento solo con Favoritos (se precisa una cuenta en TuneIn)"
 
 #: 
 msgctxt "#30301"
 #: "Label for entry-field in Preferences"
 msgid "new folder for Favourites"
-msgstr "Nueva carpeta en Favoritos"
+msgstr "Carpeta nueva para Favoritos"
 
 #: 
 msgctxt "#30302"
 #: "Label for entry-field in Preferences"
 msgid "Custom Url - Url:"
-msgstr "URL personalizada - URL de la emisora:"
+msgstr "URL personalizada: URL"
 
 #: 
 msgctxt "#30303"
 #: "Label for entry-field in Preferences"
-msgid "Custom Url: Name"
-msgstr "URL personalizada - Nombre de la emisora:"
+msgid "Custom Url - Name:"
+msgstr "Custom Url - name:"
 
 #: 
 msgctxt "#30112" 
@@ -72,19 +72,19 @@ msgstr "Bitrate mínimo"
 msgctxt "#30204"
 #: "Label for option-field in Preferences"
 msgid "Start of plugin only with My Radio Stations"
-msgstr "Iniciar el complemento solo con Mis emisoras"
+msgstr "Iniciar el complemento solo con Mis Emisoras de Radio"
 
 #: 
 msgctxt "#30117"
 #: "Label for entry-field in Preferences"
 msgid "complete path to My Radio Stations"
-msgstr "Ruta completa de Mis emisoras"
+msgstr "Ruta completa de Mis Emisoras de Radio"
 
 #: 
 msgctxt "#30113" 
 #: "Label for option-field in Preferences"
 msgid "maximum number of streams per station (can prevent timeouts)"
-msgstr "Número máximo de trasmisiones por emisora (pueden evitarse cortes)"
+msgstr "Máximo número de trasmisiones por emisora (se pueden prevenir cortes)"
 
 #: 
 msgctxt "#30114" 
@@ -96,7 +96,7 @@ msgstr "Añadir/eliminar favoritos"
 msgctxt "#30115" 
 #: "description of of checkbox in Preferences"
 msgid "manually setting of Local Radio (menu By Location)"
-msgstr "Configuración manual de Radio local (menú Por ubicación)"
+msgstr "Configuración manual de Radio Local (menú Por Ubicación)"
 
 #: 
 msgctxt "#30110" 
@@ -108,7 +108,7 @@ msgstr "Añadir formato AAC"
 msgctxt "#30116" 
 #: "Preferences General"
 msgid "Show My Radiostations"
-msgstr "Mostrar Mis emisoras"
+msgstr "Mostrar Mis Emisoras de Radio"
 
 #: 
 msgctxt "#30118" 
@@ -138,9 +138,14 @@ msgstr "Activar/desactivar depuración de errores"
 msgctxt "#30300" 
 #: "Preferences Category Label"
 msgid "Favorit | Custom Url"
-msgstr "Favoritos | URL personalizada"
+msgstr "Favorito | URL personalizada"
 
 msgctxt "#30501" 
 #: "Cache Preferences"
 msgid "Days until deletion"
-msgstr "Frecuencia de borrado (en días)"
+msgstr "Días hasta el borrado"
+
+msgctxt "#30205" 
+#: "Label for bool-field in Preferences "
+msgid "station not compatible? Try a new search"
+msgstr "Iniciar nueva búsqueda si la emisora no es compatible"
