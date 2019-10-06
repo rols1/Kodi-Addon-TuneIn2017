@@ -1,11 +1,11 @@
 {
     "Durchstoebern": "Explorar TuneIn",
-    "Meine Favoriten": "Mis Favoritos",
+    "Meine Favoriten": "Favoritos",
     "Meine Stationen": "Mis Emisoras",
-    "Suche": "Buscar",
+    "Suche": "Busqueda",
     "Suche Station / Titel": "Buscar emisora / Nombre ",
     "Suche nach": "Buscar",
-    "Keine Suchergebnisse zu": "No se encontraron resultados para",
+    "Keine Suchergebnisse zu": "No se han encontrado resultados para",
     "Fehler": "Error",
     "neues Update vorhanden": "Hay disponible una nueva actualización",
     "jetzt installieren": "Instalar",
@@ -16,47 +16,47 @@
     "Bezugsquelle": "Fuente",
     "Github ist nicht errreichbar": "No es posible acceder a GitHub",
     "Bitte die Update-Anzeige abschalten": "Deshabilite notificaciones del complemento",
-    "Username ueberpruefen": "Revise el usuario",
+    "Username ueberpruefen": "Compruebe el usuario",
     "keinen Stream gefunden zu": "No se ha encontrado transmisión para",
     "nicht gefunden": "No se ha encontrado",
-    "Mehr...": "Mas...",
-    "neuer Versuch": "Nuevo intento"},
+    "Mehr...": "Mas... ",
+    "neuer Versuch": "Nuevo intento",
     "neues Update beim Start des Plugins anzeigen": "Buscar actualizaciones al inicio"
-    "Sprache Plugin": "Idioma del complemento"
-    "maximale Anzahl Objekte pro Seite": "Máximo número de elementos por página"
+    "Sprache Plugin": "Idioma"
+    "maximale Anzahl Objekte pro Seite": "Número máximo de elementos por página"
     "Aufnehmen mit Streamripper": "Grabaciones con Streamripper"
     "kompletter Pfad zum Programm Streamripper": "Ruta completa del programa Streamripper"
     "kompletter Pfad zum Download-Verzeichnis": "Ruta completa de la carpeta de descarga"
     "Laufende Aufnahmen": "Grabaciones activas"
     "Download-Verzeichnis": "Carpeta de descarga"
     "Aufnahme": "Grabación"
-    "beenden": "Parada"
-    "beendet": "Terminado",
-    "starten": "Inicio",
-    "gestartet": "Iniciado",
-    "fehlgeschlagen": "Fallido"
+    "beenden": "Detener"
+    "beendet": "terminada",
+    "starten": "Iniciar",
+    "gestartet": "iniciada",
+    "fehlgeschlagen": "fallida"
     "keine laufende Aufnahme gefunden": "No se han encontrado grabaciones activas"
     "Ursache unbekannt": "Causa desconocida"
     "Favoriten hinzufuegen/entfernen": "Añadir/eliminar favoritos",
-    "Starte Plugin nur mit Favoriten (TuneIn-Account erforderlich)": "Iniciar el complemento solo con Favoritos (se precisa una cuenta en TuneIn)",
+    "Starte Plugin nur mit Favoriten (TuneIn-Account erforderlich)": "Iniciar el complemento solo con Favoritos (se precisa cuenta en TuneIn)",
      "Minimale Bitrate": "Bitrate mínimo",
-     "Starte Plugin nur mit Meine Radiostationen": "Iniciar el complemento solo con Mis Emisoras de Radio",
-     "maximum number of streams per station (can prevent timeouts)": "Máximo número de trasmisiones por emisora (se pueden prevenir cortes)"
+     "Starte Plugin nur mit Meine Radiostationen": "Iniciar el complemento solo con Mis emisoras",
+     "maximum number of streams per station (can prevent timeouts)": "Número máximo de trasmisiones por emisora (pueden evitarse cortes)"
     "Favorit": "Favoritos"
     "hinzufuegen": "Añadir",
-    "hinzugefuegt": "Añadido",
+    "hinzugefuegt": "añadido",
     "entfernen": "Eliminar",
-    "entfernt": "Eliminado",
+    "entfernt": "eliminado",
     "verschieben": "Mover",
-    "verschoben": "Movido"
-    "TuneIn Passwort (nur erforderlich fuer Favoriten hinzufuegen/loeschen)": "Contraseña de TuneIn (solo se necesita para añadir y mover favoritos)",
-    "Custom Url - Url": "URL personalizada - URL:",
-    "Custom Url - Name:": "URL personalizada - nombre:",
-    "kompletter Pfad zu Meine Radiostationen": "Ruta completa de Mis Emisoras de Radio"
+    "verschoben": "movido"
+    "TuneIn Passwort (nur erforderlich fuer Favoriten hinzufuegen/loeschen)": "Contraseña de TuneIn (solo se precisa para añadir y mover favoritos)",
+    "Custom Url - Url": "URL personalizada - URL de la emisora:",
+    "Custom Url - Name:": "URL personalizada - Nombre de la emisora:",
+    "kompletter Pfad zu Meine Radiostationen": "Ruta completa de Mis emisoras"
     "Username und Passwort sind fuer diese Aktion erforderlich": "Se necesitan usuario y contraseña para realizar esta acción",
     "Problem mit Username / Passwort": "Hay problemas con el usuario/contraseña",
     "Ordnername fehlt": "Falta el nombre de la carpeta"
-    "Neuer Ordner fuer Favoriten": "Carpeta nueva para Favoritos"
+    "Neuer Ordner fuer Favoriten": "Nueva carpeta en Favoritos"
     "Name des neuen Ordners": "Nombre de la carpeta nueva"
     "Ordner entfernen": "Eliminar carpeta"
     "Ordner zum Entfernen auswaehlen": "Seleccionar la carpeta a eliminar",
@@ -64,32 +64,38 @@
     "Ordner": "Carpeta"
     "Anzahl der Eintraege": "Número de elementos"
     "ohne Rueckfrage!": "Automáticamente, sin confirmación"
-    "Ordner kann nicht entfernt werden": "la carpeta no se puede eliminar"
-    "hierhin verschieben": "mover aquí"
+    "Ordner kann nicht entfernt werden": "La carpeta no se puede eliminar"
+    "hierhin verschieben": "Mover aquí"
     "keine Eintraege gefunden": "No se encontraron elementos"
-    "Meine Radiostationen": "Mis Emisoras de Radio"
+    "Meine Radiostationen": "Mis emisoras"
     "Datei nicht gefunden": "No se encontró el archivo"
     "Bitte den Eintrag in Einstellungen ueberpruefen!": "Compruebe el ajuste en Preferencias"
-    "fehlerhafte Datei": "El Archivo está corrupto"
+    "fehlerhafte Datei": "El archivo está corrupto"
     "Eintrag fehlt fuer Url oder Name": "Falta la URL o el nombre"
-    "Custom Url muss mit http beginnen": "La URL debe comenzar con http o https"
+    "Custom Url muss mit http beginnen": "La URL personalizada debe comenzar con http o https"
     "Im Trend": "Tendencias"
     "Kuerzlich gehoert": "Recientes"
     "Plugin Update": "Actualización del complemento"
     "Plugin Version:": "Versión del complemento:"
     "Plugin aktuell": "El complemento está actualizado"
-    "Lokales Radio manuell einstellen (Menue Orte)": "Configuración manual de Radio Local (menú Por Ubicación)"
-    "neu setzen im Menue Orte": "Nuevo ajuste en el menú Por Ubicación"
-    "setze Lokales Radio auf": "Configurar Radio Local en"
-    "Lokales Radio gesetzt auf": "Radio Local configurado en"
-    "entferne Lokales Radio": "Eliminar Radio Local"
-    "Lokales Radio entfernt": "Se ha eliminado Radio Local"
+    "Lokales Radio manuell einstellen (Menue Orte)": "Configuración manual de Radio local (menú Por ubicación)"
+    "neu setzen im Menue Orte": "Nuevo ajuste en el menú Por ubicación"
+    "setze Lokales Radio auf": "Configurar Radio local en"
+    "Lokales Radio gesetzt auf": "Radio local configurado en"
+    "entferne Lokales Radio": "Eliminar Radio local"
+    "Lokales Radio entfernt": "Se ha eliminado Radio local"
     "plus AAC-Format": "Añadir formato AAC",
-    "Show My Radiostations": "Mostrar Mis Emisoras de Radio",
+    "Show My Radiostations": "Mostrar Mis emisoras",
     "System-Certifikat": "Certificado de sistema",
     "kompletter Pfad zum System-Zertifikat": "Ruta completa del certificado de sistema"
     "Turn debug logging on or off": "Activar/desactivar depuración de errores"
-    "Favorit | Custom Url": "Favorito | URL personalizada",
+    "Favorit | Custom Url": "Favoritos | URL personalizada",
     "Startup Settings": "Ajustes de inicio"
-    "Days until deletion": "Días hasta el borrado"
+    "Days until deletion": "Frecuencia de borrado (en días)"
+    "Suche kompatible Streams fuer": "Buscar trasmisiones compatibles para",
+    "Home / Refresh": "Inicio / Recarga",
+    "Stream": "Trasmisión",
+    "Bitte Suchwort(e) eingeben": "Escriba término(s) de búsqueda",
+    "Addon Update auf Version": "Actualización del complemento a la versión",
+    "Update erfolgreich - weiter zum aktuellen Addon": "La actualización se ha realizado con éxito - Continuar con el complemento actual"
 }
