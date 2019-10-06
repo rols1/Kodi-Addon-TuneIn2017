@@ -39,7 +39,7 @@ https://github.com/rols1/TuneIn2017/wiki/Pictures-and-Contexts-for-the-Localisat
 * Vlad - Ukrainian
 * Joyfik - French
 * Alessio79 - Italian
-* tengoalhot - Spanish
+* Patrizia - Spanish
 
 UPDATES:
 ===================  
