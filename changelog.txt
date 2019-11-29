@@ -7,9 +7,35 @@ CHANGE HISTORY 	Kodi-Addon-TuneIn2017 (previosly plugin for Plexmediaserver)
 			Plex-Forum:
 			https://forums.plex.tv/discussion/288260/rel-tunein2017
 
+29.10.2019	1.4.9	Adaptation Kodi Matrix (compatibility Python2/Python3:
+			Modul updater: replace StringIO with BytesIO in update(), replace
+			urllib2.urlopen -> urllib.request.urlopen, decode('utf-8') replaced 
+			from ADDON_PATH, page.decode('utf-8')
+			Statements in Main-PRG conformed/replaced/removed: urllib.*, UtfToStr, *.decode,
+			*.replace('\u002F', '/') -> *.replace('\\u002F', '/'), py2_encode all quoted
+			out-Args, decode('utf-8') replaced from ADDON_PATH.
+			RequestTunein: page.decode('utf-8').
+			
+not on Github	1.4.8	Main: Fix reaction on Github-problem (interpretation of updater return was wrong). 
+			getHeaders: für Python3 dict(response.info() statt response.headers.dict.
+			try/except for building OS_DETECT-string (IOError possible on iOS ARM 32-bit).
+			RLoad (Modul util_tunein2017): encoding="utf8" for reading file on PYTHON3.
+			
+not on Github	1.4.7	Adaptation Kodi Matrix (compatibility Python2/Python3:
+			Modul util_tunein2017: decode('utf-8') replaced from ADDON_PATH, msg.encoding
+			removed in PLog(), old content in UtfToStr() replaced with py2_encode, all
+			in-Args in addDir treated with py2_encode, all terms in repl_json_chars() set 
+			to unicode, dto. in unescape(), dto. in transl_json, dto. in repl_json_chars. 	
+
+not on Github	1.4.6	Favorites: username added for SearchInFolders (Button "Favourite remove" was 
+			missing).)
+			List of languages (Settings): percent info added (translation status).
+			ClearUp (Modul util): Fix removing directories.
+			ClearUp (Main-PRG): Clearing M3U8STORE added.
+
 04.10.2019	1.4.5	Update language-files: Spanish (Patrizia).
 			Update Lang-terms in main prg (Main, home, StationList, PlayAudio_pre,
-			GetContent, )
+			GetContent).
 			Update Lang-terms in modul update. 	
 			Update Lang-terms in modul util.
 			Update Lang-terms on PoEditor. 	
