@@ -16,14 +16,15 @@ EMail: rols1@gmx.de
 INSTALLATION:
 ===================  
 - Download der zip-Datei hier: https://github.com/rols1/Kodi-Addon-TuneIn2017/releases/latest
-- Im Kodi-Menü Addons/Addon-Browser anklicken: aus ZIP-Datei installieren
-- Heruntergeladene zip-Datei im Kodi-Browser auswählen.
+- Download script.module.kodi-six.zip hier https://github.com/romanvm/kodi.six/releases
+- Beide zip-Dateien mittels Kodi-Menü Addons/Addon-Browser installieren
 - Addon öffen und Addon-Einstellungen anpassen.
 - [bebilderte Anleitung](https://www.kodinerds.net/index.php/Thread/14234-Wie-installiert-man-Addons-die-nicht-über-den-Addon-Browser-verfügbar-sind/?page=Thread&threadID=14234)
 
 ### english:
 - Download zip-file from https://github.com/rols1/Kodi-Addon-TuneIn2017/releases/latest
-- choose downloaded zip-file with your Kodi-Browser
+- Download script.module.kodi-six.zip from https://github.com/romanvm/kodi.six/releases
+- install downloaded zip-files with your Kodi-Browser
 - start addon and make the appropriate settings
 - [further instructions with pictures](https://kodi.wiki/view/HOW-TO:Install_add-ons_from_zip_files) 
 
