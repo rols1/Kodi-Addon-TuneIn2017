@@ -58,6 +58,7 @@ Credits:
 - Credits to [dirble]https://github.com/dirble/streamscrobbler-python: Metadata for some streamservices, esp. Shoutcast
 - Credits to [solvek] https://github.com/solvek/TuneIn.bundle): Information for developer
 - Credits to [coder-alpha] https://forums.plex.tv/discussion/166602/rel-ccloudtv-channel-iptv/p1): (Channel updater, based on Channel updater by sharkone/BitTorrent.bundle)
+- Credits to [romanv](https://github.com/romanvm) for his script.module.kodi-six
 
  
 Bilder / Pictures:
