@@ -7,6 +7,11 @@ CHANGE HISTORY 	Kodi-Addon-TuneIn2017 (previosly plugin for Plexmediaserver)
 			Plex-Forum:
 			https://forums.plex.tv/discussion/288260/rel-tunein2017
 
+05.12.2019	1.5.0	GetContent: replaced value of preset_id with target_id (preset_id no longer
+			unique for Fav's). Set capital letter in token + TargetItemId to lowercase.
+			FolderMenuList: in tagline the prefix "Song: " added.
+			StationList:  py2_encode(foldername) for Fav-button.
+
 29.10.2019	1.4.9	Adaptation Kodi Matrix (compatibility Python2/Python3:
 			Modul updater: replace StringIO with BytesIO in update(), replace
 			urllib2.urlopen -> urllib.request.urlopen, decode('utf-8') replaced 
@@ -24,8 +29,8 @@ not on Github	1.4.8	Main: Fix reaction on Github-problem (interpretation of upda
 not on Github	1.4.7	Adaptation Kodi Matrix (compatibility Python2/Python3:
 			Modul util_tunein2017: decode('utf-8') replaced from ADDON_PATH, msg.encoding
 			removed in PLog(), old content in UtfToStr() replaced with py2_encode, all
-			in-Args in addDir treated with py2_encode, all terms in repl_json_chars() set 
-			to unicode, dto. in unescape(), dto. in transl_json, dto. in repl_json_chars. 	
+			in-Args in addDir treated with py2_encode, all terms in repl_json_chars()
+			set to unicode, dto. in unescape(), dto. in transl_json, dto. in repl_json_chars. 	
 
 not on Github	1.4.6	Favorites: username added for SearchInFolders (Button "Favourite remove" was 
 			missing).)

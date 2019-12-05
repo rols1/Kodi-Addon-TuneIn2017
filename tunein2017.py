@@ -51,8 +51,8 @@ L=util.L; PlayAudio=util.PlayAudio; Callback=util.Callback;
 
 # +++++ TuneIn2017  - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.4.9'	
-VDATE = '29.11.2019'
+VERSION =  '1.5.0'	
+VDATE = '05.12.2019'
 
 # 
 #	
@@ -650,6 +650,7 @@ def GetContent(url, title, offset=0, li=''):
 		formats = Dict('load', 'formats'); serial = Dict('load', 'serial')
 		# PLog(formats); PLog(serial);
 		url = url % (formats, serial)
+		# PLog(url)
 	# ------------------------------------------------------------------	
 	# Anpassung Url Local Radio: Title2 oc, Url setzen, Remove-Button		Local Radio
 	# ------------------------------------------------------------------
@@ -723,9 +724,9 @@ def GetContent(url, title, offset=0, li=''):
 			.replace('"FollowText"','"followText"').replace('"ShareText"','"shareText"').replace('"Id"','"id"')
 			.replace('Type','type').replace('ContainerType','containerType').replace('Token','token')
 			.replace('Subtitle','subtitle').replace('Index','index').replace('GuideId','guideId').replace('"Url"','"url"')
-			.replace('Duration','duration'))			
+			.replace('Duration','duration').replace('Token','token').replace('TargetItemId','targetItemId'))			
 
-	indices = blockextract('"index":', page)
+	indices = blockextract('"token":', page)		# 05.12.2019 getauscht gegen "index"
 	page_cnt = len(indices)
 	PLog('indices: %d, max_count: %d, offset: %d' % (page_cnt, max_count, offset))
 	if 	max_count:									# '' = 'Mehr..'-Option ausgeschaltet?
@@ -748,6 +749,14 @@ def GetContent(url, title, offset=0, li=''):
 			PLog('skip: "hasProgressBar":true in index')
 			continue
 			
+		# 05.12.2019 preset_id stimmt nicht mehr mit id für Fav überein - Austausch mit target_id
+		# preset_id 	= stringextract('"id":"', '"', index)		# dto. targetItemId, scope, guideId -> url
+		target_id 	= stringextract('"targetItemId":"', '"', index)		# dto. targetItemId, scope, guideId -> url
+		guideId 	= stringextract('"guideId":"', '"', index)	# Bsp. t121001218 -> opml-url zum mp3-Quelle
+		if target_id == '':										# Rest Seite, nicht verwertbar
+			continue
+		preset_id = target_id									# alter Name -> neuer Wert
+		
 		index = index.replace('\\"', '*')							# Bsp. Die \"beste\" Erfindung..
 		title		= stringextract('"title":', '",', index)		# Sonderbhdl. wg. "\"Sticky Fingers\" ...
 		title		= title[1:].replace('\\"', '"')	
@@ -775,8 +784,6 @@ def GetContent(url, title, offset=0, li=''):
 			image=R(ICON)
 		FollowText	= stringextract('"followText":"', '"', index)
 		ShareText	= stringextract('"shareText":"', '"', index)
-		preset_id 	= stringextract('"id":"', '"', index)		# dto. targetItemId, scope, guideId -> url
-		guideId 	= stringextract('"guideId":"', '"', index)	# Bsp. t121001218 -> opml-url zum mp3-Quelle
 		path 		= stringextract('"path":"', '"', index)		# -> url_title - url-Abgleich
 		linkfilter 	= stringextract('"filter":"', '"', index)	# dto.
 		linkfilter	= 'filter%3D' + linkfilter
@@ -788,7 +795,8 @@ def GetContent(url, title, offset=0, li=''):
 			 guideId = sec_gId
 			 
 			
-		PLog('Vars:') 	
+		PLog('Vars:')
+		PLog('target_id: ' + target_id) 	
 		PLog("%s | %s | %s | %s | %s | %s | %s"	% (myindex,mytype,title,subtitle,publishTime,seoName,FollowText))
 		PLog("%s | %s | %s | %s | %s | %s | %s"	% (ShareText,descr,linkfilter,preset_id,guideId,path,duration))
 			
@@ -1086,7 +1094,7 @@ def StationList(url, title, image, summ, typ, bitrate, preset_id):
 	
 	li = xbmcgui.ListItem()
 	li = home(li)							# Home
-			
+		
 	if summ:
 		if 'No compatible stream' in summ or 'Does not stream' in summ: 	# Kennzeichnung + mp3 von TuneIn 
 			if 'Tune.ashx?' in url == False:								# "trozdem"-Streams überspringen - s. GetContent
@@ -1098,7 +1106,6 @@ def StationList(url, title, image, summ, typ, bitrate, preset_id):
 				addDir(li=li, label=title, action="dirList", dirID="PlayAudio_pre", fanart=image, thumb=image, 
 					fparams=fparams, summary=summ, mediatype='music')
 				xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
-	
 
 	if 'Tune.ashx?' in url:						# normaler TuneIn-Link zur Playlist o.ä.
 		cont, msg = RequestTunein(FunctionName='StationList, Tune.ashx-Call', url=url)
@@ -1254,8 +1261,8 @@ def StationList(url, title, image, summ, typ, bitrate, preset_id):
 					fparams=fparams, summary=summ)
 					
 			if sidExist == True:	
-				summ =title_org	+ ' | ' + L('Ordner') + ': ' + 	foldername	# hier nur Station + Ordner angeben,
-				title = L("Favorit") + ' | ' + L("entfernen")					#  Server + Song entfallen
+				summ =title_org	+ ' | ' + L('Ordner') + ': ' + 	py2_encode(foldername)	# hier nur Station + Ordner angeben,
+				title = L("Favorit") + ' | ' + L("entfernen")							#  Server + Song entfallen
 				fparams="&fparams={'ID': 'remove', 'preset_id': '%s', 'folderId': 'dummy'}" % preset_id
 				addDir(li=li, label=title, action="dirList", dirID="Favourit", fanart=R(ICON_FAV_REMOVE), 
 					thumb=R(ICON_FAV_REMOVE), fparams=fparams, summary=summ)
@@ -1969,7 +1976,7 @@ def Favourit(ID, preset_id, folderId):
 # 
 # ID = folderId, url mit serial-id vorbelegt	
 def FolderMenuList(url, title, li=''):	
-	PLog('FolderMenuList:')
+	PLog('FolderMenuList: ' + url)
 	
 	if li == '':								# eigene Liste
 		endOfDirectory = True 
@@ -2013,6 +2020,7 @@ def FolderMenuList(url, title, li=''):
 				fanart=image, thumb=image, fparams=fparams)
 			
 		if typ == 'audio':							# Station
+			playing = "Song: %s" % playing
 			local_url=py2_encode(local_url); text=py2_encode(text); 
 			subtext=py2_encode(subtext); image=py2_encode(image); 			 						
 			fparams="&fparams={'url': '%s', 'title': '%s', 'summ': '%s', 'image': '%s', 'typ': 'Station', 'bitrate': '%s', 'preset_id': '%s'}"  %\
@@ -2127,7 +2135,9 @@ def FolderMenu(title, ID, preset_id, checkFiles=None):
 				PLog(items_cnt)
 				
 				if ID == 'removeFolder':	# -> Ordner entfernen
+					foldername = py2_encode(foldername)
 					title = foldername + ': ' + L('Ordner entfernen') + ' | ' + L('ohne Rueckfrage!')
+
 					summ = L('Anzahl der Eintraege') + ': ' + str(items_cnt)
 					thumb = R(ICON_FOLDER_REMOVE)
 					if foldername == 'General':
