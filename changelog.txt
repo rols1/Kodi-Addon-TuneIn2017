@@ -14,6 +14,7 @@ CHANGE HISTORY 	Kodi-Addon-TuneIn2017 (previosly plugin for Plexmediaserver)
 			FolderMenuList: in tagline the prefix "Song: " added.
 			StationList: display detailed error list if no stream is found. 
 			StationList:  py2_encode(foldername) for Fav-button.
+			StreamTests: repl_json_chars for summ.
 
 29.10.2019	1.4.9	Adaptation Kodi Matrix (compatibility Python2/Python3:
 			Modul updater: replace StringIO with BytesIO in update(), replace

@@ -1359,6 +1359,7 @@ def StreamTests(url_list,summ_org):
 							summ = 'Song: %s | Bitrate: %s KB' % (song, bitrate) # neues summary
 						if bitrate and song == '':	
 							summ = '%s | Bitrate: %s KB' % (summ_org, bitrate)		# altes summary ergänzen
+						summ = repl_json_chars(summ)
 					PLog('summ: ' + summ)		
 				if  ret.get('hasPortNumber') == 'true': # auch SHOUTcast ohne Metadaten möglich, Bsp. Holland FM Gran Canaria,
 					if url.endswith('/'):				#	
