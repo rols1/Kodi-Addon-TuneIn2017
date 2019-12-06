@@ -7,9 +7,12 @@ CHANGE HISTORY 	Kodi-Addon-TuneIn2017 (previosly plugin for Plexmediaserver)
 			Plex-Forum:
 			https://forums.plex.tv/discussion/288260/rel-tunein2017
 
-05.12.2019	1.5.0	GetContent: replaced value of preset_id with target_id (preset_id no longer
-			unique for Fav's). Set capital letter in token + TargetItemId to lowercase.
+05.12.2019	1.5.0	GetContent: new blockmark (index replaced with token) - except language groups.
+			GetContent: on stations replaced value of preset_id with target_id (preset_id 
+			no longer unique for Fav's). Set capital letter in token + TargetItemId to 
+			lowercase.
 			FolderMenuList: in tagline the prefix "Song: " added.
+			StationList: display detailed error list if no stream is found. 
 			StationList:  py2_encode(foldername) for Fav-button.
 
 29.10.2019	1.4.9	Adaptation Kodi Matrix (compatibility Python2/Python3:

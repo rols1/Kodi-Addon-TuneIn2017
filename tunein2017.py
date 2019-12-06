@@ -52,7 +52,7 @@ L=util.L; PlayAudio=util.PlayAudio; Callback=util.Callback;
 # +++++ TuneIn2017  - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
 VERSION =  '1.5.0'	
-VDATE = '05.12.2019'
+VDATE = '06.12.2019'
 
 # 
 #	
@@ -718,7 +718,10 @@ def GetContent(url, title, offset=0, li=''):
 	# RSave('/tmp/x.txt', page)		# Debug: Save Content	
 	# PLog(page)
 	link_list = blockextract('guide-item__guideItemLink', page) # Link-List außerhalb json-Bereich
+	PLog("link_list: " + str(len(link_list)))
 	
+	# 05.12.2019 Auswertung TargetItemId (-> preset_id bei type=station, s.u.)
+	#	Blockbildung ausgetauscht (index -> token) - Block unvollständig, TargetItemId fehlte
 	if 'doctypehtml' not in page:								# api-call: Uppercase für Parameter im json-Inhalt
 		page = (page.replace('"Title"','"title"').replace('"Image"','"image"').replace('"Category"','"category"')
 			.replace('"FollowText"','"followText"').replace('"ShareText"','"shareText"').replace('"Id"','"id"')
@@ -726,8 +729,11 @@ def GetContent(url, title, offset=0, li=''):
 			.replace('Subtitle','subtitle').replace('Index','index').replace('GuideId','guideId').replace('"Url"','"url"')
 			.replace('Duration','duration').replace('Token','token').replace('TargetItemId','targetItemId'))			
 
-	indices = blockextract('"token":', page)		# 05.12.2019 getauscht gegen "index"
-	page_cnt = len(indices)
+	if 'attributes=filter' in url: 						# Untergruppen Sprachen: Block=index
+		indices = blockextract('"index":', page)
+	else:
+		indices = blockextract('"token":', page)		# 05.12.2019 token ersetzt index 
+	page_cnt = len(indices)	
 	PLog('indices: %d, max_count: %d, offset: %d' % (page_cnt, max_count, offset))
 	if 	max_count:									# '' = 'Mehr..'-Option ausgeschaltet?
 		delnr = min(page_cnt, offset)
@@ -751,26 +757,23 @@ def GetContent(url, title, offset=0, li=''):
 			
 		# 05.12.2019 preset_id stimmt nicht mehr mit id für Fav überein - Austausch mit target_id
 		# preset_id 	= stringextract('"id":"', '"', index)		# dto. targetItemId, scope, guideId -> url
-		target_id 	= stringextract('"targetItemId":"', '"', index)		# dto. targetItemId, scope, guideId -> url
-		guideId 	= stringextract('"guideId":"', '"', index)	# Bsp. t121001218 -> opml-url zum mp3-Quelle
-		if target_id == '':										# Rest Seite, nicht verwertbar
-			continue
-		preset_id = target_id									# alter Name -> neuer Wert
+		target_id 	= stringextract('"targetItemId":"', '"', index)	# 
+		guideId 	= stringextract('"guideId":"', '"', index)		# Bsp. t121001218 -> opml-url zum mp3-Quelle
+		preset_id 	= stringextract('"id":"', '"', index)			# dto. targetItemId, scope, guideId -> url
 		
-		index = index.replace('\\"', '*')							# Bsp. Die \"beste\" Erfindung..
+		# url-Korrektur u.a.
+		index = (index.replace('\\u002F', '/').replace('\u003E', '').replace('\u003C', '')
+				.replace('\\"', '*').replace('\\r\\n', ' '))
+		
 		title		= stringextract('"title":', '",', index)		# Sonderbhdl. wg. "\"Sticky Fingers\" ...
 		title		= title[1:].replace('\\"', '"')	
-		title		= title.replace('\\u002F', '/')
 		subtitle	= stringextract('"subtitle":"', '"', index)		# Datum lokal
-		subtitle	= (subtitle.replace('\\u002F', '/').replace('\u003E', '').replace('\u003C', ''))
 		publishTime	= stringextract('"publishTime":"', '"', index)	# Format 2017-10-26T16:50:58
 		seoName		= stringextract('"seoName":"', '"', index)		# -> url-Abgleich
 		if '"description"' in index:
 			descr		= stringextract('"description":"', '"', index)	
 		else:
 			descr		= stringextract('"text":"', '"', index)		# description
-		descr	= (descr.replace('\\u002F', '/').replace('\u003E', '').replace('\u003C', '')
-			.replace('\\r\\n', ' '))
 		duration	= stringextract('"duration":"', '"', index)
 
 		#if 'Religious Music' in index:									# Debug: Datensatz
@@ -779,7 +782,6 @@ def GetContent(url, title, offset=0, li=''):
 		myindex	= stringextract('"index":"', '"', index)	
 		mytype	= stringextract('"type":"', '"', index)	
 		image	= stringextract('"image":"', '"', index)		# Javascript Unicode escape \\u002F
-		image	= image.replace('\\u002F', '/')					# Standard-Icon für Kategorie
 		if image == '':
 			image=R(ICON)
 		FollowText	= stringextract('"followText":"', '"', index)
@@ -889,6 +891,9 @@ def GetContent(url, title, offset=0, li=''):
 		if mytype == 'Station' or mytype == 'Topic':					
 			if preset_id.startswith('p'):
 				preset_id = guideId				# mp3-Quelle in guideId., Bsp. t109814382
+			else:
+				preset_id = target_id	
+					
 			# local_url = 'http://opml.radiotime.com/Tune.ashx?id=%s&formats=%s' % (preset_id, Dict('load', 'formats'))
 			# 19.07.2019: nach IP-Sperre Call erweitert mit serial + partnerId - s. StationList
 			# 26.11.2019: erneute Tests (Anlass: geoblock AFN) ohne serial + partnerId - anscheinend wieder OK 
@@ -1187,14 +1192,21 @@ def StationList(url, title, image, summ, typ, bitrate, preset_id):
 			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
 			return li			
 
-	#	StreamTests ausgelagert zur Mehrfachnutzung (ListMRS)
-	url_list, err_flag = StreamTests(cont,summ_org)	
+	# ------------------------------------------------------------------	
+	# StreamTests ausgelagert zur Mehrfachnutzung (ListMRS)					StreamTests
+	# ------------------------------------------------------------------
+	url_list, err_list, err_flag = StreamTests(cont,summ_org)	
 	PLog("url_list: " + str(url_list))	
 	if len(url_list) == 0:
 		if err_flag == True:					# detaillierte Fehlerausgabe vorziehen, aber nur bei leerer Liste
 			msg1 = L('keinen Stream gefunden zu') 
 			msg2 = title
 			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+			
+			if len(err_list) > 0:				# Fehlerliste
+				msg1 = L('Fehler:') 
+				msg2 = '\n'.join(err_list)
+				xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
 			return li
 		else:
 			msg1 = L('keinen Stream gefunden zu') + ": %s" % title
@@ -1297,7 +1309,7 @@ def StreamTests(url_list,summ_org):
 	
 	lines = url_list.splitlines()
 	err_flag = False; err=''					# Auswertung nach Schleife	
-	url_list = []
+	url_list = []; err_list = []
 	line_cnt = 0								# Einzelzählung
 	for line in lines:
 		line_cnt = line_cnt + 1			
@@ -1317,6 +1329,7 @@ def StreamTests(url_list,summ_org):
 				err = ret.get('error')			# Bsp.  City FM 92.9 (Taichung, Taiwan):
 				err = err + '\r\n' + url		#	URLError: timed out, http://124.219.41.230:8000/929.mp3
 				err_flag = True
+				err_list.append(err)
 				PLog(err)
 				# xbmcgui.Dialog().ok(ADDON_NAME, msg1=err, '', '') # erst nach Durchlauf der Liste, s.u.
 				continue							
@@ -1380,15 +1393,15 @@ def StreamTests(url_list,summ_org):
 								url = '%s/;' % url	
 																		
 			PLog('append: ' + url)	
-			PLog(summ); 					
-			PLog(type(summ));
-				
+			PLog(summ); 									
 			url_list.append(url + '|||' + py2_decode(summ))		# Liste für PlayAudio_pre	
 				
 			if max_streams:										# Limit gesetzt?
 				if line_cnt >= max_streams:
-					break 
-	return url_list, err_flag
+					break
+					
+	err_list = repl_dop(err_list)				# Doppler in Error-Liste entfernen		
+	return url_list, err_list, err_flag
 #-----------------------------
 def get_pls(url):               # Playlist extrahieren
 	PLog('get_pls: ' + url)
@@ -2277,7 +2290,7 @@ def SingleMRS(name, url, max_streams, image):
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
 		return li
 	
-	url_list, err_flag =  StreamTests(url_list,summ_org='')
+	url_list, err_list, err_flag = StreamTests(url_list,summ_org='')
 	if len(url_list) == 0:
 		if err_flag == True:					# detaillierte Fehlerausgabe vorziehen, aber nur bei leerer Liste
 			msg1 = L('keinen Stream gefunden zu') 
@@ -2285,6 +2298,11 @@ def SingleMRS(name, url, max_streams, image):
 			msg3 = url
 			PLog(msg1); PLog(msg3); 
 			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+			
+			if len(err_list) > 0:				# Fehlerliste
+				msg1 = L('Fehler:') 
+				msg2 = '\n'.join(err_list)
+				xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
 			return li
 	
 	i=1;
