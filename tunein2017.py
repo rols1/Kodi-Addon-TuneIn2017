@@ -51,8 +51,8 @@ L=util.L; PlayAudio=util.PlayAudio; Callback=util.Callback;
 
 # +++++ TuneIn2017  - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.5.0'	
-VDATE = '06.12.2019'
+VERSION =  '1.5.1'	
+VDATE = '27.12.2019'
 
 # 
 #	
@@ -705,6 +705,7 @@ def GetContent(url, title, offset=0, li=''):
 	# ------------------------------------------------------------------	
 	PLog('url: ' + url)	
 	page, msg = RequestTunein(FunctionName='GetContent', url=url)
+	# RSave('/tmp/x.html', py2_encode(page))	# Debug
 	if page == '':	
 		msg1 = msg
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
@@ -729,7 +730,8 @@ def GetContent(url, title, offset=0, li=''):
 			.replace('Subtitle','subtitle').replace('Index','index').replace('GuideId','guideId').replace('"Url"','"url"')
 			.replace('Duration','duration').replace('Token','token').replace('TargetItemId','targetItemId'))			
 
-	if 'attributes=filter' in url: 						# Untergruppen Sprachen: Block=index
+	# Suche (27.12.2019), Untergruppen Sprachen: Block=index
+	if 'attributes=filter' or  'search/?query=' in url: 						
 		indices = blockextract('"index":', page)
 	else:
 		indices = blockextract('"token":', page)		# 05.12.2019 token ersetzt index 
@@ -1014,7 +1016,7 @@ def RequestTunein(FunctionName, url, GetOnlyHeader=None):
 				page = f.read()
 				PLog(len(page))
 			ret.close()
-			PLog(page[:160])
+			PLog(page[:200])
 	except Exception as exception:
 		error_txt = "RequestTunein: %s-1: %s" % (FunctionName, str(exception))
 		error_txt = error_txt + ' | ' + url				 			 	 
