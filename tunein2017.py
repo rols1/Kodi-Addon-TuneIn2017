@@ -51,8 +51,8 @@ L=util.L; PlayAudio=util.PlayAudio; Callback=util.Callback;
 
 # +++++ TuneIn2017  - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.5.1'	
-VDATE = '27.12.2019'
+VERSION =  '1.5.2'	
+VDATE = '28.12.2019'
 
 # 
 #	
@@ -1361,6 +1361,7 @@ def StreamTests(url_list,summ_org):
 							summ = 'Song: %s | Bitrate: %s KB' % (song, bitrate) # neues summary
 						if bitrate and song == '':	
 							summ = '%s | Bitrate: %s KB' % (summ_org, bitrate)		# altes summary ergänzen
+						summ=py2_decode(summ)
 						summ = repl_json_chars(summ)
 					PLog('summ: ' + summ)		
 				if  ret.get('hasPortNumber') == 'true': # auch SHOUTcast ohne Metadaten möglich, Bsp. Holland FM Gran Canaria,
@@ -2776,13 +2777,14 @@ def getHeaders(response):
 	PLog(dict_headers)
 	PLog(item_headers)
 
-	
+	headers=''
 	if is_empty(dict_headers) is False:
 		headers = dict_headers
 	elif item_headers and is_empty(item_headers) is False:
 		headers = item_headers
 	else:
-		headers = parse_headers(str(response.info()))
+		if headers:
+			headers = parse_headers(str(response.info()))
 
 	PLog(headers)
 		

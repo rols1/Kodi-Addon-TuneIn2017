@@ -7,6 +7,9 @@ CHANGE HISTORY 	Kodi-Addon-TuneIn2017 (previosly plugin for Plexmediaserver)
 			Plex-Forum:
 			https://forums.plex.tv/discussion/288260/rel-tunein2017
 
+27.12.2019	1.5.2	getHeaders: Fix parsing stream header (only if not empty).
+			StreamTests: Fix decoding summ (build from song + bitrate) with py2_decode.
+
 27.12.2019	1.5.1	GetContent: blockmark was changed back to "index" in the Websearch results 
 			(radio stations were missing with blockmark "token").
 
