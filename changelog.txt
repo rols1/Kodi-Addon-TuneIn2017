@@ -7,6 +7,9 @@ CHANGE HISTORY 	Kodi-Addon-TuneIn2017 (previosly plugin for Plexmediaserver)
 			Plex-Forum:
 			https://forums.plex.tv/discussion/288260/rel-tunein2017
 
+24.01.2020	1.5.3	getStreamMeta: function added to follow redirects.
+			Global vars: UrlopenTimeout set to 4 from 3.
+
 27.12.2019	1.5.2	getHeaders: Fix parsing stream header (only if not empty).
 			StreamTests: Fix decoding summ (build from song + bitrate) with py2_decode.
 

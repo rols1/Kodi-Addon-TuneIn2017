@@ -51,8 +51,8 @@ L=util.L; PlayAudio=util.PlayAudio; Callback=util.Callback;
 
 # +++++ TuneIn2017  - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.5.2'	
-VDATE = '28.12.2019'
+VERSION =  '1.5.3'	
+VDATE = '24.01.2020'
 
 # 
 #	
@@ -131,7 +131,7 @@ REPO_URL 			= 'https://github.com/{0}/releases/latest'.format(GITHUB_REPOSITORY)
 partnerId		= 'RadioTime&version=3.34&itemUrlScheme=secure&reqAttempt=1'
 
 # Start-Variablen aus Plex-Version
-UrlopenTimeout = 3			# Timeout sec, 18.10.2017 von 6 auf 3
+UrlopenTimeout = 4			# Timeout sec, 24.01.2020 von 3 auf 4
 SearchWeb = True			# z.Z. Websuche statt opml-Call
 
 PLog('Addon: lade Code')
@@ -2691,7 +2691,10 @@ def getStreamMeta(address):
 	gcontext.verify_mode = ssl.CERT_NONE
 	
 	try:
-		response = urlopen(request, context=gcontext, timeout=UrlopenTimeout)	
+		response = urlopen(request, context=gcontext, timeout=UrlopenTimeout)
+		new_url = response.geturl()					# follow redirects
+		PLog("new_url: " + new_url)
+			
 		headers = getHeaders(response)
 		# PLog(headers)
 				   
