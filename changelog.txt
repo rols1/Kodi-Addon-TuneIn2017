@@ -7,6 +7,10 @@ CHANGE HISTORY 	Kodi-Addon-TuneIn2017 (previosly plugin for Plexmediaserver)
 			Plex-Forum:
 			https://forums.plex.tv/discussion/288260/rel-tunein2017
 
+06.02.2020	1.5.4	Favourit: Dialog replaced with Notification after added, removed and moved
+			Search (on Fail): Dialog replaced with Notification.
+			Modul util_tunein2017: import_statement shortened.
+
 24.01.2020	1.5.3	getStreamMeta: function added to follow redirects.
 			Global vars: UrlopenTimeout set to 4 from 3.
 

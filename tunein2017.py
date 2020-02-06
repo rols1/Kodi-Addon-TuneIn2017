@@ -36,23 +36,12 @@ import json				# json -> Textstrings
 import base64			# zusätzliche url-Kodierung für addDir/router
 
 import resources.lib.updater 			as updater		
-
-# Addonmodule + Funktionsziele (util_imports.py)
-import resources.lib.util_tunein2017 as util
-PLog=util.PLog; check_DataStores=util.check_DataStores;  make_newDataDir=util. make_newDataDir; 
-getDirZipped=util.getDirZipped; Dict=util.Dict; name=util.name; ClearUp=util.ClearUp; 
-addDir=util.addDir; R=util.R; RLoad=util.RLoad; seconds_translate=util.seconds_translate
-RSave=util.RSave; GetAttribute=util.GetAttribute; repl_dop=util.repl_dop; repl_char=util.repl_char; 
-repl_json_chars=util.repl_json_chars; mystrip=util.mystrip; DirectoryNavigator=util.DirectoryNavigator; 
-stringextract=util.stringextract; blockextract=util.blockextract; my_rfind=util.my_rfind; 
-cleanhtml=util.cleanhtml; decode_url=util.decode_url; unescape=util.unescape; serial_random=util.serial_random; 
-transl_json=util.transl_json; repl_json_chars=util.repl_json_chars; get_keyboard_input=util.get_keyboard_input; 
-L=util.L; PlayAudio=util.PlayAudio; Callback=util.Callback; 
+from resources.lib.util_tunein2017 import *
 
 # +++++ TuneIn2017  - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.5.3'	
-VDATE = '24.01.2020'
+VERSION =  '1.5.4'	
+VDATE = '06.02.2020'
 
 # 
 #	
@@ -512,8 +501,10 @@ def Search(query=''):
 		title = L('Keine Suchergebnisse zu')
 		msg1 = L(title) 
 		msg2 = unquote(query)
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		# xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')					# Austausch 06.02.2020
 		#return li		
+		xbmcgui.Dialog().notification(msg1,msg2,R(ICON),5000)	
+		return		
 		
 	xbmcplugin.endOfDirectory(HANDLE)	
 #-----------------------------
@@ -999,6 +990,8 @@ def RequestTunein(FunctionName, url, GetOnlyHeader=None):
 		gcontext.check_hostname = False
 		gcontext.verify_mode = ssl.CERT_NONE
 		ret = urlopen(req, context=gcontext, timeout=UrlopenTimeout)
+		new_url = ret.geturl()						# follow redirects (wie getStreamMeta)
+		PLog("new_url: " + new_url)				
 		
 		if GetOnlyHeader:
 			PLog("GetOnlyHeader:")
@@ -1976,16 +1969,17 @@ def Favourit(ID, preset_id, folderId):
 		return 
 	else:
 		if ID == 'add':											# 'add'
-			msg1 = L("Favorit") + ' ' + L("hinzugefuegt")
+			msg2 = L("Favorit") + ' ' + L("hinzugefuegt")
 		if ID == 'addcustom':									# 'addcustom'
-			msg1 = L("Custom Url") + ' ' + L("hinzugefuegt")
+			msg2 = L("Custom Url") + ' ' + L("hinzugefuegt")
 		elif  ID == 'remove':	 								# 'remove'
-			msg1 = L("Favorit") + ' ' + L("entfernt")	
+			msg2 = L("Favorit") + ' ' + L("entfernt")	
 		elif  ID == 'move':	 									# 'move'
-			msg1 = L("Favorit") + ' ' + L("verschoben")
+			msg2 = L("Favorit") + ' ' + L("verschoben")
 				
-		PLog(msg1)
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+		PLog(msg2)
+		# xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')			# Austausch 06.02.2020
+		xbmcgui.Dialog().notification('TuneIn:',msg2,R(ICON),5000)	# Fertig-Info
 
 #-----------------------------
 # Direktaufruf von GetContent (mit li) oder rekursiv (ohne li), falls 
@@ -2414,7 +2408,7 @@ def RecordStart(url,title,title_org,image,summ,typ,bitrate, CB=''):		# Aufnahme 
 		for PID_line in PID_lines:							# Prüfung auf exist. Aufnahme
 			PLog(PID_line)									# Aufbau: Pid|Url|Sender|Info
 			pid_url = PID_line.split('|')[1]
-			if pid_url == url:	
+			if pid_url == url:								# läuft bereits
 				pid = PID_line.split('|')[0]		
 				summ = PID_line.split('|')[3]	
 				title_new = title_org + ': ' + L('Aufnahme') +  ' ' + L('gestartet')
@@ -2692,8 +2686,8 @@ def getStreamMeta(address):
 	
 	try:
 		response = urlopen(request, context=gcontext, timeout=UrlopenTimeout)
-		new_url = response.geturl()					# follow redirects
-		PLog("new_url: " + new_url)
+		new_url = response.geturl()					# follow redirects, hier für Header-Auswertung, Kodi-Player
+		PLog("new_url: " + new_url)					#	folgt selbständig Redirects
 			
 		headers = getHeaders(response)
 		# PLog(headers)
