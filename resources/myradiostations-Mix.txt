@@ -67,7 +67,9 @@ RundFunk Meißner Eschwege (Germany) | http://s8.pop-stream.de:8650/listen.pls
 Radio Unerhört Marburg (Germany) | http://stream.radio-rum.de:8000/rum.mp3.m3u
 bigFM (Germany) | http://srv05.bigstreams.de/bigfm-mp3-64.m3u
 #
-
+# 1 Flac-Stream:
+Radio Paradise (Flac) |http://stream.radioparadise.com/rock-flac 
+ 
 
 
 

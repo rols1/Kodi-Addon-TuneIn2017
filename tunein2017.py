@@ -40,8 +40,8 @@ from resources.lib.util_tunein2017 import *
 
 # +++++ TuneIn2017  - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.5.4'	
-VDATE = '06.02.2020'
+VERSION =  '1.5.5'	
+VDATE = '14.02.2020'
 
 # 
 #	
@@ -801,6 +801,7 @@ def GetContent(url, title, offset=0, li=''):
 			seoName = ''
 											
 		mytype = mytype.title()
+		title=title.replace(u'(', u'<').replace(u')', u'>')	# klappt nicht in repl_json_chars
 		title=repl_json_chars(title) 
 	# ------------------------------------------------------------------	
 	# 																	Callback Link
@@ -1223,6 +1224,8 @@ def StationList(url, title, image, summ, typ, bitrate, preset_id):
 		fmt='mp3'								# Format nicht immer  sichtbar - Bsp. http://addrad.io/4WRMHX. Ermittlung
 		if 'aac' in url:						#	 in getStreamMeta (contenttype) hier bisher nicht genutzt
 			fmt='aac'
+		if 'flac' in url:
+			fmt='flac'
 		title = title_org + ' | %s %s | %s'  % (L("Stream"), str(i), fmt)
 		i=i+1
 
@@ -2017,6 +2020,7 @@ def FolderMenuList(url, title, li=''):
 		PLog('%s | %s | %s |%s | %s' % (typ,text,subtext,playing,bitrate))
 		PLog('%s | %s | %s |%s' % (preset_id,guide_id,local_url,image))
 
+		text=text.replace(u'(', u'<').replace(u')', u'>')		# klappt nicht in repl_json_chars
 		subtext=repl_json_chars(subtext); text=repl_json_chars(text); 
 		
 		if preset_id.startswith('u'):				# Custom-Url -> Station
@@ -2324,6 +2328,8 @@ def SingleMRS(name, url, max_streams, image):
 			fmt='asf'
 		if url.endswith('.ogg') : 				# .ogg in http://mp3.radiox.ch:8000/standard.ogg.m3u
 			fmt='ogg'
+		if 'flac' in url:
+			fmt='flac'
 		title = name + ' | %s %s | %s'  % (L("Stream"), str(i), fmt)
 		i=i+1
 

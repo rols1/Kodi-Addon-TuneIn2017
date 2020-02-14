@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # util_tunein2017.py
 #	26.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-# 	
+# Stand 14.02.2020	
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -448,9 +448,9 @@ def repl_json_chars(line):	# für json.loads (z.B.. in router) json-Zeichen in l
 	line_ret = line
 	#PLog(type(line_ret))
 	for r in	((u'"', u''), (u'\\', u''), (u'\'', u'')
-		, (u'&', u'und'), ('(u', u'<'), (u')', u'>'),  (u'∙', u'|')
+		, (u'&', u'und'), ('(u', u'<'), (u'(', u'<'),  (u')', u'>'), (u'∙', u'|')
 		, (u'„', u'>'), (u'“', u'<'), (u'”', u'>'),(u'°', u' Grad')
-		, (u'\r', u'')):			
+		, (u'\r', u''), (u'#', u'*')):			
 		line_ret = line_ret.replace(*r)
 	
 	return line_ret
