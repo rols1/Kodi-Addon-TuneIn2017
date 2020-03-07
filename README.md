@@ -53,6 +53,7 @@ Options:
 * Favourites and Folders (Tunein-Account required)
 * MyRadioStations - without any access to tunein (in combination with option StartWithMyRadioStations). Sample file with more infos comes with plugin in ```../plugin.audio.tunein2017/resources/myradiostations-Mix.txt```
 * Local radio (manually setting, only effective in plugin)
+* integrated slideshow
 
 Credits:
 ===================  

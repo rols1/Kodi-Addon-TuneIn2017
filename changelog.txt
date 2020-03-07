@@ -7,6 +7,10 @@ CHANGE HISTORY 	Kodi-Addon-TuneIn2017 (previosly plugin for Plexmediaserver)
 			Plex-Forum:
 			https://forums.plex.tv/discussion/288260/rel-tunein2017
 
+07.03.2020	1.5.6	Slideshow added: new modul slides, settings modified.
+			RecordStop: fixed missing error message (if recording process is not found). 
+			Github-Wicki https://github.com/rols1/TuneIn2017/wiki updated. 
+
 14.02.2020	1.5.5	FolderMenuList, Get Content: Fix for replacing '()' with '<>' in title 
 			(doesn't work in repl_json_chars).
 			StationList, SingleMRS: streamtype changed to 'flac' if url contains this 

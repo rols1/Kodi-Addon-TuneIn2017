@@ -40,8 +40,8 @@ from resources.lib.util_tunein2017 import *
 
 # +++++ TuneIn2017  - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.5.5'	
-VDATE = '14.02.2020'
+VERSION =  '1.5.6'	
+VDATE = '07.03.2020'
 
 # 
 #	
@@ -145,7 +145,7 @@ M3U8STORE 		= os.path.join("%s/m3u8") % ADDON_DATA
 DICTSTORE 		= os.path.join("%s/Dict") % ADDON_DATA
 PLog(M3U8STORE); PLog(DICTSTORE); 
 
-check 			= check_DataStores()	# Check /Initialisierung / Migration 
+check 			= check_DataStores()	# Check /Initialisierung
 PLog('check: ' + str(check))
 										
 try:	# 28.11.2019 exceptions.IOError möglich, Bsp. iOS ARM (Thumb) 32-bit
@@ -2502,7 +2502,7 @@ def RecordStop(url,title,summ, CB=''):					# Aufnahme Stop
 						
 	if pidExist == False:
 		msg1 = str(err) 
-		msg2 =  '%s:\n%s | %s | PID: %s' % (title, url, pid)	
+		msg2 =  '%s:\n%s | %s | PID: %s' % (title, msg1, url, pid)	
 	else:
 		msg1 = L('Aufnahme') + ' ' + L('beendet')
 		msg2 =  '%s | %s | PID: %s' % (title, url, pid)

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # util_tunein2017.py
 #	26.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-# Stand 14.02.2020	
+# Stand 07.03.2020	
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -723,7 +723,34 @@ def PlayAudio(url, title, thumb, Plot, header=None, url_template=None, FavCall='
 	li.setInfo(type="music", infoLabels=ilabels)							
 	li.setContentLookup(False)
 	 	
-	xbmc.Player().play(url, li, False)			# Player nicht mehr spezifizieren (0,1,2 - deprecated)
+	if SETTINGS.getSetting('pref_musicslideshow') == 'true':
+		# Absicherung gegen Rekursion nach GetDirectory_Error 
+		#	nach exit in SlideShow2 - exit falls STOPFILE 
+		#	jünger als 4 sec:
+		STOPFILE = os.path.join(DICTSTORE, 'stop_slides')
+		if os.path.exists(STOPFILE):							
+			now = time.time()
+			PLog(now - os.stat(STOPFILE).st_mtime)
+			if now - os.stat(STOPFILE).st_mtime < 4:	
+				PLog("GetDirectory_Error_Rekursion")
+				xbmc.executebuiltin("PreviousMenu")
+				return
+			else:
+				os.remove(STOPFILE)							# Stopdatei entfernen	
+		xbmc.Player().play(url, li, False)					# Start vor modaler Slideshow			
+		import resources.lib.slides as slides
+		path = SETTINGS.getSetting('pref_slides_path')
+		PLog(path)
+		PLog('Start_SlideShow: %s' % path)
+		CWD = SETTINGS.getAddonInfo('path') 					# working dir
+		DialogSlides = slides.Slideshow('slides.xml', CWD, 'default')
+		DialogSlides.doModal()
+		xbmc.Player().stop()					
+		del DialogSlides
+		PLog("del_DialogSlides")
+		return				
+	else:
+		xbmc.Player().play(url, li, False)			
 
 	# 08.08.2019 Verzicht auf Callback - weiteres Problem: falsche Kodierung der unicode-Strings
 	#	(Plot, summary, tagline). base64-Behandlung möglich (s. convBase64), aber aufwändig - den 

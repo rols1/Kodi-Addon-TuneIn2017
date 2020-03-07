@@ -50,8 +50,14 @@
 	</category>
 	
 	 <category label="439">
-	<setting label="30501" type="select" values="1|10|30|100" default="30" id="DICT_store_days"/>
-</category> 
+		<setting label="30501" type="select" values="1|10|30|100" default="30" id="DICT_store_days"/>
+	</category> 
+	
+	<category label="108">
+    		<setting label="361" type="bool" id="pref_musicslideshow" default="false"/>
+		<setting label="774" type="folder" source="" id="pref_slides_path" default=""/>
+		<setting label="12378" type="select" id="pref_slides_time" default="10" values="5|10|15|20|30|60|120|240|600"/>
+	</category>
 
 		
 </settings>
