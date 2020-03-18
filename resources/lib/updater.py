@@ -3,6 +3,7 @@
 #			updater.py - Part of Kodi-Addon-TuneIn2017
 #
 #	26.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
+# 	18.03.2020 adjust_AddonXml: Anpassung python-Version an Kodi-Version
 #
 ################################################################################
 
@@ -32,7 +33,7 @@ import io 							# Python2+3 -> update() io.BytesIO für Zipfile
 
 import resources.lib.util_tunein2017 as util
 PLog=util.PLog; stringextract=util.stringextract;
-cleanhtml=util.cleanhtml;
+cleanhtml=util.cleanhtml; RLoad=util.RLoad; RSave=util.RSave; 
  
 ADDON_ID      	= 'plugin.audio.tunein2017'
 SETTINGS 		= xbmcaddon.Addon(id=ADDON_ID)
@@ -114,20 +115,22 @@ def update(url, ver):
 		msg2 = 'Update erfolgreich - weiter zum aktuellen Addon'  	# Kodi: kein Neustart notw.
 		try:
 			dest_path 	= xbmc.translatePath("special://home/addons/")
-			PLog('Mark1')
 			r 			= urlopen(url)
-			PLog('Mark2')
+			PLog('Mark1')
 			zip_data	= zipfile.ZipFile(io.BytesIO(r.read()))
-			PLog('Mark3')
+			PLog('Mark2')
 			
 			# save_restore('save')									# Cache sichern - entfällt, s.o.
 			
 			PLog(dest_path)
 			PLog(ADDON_PATH)
 			shutil.rmtree(ADDON_PATH)		# remove addon, Verzicht auf ignore_errors=True
+			PLog('Mark3')
 			zip_data.extractall(dest_path)
 				
 			# save_restore('restore')								# Cache sichern	 - entfällt, s.o.
+			PLog('Mark4')
+			adjust_AddonXml()										# addon.xml an Kodi-Verson anpassen
 					
 		except Exception as exception:
 			msg1 = 'Update fehlgeschlagen'
@@ -138,6 +141,46 @@ def update(url, ver):
 		msg1 = 'Update fehlgeschlagen'
 		msg2 =  'Version ' + ver + 'nicht gefunden!'
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+
+################################################################################
+# adjust_AddonXml:  Anpassung der python-Version in der neu installierten 
+#	addon.xml an die akt. Kodi-Version. Passende addon.xml bleibt unver-
+#	ändert. Da Kodi die addon.xml erst bei Neustart od. Addon-Installation
+#	prüft, muss die Änderung nicht bereits vor dem Speichern erfolgen.
+# 
+# Voraussetzung für replace: die Einträge in addon.xml entsprechen exakt 
+#	den Marken repl_leia + repl_matrix
+# 
+# Nach Beendigung des Updates wird bei jedem Laden des Moduls util
+#	in check_AddonXml das Verzeichnis ADDON_DATA angepasst (s. dort)
+#
+def adjust_AddonXml():
+	PLog('adjust_AddonXml:')
+	repl_leia 	= 'addon="xbmc.python" version="2.25.0"'
+	repl_matrix = 'addon="xbmc.python" version="3.0.0"'
+	KODI_VERSION = xbmc.getInfoLabel('System.BuildVersion')
+	path = xbmc.translatePath('special://home/addons/' + ADDON_ID + '/addon.xml')
+	PLog(KODI_VERSION); PLog(path)
+	
+	page = RLoad(path, abs_path=True)
+	change = False
+	if KODI_VERSION.startswith('19.'):					# Kodi Matrix
+		if repl_leia in page:
+			page = page.replace(repl_leia, repl_matrix)
+			page = py2_encode(page)
+			PLog('adjust_AddonXml: ersetze %s durch %s' % (repl_leia, repl_matrix))
+			RSave(path, page)
+			change = True	
+	else:												# Kodi <= Leia
+		if repl_matrix in page:
+			page = page.replace(repl_matrix, repl_leia)
+			page = py2_encode(page)
+			PLog('adjust_AddonXml: ersetze %s durch %s' % (repl_matrix, repl_leia))
+			RSave(path, page)		
+			change = True	
+	if change == False:
+		PLog(u'adjust_AddonXml: addon.xml unverändert')
+	return	
 
 ################################################################################
 # save_restore:  Cache sichern / wieder herstellen
