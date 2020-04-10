@@ -49,7 +49,7 @@ Update-Modul integrated.
 Options:
 ===================  
 * Search
-* Download Option with Streamripper: [see more](https://github.com/rols1/TuneIn2017/wiki/Download-Option-with-Streamripper) 
+* Recording Option with Streamripper: [see more](https://github.com/rols1/TuneIn2017/wiki/Download-Option-with-Streamripper) 
 * Favourites and Folders (Tunein-Account required)
 * MyRadioStations - without any access to tunein (in combination with option StartWithMyRadioStations). Sample file with more infos comes with plugin in ```../plugin.audio.tunein2017/resources/myradiostations-Mix.txt```
 * Local radio (manually setting, only effective in plugin)

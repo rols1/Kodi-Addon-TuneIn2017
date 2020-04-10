@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # util_tunein2017.py
 #	26.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-# Stand 07.03.2020	
+# Stand 10.04.2020	
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -82,6 +82,37 @@ def PLog(msg, loglevel=xbmc.LOGDEBUG):
 	if loglevel >= 2:
 		xbmc.log("%s --> %s" % (NAME, msg), level=loglevel)
 	 
+#---------------------------------------------------------------- 
+# 10.04.2020 Konvertierung 3-zeiliger Dialoge in message (Multiline)
+#  	Anlass: 23-03-2020 Removal of deprecated features (PR) - siehe:
+#	https://forum.kodi.tv/showthread.php?tid=344263&pid=2933596#pid2933596
+#	https://github.com/xbmc/xbmc/blob/master/xbmc/interfaces/legacy/Dialog.h
+# ok triggert Modus: Dialog().ok, Dialog().yesno()
+#
+def MyDialog(msg1, msg2='', msg3='', ok=True, cancel='Abbruch', yes='JA', heading=''):
+	PLog('MyDialog:')
+	
+	msg = msg1
+	if msg2:							# 3 Zeilen -> Multiline
+		msg = "%s\n%s" % (msg, msg2)
+	if msg3:
+		msg = "%s\n%s" % (msg, msg3)
+	if heading == '':
+		heading = ADDON_NAME
+	
+	if ok:								# ok-Dialog
+		if PYTHON2:
+			return xbmcgui.Dialog().ok(heading=heading, line1=msg)
+		else:							# Matrix: line1 -> message
+			return xbmcgui.Dialog().ok(heading=heading, message=msg)
+
+	else:								# yesno-Dialog
+		if PYTHON2:
+			ret = xbmcgui.Dialog().yesno(heading=heading, line1=msg, nolabel=cancel, yeslabel=yes)
+		else:							# Matrix: line1 -> message
+			ret = xbmcgui.Dialog().yesno(heading=heading, message=msg, nolabel=cancel, yeslabel=yes)
+		return ret
+
 #---------------------------------------------------------------- 
 #	03.04.2019 data-Verzeichnis des Addons:
 #  		Check /Initialisierung / Migration

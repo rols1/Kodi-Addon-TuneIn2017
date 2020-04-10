@@ -7,6 +7,13 @@ CHANGE HISTORY 	Kodi-Addon-TuneIn2017 (previosly plugin for Plexmediaserver)
 			Plex-Forum:
 			https://forums.plex.tv/discussion/288260/rel-tunein2017
 
+10.04.2020	1.5.8	Dialog-Calls for Kodi Matrix adapted: 
+			new function MyDialog (Modul util_tunein2017) added.
+			xbmcgui.Dialog().ok replaced with MyDialog().
+			xbmcgui.Dialog().yesno replaced with MyDialog(ok=False).
+			not_available_sp.mp3 soundfile (Spanish) added.
+			Fix error message (':' in 'Fehler:' replaced to make translation possible).
+
 18.03.2020	1.5.7	update (Modul Updater): new function adjust_AddonXml - adjust python-version in
 			fresh installed addon.xml (e.g. "3.0.0" if Kodi 19 is running). 	
 

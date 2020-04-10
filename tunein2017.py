@@ -40,8 +40,8 @@ from resources.lib.util_tunein2017 import *
 
 # +++++ TuneIn2017  - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.5.7'	
-VDATE = '18.03.2020'
+VERSION =  '1.5.8'	
+VDATE = '10.04.2020'
 
 # 
 #	
@@ -288,7 +288,7 @@ def Main():
 			msg1 = L("Meine Radiostationen") + ': ' + L("Datei nicht gefunden")	
 			msg2 = MyRadioStations
 			msg3 = L('Bitte den Eintrag in Einstellungen ueberpruefen!')
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+			MyDialog(msg1, msg2, msg3)
 				
 	formats = 'mp3,aac,ogg,flash,html,hls'
 	PLog(SETTINGS.getSetting('PlusAAC'))								
@@ -307,7 +307,7 @@ def Main():
 		msg1 = L('Fehler')
 		msg2 = ROOT_URL
 		msg3 = L('Ursache unbekannt')								# ohne Tunein-Menüs weiter
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+		MyDialog(msg1, msg2, msg3)
 		return li
 			
 	PLog(len(items))
@@ -358,7 +358,7 @@ def Main():
 			msg1 = L("Github ist nicht errreichbar")
 			msg2 = 'update_available: False'
 			PLog("%s | %s" % (msg1, msg2))
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+			MyDialog(msg1, msg2, '')
 		else:	
 			int_lv = ret[0]			# Version Github
 			int_lc = ret[1]			# Version aktuell
@@ -428,7 +428,7 @@ def dummy():
 	li = home(li)						# Home-Button
 	msg1 = L('Hinweis')
 	msg2 = 'dummy-Funktion OK'
-	xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+	MyDialog(msg1, msg2, '')
 	
 	xbmcplugin.endOfDirectory(HANDLE)
 
@@ -501,7 +501,7 @@ def Search(query=''):
 		title = L('Keine Suchergebnisse zu')
 		msg1 = L(title) 
 		msg2 = unquote(query)
-		# xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')					# Austausch 06.02.2020
+		# MyDialog(msg1, msg2, '')					# Austausch 06.02.2020
 		#return li		
 		xbmcgui.Dialog().notification(msg1,msg2,R(ICON),5000)	
 		return		
@@ -520,7 +520,7 @@ def SetLocation(url, title, region, myLocationRemove):
 	else:
 		Dict('store', 'myLocation', url) 
 		msg1 = L('Lokales Radio gesetzt auf') + ': %s' % region
-	xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+	MyDialog(msg1, '', '')
 	return
 
 #-----------------------------
@@ -556,7 +556,7 @@ def GetContent(url, title, offset=0, li=''):
 	if url == None or url == '':
 		msg1 = 'GetContent: Url ' + L("nicht gefunden")	
 		PLog(msg1)
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+		MyDialog(msg1, '', '')
 		return li
 	if offset:
 		oc_title2 = title_org + ' | %s...' % offset			
@@ -613,13 +613,13 @@ def GetContent(url, title, offset=0, li=''):
 				if customUrl == '' or customName == '':
 					error_txt = L("Custom Url") + ': ' + L("Eintrag fehlt fuer Url oder Name")
 					PLog(msg1)
-					xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+					MyDialog(msg1, '', '')
 					return li
 				
 				if customUrl.startswith('http') == False: 
 					error_txt = L('Custom Url muss mit http beginnen')
 					PLog(msg1)
-					xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+					MyDialog(msg1, '', '')
 					return li
 						
 				if sidExist == False:									# schon vorhanden?
@@ -699,7 +699,7 @@ def GetContent(url, title, offset=0, li=''):
 	# RSave('/tmp/x.html', py2_encode(page))	# Debug
 	if page == '':	
 		msg1 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+		MyDialog(msg1, '', '')
 		return li
 
 	# Hinw.: Seite nicht ab initialStateEl begrenzen - fehlt bei api-Ausgaben (Bsp. Recents) 
@@ -842,7 +842,7 @@ def GetContent(url, title, offset=0, li=''):
 					msg2 = stringextract('title":"', '"', msg2)
 					msg1 = title
 					PLog(msg2)
-					xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')	
+					MyDialog(msg1, msg2, '')	
 				continue
 											
 			PLog('Link_url: %s, url_org: %s' % (local_url, url_org)); # PLog(image);	# Bei Bedarf
@@ -949,7 +949,7 @@ def GetContent(url, title, offset=0, li=''):
 			msg1 = L('keine Eintraege gefunden') + ": " + title_org 
 			msg1 = py2_encode(msg1)
 			PLog(msg1)
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')	
+			MyDialog(msg1, '', '')	
 			return li						# verursacht zwar Directory-Error, bleibt aber in der Liste.
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True) 
 	else:
@@ -1113,7 +1113,7 @@ def StationList(url, title, image, summ, typ, bitrate, preset_id):
 		if cont == '':
 			msg1 = msg
 			PLog(msg1)
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+			MyDialog(msg1, '', '')
 			xbmcplugin.endOfDirectory(HANDLE)
 			return li
 		if ': 400' in cont:				# passiert (manchmal) bei 'neuer Versuch' (mit preset_id)
@@ -1151,7 +1151,7 @@ def StationList(url, title, image, summ, typ, bitrate, preset_id):
 			msg2 = url
 			msg3 = 'Tunein: %s' % cont
 			PLog(msg1); PLog(msg2); PLog(msg3);
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+			MyDialog(msg1, msg2, msg3)
 			xbmcplugin.endOfDirectory(HANDLE)
 			return li
 
@@ -1165,7 +1165,7 @@ def StationList(url, title, image, summ, typ, bitrate, preset_id):
 		cont = get_pls(cont)
 		if cont.startswith('get_pls-error'): 	# Bsp. Rolling Stones by Radio UNO Digital, pls-Url: 
 			msg1 = cont							# http://radiounodigital.com/Players-Tunein/rollingstones.pls
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+			MyDialog(msg1, '', '')
 			return li
 	
 	# if line.endswith('.m3u'):				# ein oder mehrere .m3u-Links, Bsp. "Absolut relax (Easy Listening Music)"
@@ -1175,7 +1175,7 @@ def StationList(url, title, image, summ, typ, bitrate, preset_id):
 		if cont == '':
 			msg1 = L('keinen Stream gefunden zu') 
 			msg2 = "%s %s" % (msg, title)
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+			MyDialog(msg1, msg2, '')
 			return li
 			
 												# Bsp.: Space Station Soma - mehrere Stream-Urls, die 
@@ -1185,7 +1185,7 @@ def StationList(url, title, image, summ, typ, bitrate, preset_id):
 		if cont == '':
 			msg1 = L('keinen Stream gefunden zu') 
 			msg2 = "%s %s" % (msg, title)
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+			MyDialog(msg1, msg2, '')
 			return li			
 
 	# ------------------------------------------------------------------	
@@ -1197,18 +1197,18 @@ def StationList(url, title, image, summ, typ, bitrate, preset_id):
 		if err_flag == True:					# detaillierte Fehlerausgabe vorziehen, aber nur bei leerer Liste
 			msg1 = L('keinen Stream gefunden zu') 
 			msg2 = title
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+			MyDialog(msg1, msg2, '')
 			
 			if len(err_list) > 0:				# Fehlerliste
-				msg1 = L('Fehler:') 
+				msg1 = L('Fehler') 
 				msg2 = '\n'.join(err_list)
-				xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+				MyDialog(msg1, msg2, '')
 			return li
 		else:
 			msg1 = L('keinen Stream gefunden zu') + ": %s" % title
 			msg2 = L("Bitte den Eintrag in Einstellungen ueberpruefen!")
 			msg3 = L('Minimale Bitrate')
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+			MyDialog(msg1, msg2, msg3)
 			return li
 
 	i=1; 
@@ -1653,7 +1653,7 @@ def PlayAudio_pre(url, title, thumb, Plot, header=None, url_template=None, FavCa
 			query = title.split(' - ')[0]
 			msg1 = L('Suche kompatible Streams fuer')
 			msg2 = query
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+			MyDialog(msg1, msg2, '')
 			url = 'https://tunein.com/search/?query=%s' % query		
 			PLog('url: ' + url)
 			Search(query)			
@@ -1768,7 +1768,7 @@ def SearchInFolders(preset_id, ID):
 	if page == '':
 		msg1 = msg
 		PLog(msg1)
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')	
+		MyDialog(msg1, '', '')	
 	PLog(page[:10])
 	
 	foldercnt = page.count('guide_id="f')
@@ -1831,7 +1831,7 @@ def SearchInProfile(ID, preset_id):
 		page, msg = RequestTunein(FunctionName='SearchInProfile: favoriteId suchen', url=url)
 		if page == '':
 			msg1 = msg
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+			MyDialog(msg1, '', '')
 			return li
 		PLog(page[:10])				
 		
@@ -1872,7 +1872,7 @@ def Favourit(ID, preset_id, folderId):
 	if not SETTINGS.getSetting('username')  or not SETTINGS.getSetting('passwort'):
 		msg1 = L('Username und Passwort sind fuer diese Aktion erforderlich')
 		PLog(msg1)
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+		MyDialog(msg1, '', '')
 		return
 
 	# Query prüft, ob der Tunein-Account bereits mit der serial-ID verknüpft ist, Rückgabe username falls OK 
@@ -1882,7 +1882,7 @@ def Favourit(ID, preset_id, folderId):
 	page, msg = RequestTunein(FunctionName='Favourit - association-test', url=query_url)	# 1. Query
 	if page == '':							# Netzwerk-Problem
 		msg1 = msg
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')							
+		MyDialog(msg1, '', '')							
 		return	
 
 	PLog('Fav-Query: ' + page[:10])				 
@@ -1906,7 +1906,7 @@ def Favourit(ID, preset_id, folderId):
 			msg1 = msg
 			PLog(msg1)
 			PLog('Join-Call fehlgeschlagen')
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+			MyDialog(msg1, '', '')
 			# return
 									
 		# PLog('Fav-Join: ' + page)	# bei Bedarf
@@ -1920,7 +1920,7 @@ def Favourit(ID, preset_id, folderId):
 			msg = L('Problem mit Username / Passwort') 
 			msg1 = msg
 			PLog(msg1)
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+			MyDialog(msg1, '', '')
 			return
 			
 	# Favoriten hinzufügen/Löschen - ID steuert ('add', 'remove', moveto)
@@ -1942,7 +1942,7 @@ def Favourit(ID, preset_id, folderId):
 		if favoriteId == '':					# 'Wahrscheinlichkeit gering			
 			msg1 = L('verschieben') + ' ' + L('fehlgeschlagen')
 			PLog(msg1)
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+			MyDialog(msg1, '', '')
 			return 
 		ID = 'move'		# Korrektur
 		fav_url = ('https://opml.radiotime.com/favorites.ashx?render=xml&c=%s&favoriteId=%s&folderId=%s&formats=%s&serial=%s&partnerId=%s'
@@ -1957,7 +1957,7 @@ def Favourit(ID, preset_id, folderId):
 		msg1 = msg
 		PLog(msg1)
 		PLog('%s - Render-Call fehlgeschlagen' % ID)
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+		MyDialog(msg1, '', '')
 		return 
 	# PLog('Fav add/remove: ' + page)
 	
@@ -1968,7 +1968,7 @@ def Favourit(ID, preset_id, folderId):
 			title  = 'status ' + status
 		msg1 = L('fehlgeschlagen') + ' | Tunein: ' + title			
 		PLog(msg1)
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+		MyDialog(msg1, '', '')
 		return 
 	else:
 		if ID == 'add':											# 'add'
@@ -1981,7 +1981,7 @@ def Favourit(ID, preset_id, folderId):
 			msg2 = L("Favorit") + ' ' + L("verschoben")
 				
 		PLog(msg2)
-		# xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')			# Austausch 06.02.2020
+		# MyDialog(msg1, '', '')			# Austausch 06.02.2020
 		xbmcgui.Dialog().notification('TuneIn:',msg2,R(ICON),5000)	# Fertig-Info
 
 #-----------------------------
@@ -2003,7 +2003,7 @@ def FolderMenuList(url, title, li=''):
 	if page == '':
 		msg1 = msg
 		PLog(msg1)
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+		MyDialog(msg1, '', '')
 		return li
 	PLog(len(page))
 	PLog(page[:100])
@@ -2063,13 +2063,13 @@ def Folder(ID, title, foldername, folderId):
 	if foldername == 'None' or foldername == '':
 		msg1 = L('Ordnername fehlt') 
 		PLog(msg1)
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+		MyDialog(msg1, '', '')
 		return
 	
 	if foldername == 'General':
 		msg1 = L('Ordner kann nicht entfernt werden')
 		PLog(msg1)
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+		MyDialog(msg1, '', '')
 		return
 	
 	# 	Ersetzung: c=ID, name=foldername, serial=serial, partnerId=partnerId
@@ -2089,7 +2089,7 @@ def Folder(ID, title, foldername, folderId):
 		msg1 = msg
 		PLog(msg1)
 		PLog(msg1)
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+		MyDialog(msg1, '', '')
 		return
 	# PLog('Fav-Join: ' + page)
 
@@ -2098,14 +2098,14 @@ def Folder(ID, title, foldername, folderId):
 		title  = stringextract('<title>', '</title>', page)
 		msg1 = L('fehlgeschlagen') + ' | Tunein: ' + title			
 		PLog(msg1)
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+		MyDialog(msg1, '', '')
 	else:
 		if ID == 'addFolder':							# 'add'
 			msg1 = L("Ordner") + ' ' + L("hinzugefuegt")
 		else:											# 'remove'
 			msg1 = L("Ordner") + ' ' + L("entfernt")	
 		PLog(msg1)
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+		MyDialog(msg1, '', '')
 
 	my_title = u'%s' % L('Meine Favoriten')								# -> Menü Favoriten
 	my_url = Dict('load','my_url')
@@ -2134,7 +2134,7 @@ def FolderMenu(title, ID, preset_id, checkFiles=None):
 	if page == '':
 		msg1 = msg
 		PLog(msg1)
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+		MyDialog(msg1, '', '')
 		return li
 				
 	rubriken = blockextract('<outline type="link"', page)		# Ordner-Übersicht
@@ -2203,7 +2203,7 @@ def ListMRS(path):
 	if content == '' or content == None:
 		msg1 = L("nicht gefunden") + ': '
 		msg2 = path
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 
 	max_streams=0										# Limit default
 	lines = content.splitlines()
@@ -2228,7 +2228,7 @@ def ListMRS(path):
 			msg2 = path
 			msg3 = 'in line %s' % str(i)
 			PLog(msg1); PLog(msg2);  PLog(msg3);
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+			MyDialog(msg1, msg2, msg3)
 		
 		thumb = R(ICON_MYRADIO)
 		url=py2_encode(url); name=py2_encode(name); thumb=py2_encode(thumb); 
@@ -2258,7 +2258,7 @@ def SingleMRS(name, url, max_streams, image):
 		msg1 =  L('Custom Url muss mit http beginnen') 
 		msg2 = url
 		PLog(msg1)
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		return li
 							
 	if 'Tune.ashx?' in url:						# TuneIn-Link ebenfalls ermöglichen, Inhalt laden
@@ -2270,7 +2270,7 @@ def SingleMRS(name, url, max_streams, image):
 			msg1 = 'My Radiostations - url error:' 
 			msg2 = url
 			PLog(msg1); PLog(msg2)
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+			MyDialog(msg1, msg2, '')
 			return li
 			
 		PLog(url_list)	
@@ -2284,12 +2284,12 @@ def SingleMRS(name, url, max_streams, image):
 		msg2 = name
 		msg3 = url
 		PLog(msg1); PLog(msg3); 
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+		MyDialog(msg1, msg2, msg3)
 		return li
 		
 	if url_list.startswith('get_pls-error'): 					# z.B: Redirection to url ..  is not allowed, einschl.
 		msg1 = url_list											# itunes-Url not supported by this plugin	
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+		MyDialog(msg1, '', '')
 		return li
 	
 	url_list, err_list, err_flag = StreamTests(url_list,summ_org='')
@@ -2299,12 +2299,12 @@ def SingleMRS(name, url, max_streams, image):
 			msg2 = name
 			msg3 = url
 			PLog(msg1); PLog(msg3); 
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, msg3)
+			MyDialog(msg1, msg2, msg3)
 			
 			if len(err_list) > 0:				# Fehlerliste
-				msg1 = L('Fehler:') 
+				msg1 = L('Fehler') 
 				msg2 = '\n'.join(err_list)
-				xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+				MyDialog(msg1, msg2, '')
 			return li
 	
 	i=1;
@@ -2317,7 +2317,6 @@ def SingleMRS(name, url, max_streams, image):
 		except:
 			summ = url
 		summ  = '%s | %s' % (summ, server)
-#		summ = summ.decode('utf-8')		# ev. für song erforderlich
 		if summ.strip().startswith('|'):
 			summ = summ[3:]
 		
@@ -2375,7 +2374,7 @@ def RecordStart(url,title,title_org,image,summ,typ,bitrate, CB=''):		# Aufnahme 
 	if AppExist == False:
 		msg1 = 'Streamripper' + ' ' + L("nicht gefunden")
 		PLog(msg1)
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+		MyDialog(msg1, '', '')
 		return 		
 	
 	DestDir = SETTINGS.getSetting('DownloadDir')	# bei leerem Verz. speichert Streamripper ins Heimatverz.
@@ -2385,7 +2384,7 @@ def RecordStart(url,title,title_org,image,summ,typ,bitrate, CB=''):		# Aufnahme 
 		if os.path.exists(DestDir) == False:
 			msg1 = L('Download-Verzeichnis') + ' ' + L("nicht gefunden")
 			PLog(msg1)
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+			MyDialog(msg1, '', '')
 			return 		
 					
 	# cmd-Bsp.: streamripper http://addrad.io/4WRMHX --quiet -d /tmp -u Mozilla/5.0
@@ -2422,7 +2421,7 @@ def RecordStart(url,title,title_org,image,summ,typ,bitrate, CB=''):		# Aufnahme 
 				PLog(OS_DETECT)	
 				PLog('Test existing Record: ' + msg1)
 				PLog(msg1)
-				xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+				MyDialog(msg1, '', '')
 				return 		
 
 	# Popen-Objekt mit Pid außerhalb nicht mehr ansprechbar (call.pid). Daher speichern wir im Dict die Prozess-ID direkt.
@@ -2446,19 +2445,19 @@ def RecordStart(url,title,title_org,image,summ,typ,bitrate, CB=''):		# Aufnahme 
 			title_new = L('Aufnahme') + ' ' + L('gestartet')
 			msg1 =  '%s: \n %s | %s | PID: %s' % (title_new, title_org, url, call.pid)
 			PLog(msg1)
-			xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+			MyDialog(msg1, '', '')
 			return 		
 							
 	except Exception as exception:
 		msg1 = L('Aufnahme fehlgeschlagen')
 		msg2 = str(exception)
 		PLog(msg1); PLog(msg2)		
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		return 		
 		
 	msg1 = L('Aufnahme') + ' ' + L('fehlgeschlagen') + '\n' + L('Ursache unbekannt')
 	PLog(msg1)	
-	xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+	MyDialog(msg1, '', '')
 #	return 		
 	 	
 #-----------------------------
@@ -2479,7 +2478,7 @@ def RecordStop(url,title,summ, CB=''):					# Aufnahme Stop
 	if pid == '' or int(pid) == 0:
 		msg1 = url + ': ' + L('keine laufende Aufnahme gefunden')
 		PLog(msg1)
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, '', '')
+		MyDialog(msg1, '', '')
 		# if CB:	Callback(CB)		# nicht genutzt
 		return			
 			
@@ -2510,7 +2509,7 @@ def RecordStop(url,title,summ, CB=''):					# Aufnahme Stop
 	PID_lines.remove(PID_line)		# Eintrag Prozessliste entfernen - unabhängig vom Erfolg
 	PLog(PID_lines)
 	Dict('store', 'PID', PID_lines)	
-	xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+	MyDialog(msg1, msg2, '')
 	return 		
 					
 #-----------------------------
@@ -2561,7 +2560,7 @@ def SearchUpdate(title):
 		msg1 = L("Github ist nicht errreichbar")
 		msg2 = 'update_available: False'
 		PLog("%s | %s" % (msg1, msg2))
-		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+		MyDialog(msg1, msg2, '')
 		return li			
 
 	int_lv = ret[0]			# Version Github
@@ -2921,7 +2920,7 @@ def router(paramstring):
 					msg1 = "Modul %s ist nicht geladen" % dest_modul
 					msg2 = "Ursache unbekannt."
 					PLog(msg1)
-					xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
+					MyDialog(msg1, msg2, '')
 					xbmcplugin.endOfDirectory(HANDLE)
 
 			else:
@@ -2995,6 +2994,5 @@ if __name__ == '__main__':
 	except Exception as e: 
 		msg = str(e)
 		PLog('network_error: ' + msg)
-		# xbmcgui.Dialog().ok(ADDON_NAME, 'network_error', msg)
 
 		
