@@ -2,6 +2,7 @@
 <addon id="plugin.audio.tunein2017" name="TuneIn2017" version="1.5.9" provider-name="rols1 (rols1@gmx.de)">
 	<requires>
 		<import addon="xbmc.python" version="2.25.0"/>
+    		<import addon="script.module.kodi-six" />
 	</requires>
 	<extension point="xbmc.python.pluginsource" library="tunein2017.py">
 		<provides>audio</provides>
@@ -22,4 +23,5 @@
 			<icon>icon.png</icon>
 			<fanart>fanart.png</fanart>           
 		</assets>
-    
+   </extension>
+</addon>    
