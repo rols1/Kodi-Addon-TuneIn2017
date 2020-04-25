@@ -2,27 +2,48 @@
 ################################################################################
 #			updater.py - Part of Kodi-Addon-TuneIn2017
 #
+#	26.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
+# 	18.03.2020 adjust_AddonXml: Anpassung python-Version an Kodi-Version
 #
 ################################################################################
-import re, os, sys
-import shutil						# Dir's löschen
-import urllib2, zipfile, StringIO
 
-import xbmc, xbmcgui, xbmcaddon
+# Python3-Kompatibilität:
+from __future__ import absolute_import		# sucht erst top-level statt im akt. Verz. 
+from __future__ import division				# // -> int, / -> float
+from __future__ import print_function		# PYTHON2-Statement -> Funktion
+from kodi_six import xbmc, xbmcaddon, xbmcplugin, xbmcgui, xbmcvfs
+# o. Auswirkung auf die unicode-Strings in PYTHON3:
+from kodi_six.utils import py2_encode, py2_decode
+
+import os, sys
+PYTHON2 = sys.version_info.major == 2
+PYTHON3 = sys.version_info.major == 3
+if PYTHON2:					
+	from urllib import quote, unquote, quote_plus, unquote_plus, urlencode, urlretrieve 
+	from urllib2 import Request, urlopen, URLError 
+	from urlparse import urljoin, urlparse, urlunparse , urlsplit, parse_qs 
+elif PYTHON3:				
+	from urllib.parse import quote, unquote, quote_plus, unquote_plus, urlencode, urljoin, urlparse, urlunparse, urlsplit, parse_qs  
+	from urllib.request import Request, urlopen, urlretrieve
+	from urllib.error import URLError
+
+import zipfile, re
+import shutil						# Dir's löschen
+import io 							# Python2+3 -> update() io.BytesIO für Zipfile
 
 import resources.lib.util_tunein2017 as util
 PLog=util.PLog; stringextract=util.stringextract;
-cleanhtml=util.cleanhtml;
+cleanhtml=util.cleanhtml; RLoad=util.RLoad; RSave=util.RSave; 
  
 ADDON_ID      	= 'plugin.audio.tunein2017'
 SETTINGS 		= xbmcaddon.Addon(id=ADDON_ID)
 ADDON_NAME    	= SETTINGS.getAddonInfo('name')
-ADDON_PATH    	= SETTINGS.getAddonInfo('path').decode('utf-8')
+ADDON_PATH    	= SETTINGS.getAddonInfo('path')
 
 FEED_URL = 'https://github.com/{0}/releases.atom'
 
 ################################################################################
-TITLE = 'ARD und ZDF'
+TITLE = 'TuneIn2017'
 REPO_NAME		 	= 'Kodi-Addon-TuneIn2017'
 GITHUB_REPOSITORY 	= 'rols1/' + REPO_NAME
 
@@ -32,13 +53,14 @@ GITHUB_REPOSITORY 	= 'rols1/' + REPO_NAME
 def get_latest_version():
 	PLog('get_latest_version:')
 	try:
-		# https://github.com/rols1/Kodi-Addon-TuneIn2017/releases.atom
+		# https://github.com/rols1/Kodi-Addon-ARDundZDF/releases.atom
 		# releases.atom liefert Releases-Übersicht als xml-Datei 
 		release_feed_url = ('https://github.com/{0}/releases.atom'.format(GITHUB_REPOSITORY))
 		PLog(release_feed_url)
 			
-		r = urllib2.urlopen(release_feed_url)
-		page = r.read()					
+		r = urlopen(release_feed_url)
+		page = r.read()	
+		page=page.decode('utf-8')				
 		PLog(len(page))
 		# PLog(page[:800])
 
@@ -52,10 +74,11 @@ def get_latest_version():
 		# PLog(link); PLog(title); PLog(summary); PLog(tag);  
 		return (title, summary, tag)
 	except Exception as exception:
-		Log.Error('Suche nach neuen Versionen fehlgeschlagen: {0}'.format(repr(exception)))
+		PLog(str(exception))
 		return ('', '', '')
 
 ################################################################################
+# decode latest_version (hier bytestring) erforderlich für Pfad-Bau in 
 def update_available(VERSION):
 	PLog('update_available:')
 
@@ -71,16 +94,18 @@ def update_available(VERSION):
 			# wir verwenden auf Github die Versionierung nicht im Plugin-Namen
 			# latest_version  = title 
 			latest_version  = tag		# Format hier: '1.4.1'
+
 			current_version = VERSION
 			int_lv = tag.replace('.','')
 			int_cv = current_version.replace('.','')
 			PLog('Github: ' + latest_version); PLog('lokal: ' + current_version); 
 			# PLog(int_lv); PLog(int_cv)
 			return (int_lv, int_cv, latest_version, summ, tag)
-	except:
-		pass
+	except Exception as exception:	
+		PLog(str(exception))
+		
 	return (False, '', '', '', '', '')
-           
+            
 ################################################################################
 def update(url, ver):
 	PLog('update:')	
@@ -90,20 +115,22 @@ def update(url, ver):
 		msg2 = 'Update erfolgreich - weiter zum aktuellen Addon'  	# Kodi: kein Neustart notw.
 		try:
 			dest_path 	= xbmc.translatePath("special://home/addons/")
+			r 			= urlopen(url)
 			PLog('Mark1')
-			r 			= urllib2.urlopen(url)
+			zip_data	= zipfile.ZipFile(io.BytesIO(r.read()))
 			PLog('Mark2')
-			zip_data	= zipfile.ZipFile(StringIO.StringIO(r.read()))
-			PLog('Mark3')
 			
 			# save_restore('save')									# Cache sichern - entfällt, s.o.
 			
 			PLog(dest_path)
 			PLog(ADDON_PATH)
 			shutil.rmtree(ADDON_PATH)		# remove addon, Verzicht auf ignore_errors=True
+			PLog('Mark3')
 			zip_data.extractall(dest_path)
 				
 			# save_restore('restore')								# Cache sichern	 - entfällt, s.o.
+			PLog('Mark4')
+			adjust_AddonXml()										# addon.xml an Kodi-Verson anpassen
 					
 		except Exception as exception:
 			msg1 = 'Update fehlgeschlagen'
@@ -114,7 +141,46 @@ def update(url, ver):
 		msg1 = 'Update fehlgeschlagen'
 		msg2 =  'Version ' + ver + 'nicht gefunden!'
 		xbmcgui.Dialog().ok(ADDON_NAME, msg1, msg2, '')
-	return
+
+################################################################################
+# adjust_AddonXml:  Anpassung der python-Version in der neu installierten 
+#	addon.xml an die akt. Kodi-Version. Passende addon.xml bleibt unver-
+#	ändert. Da Kodi die addon.xml erst bei Neustart od. Addon-Installation
+#	prüft, muss die Änderung nicht bereits vor dem Speichern erfolgen.
+# 
+# Voraussetzung für replace: die Einträge in addon.xml entsprechen exakt 
+#	den Marken repl_leia + repl_matrix
+# 
+# Nach Beendigung des Updates wird bei jedem Laden des Moduls util
+#	in check_AddonXml das Verzeichnis ADDON_DATA angepasst (s. dort)
+#
+def adjust_AddonXml():
+	PLog('adjust_AddonXml:')
+	repl_leia 	= 'addon="xbmc.python" version="2.25.0"'
+	repl_matrix = 'addon="xbmc.python" version="3.0.0"'
+	KODI_VERSION = xbmc.getInfoLabel('System.BuildVersion')
+	path = xbmc.translatePath('special://home/addons/' + ADDON_ID + '/addon.xml')
+	PLog(KODI_VERSION); PLog(path)
+	
+	page = RLoad(path, abs_path=True)
+	change = False
+	if KODI_VERSION.startswith('19.'):					# Kodi Matrix
+		if repl_leia in page:
+			page = page.replace(repl_leia, repl_matrix)
+			page = py2_encode(page)
+			PLog('adjust_AddonXml: ersetze %s durch %s' % (repl_leia, repl_matrix))
+			RSave(path, page)
+			change = True	
+	else:												# Kodi <= Leia
+		if repl_matrix in page:
+			page = page.replace(repl_matrix, repl_leia)
+			page = py2_encode(page)
+			PLog('adjust_AddonXml: ersetze %s durch %s' % (repl_matrix, repl_leia))
+			RSave(path, page)		
+			change = True	
+	if change == False:
+		PLog(u'adjust_AddonXml: addon.xml unverändert')
+	return	
 
 ################################################################################
 # save_restore:  Cache sichern / wieder herstellen
@@ -124,7 +190,8 @@ def update(url, ver):
 # 03.05.2019 Funktion wieder entfernt - s.o.
 
 	
-################################################################################# clean tag names based on your release naming convention
+################################################################################# 
+# clean tag names based on your release naming convention
 def cleanSummary(summary):
 	
 	summary = (summary.replace('&lt;','').replace('&gt;','').replace('/ul','')
@@ -133,3 +200,4 @@ def cleanSummary(summary):
 		.replace('&quot;', '"').replace('| li', '| ').replace('-&amp;gt;', '->'))
 		
 	return summary.lstrip()
+	

@@ -16,14 +16,14 @@
     "Bezugsquelle": "Fuente",
     "Github ist nicht errreichbar": "No es posible acceder a GitHub",
     "Bitte die Update-Anzeige abschalten": "Deshabilite notificaciones del complemento",
-    "Username ueberpruefen": "Compruebe el usuario",
-    "keinen Stream gefunden zu": "No se ha encontrado transmisión alguna de",
-    "nicht gefunden": "no se ha encontrado",
-    "Mehr...": "Mas... ",
+    "Username ueberpruefen": "Revise el usuario",
+    "keinen Stream gefunden zu": "No se ha encontrado transmisión para",
+    "nicht gefunden": "No se ha encontrado",
+    "Mehr...": "Mas...",
     "neuer Versuch": "Nuevo intento",
     "neues Update beim Start des Plugins anzeigen": "Buscar actualizaciones al inicio",
-    "Sprache Plugin": "Idioma",
-    "maximale Anzahl Objekte pro Seite": "Nnúmero máximo de elementos por página",
+    "Sprache Plugin": "Idioma del complemento",
+    "maximale Anzahl Objekte pro Seite": "Máximo número de elementos por página",
     "Aufnehmen mit Streamripper": "Grabaciones con Streamripper",
     "kompletter Pfad zum Programm Streamripper": "Ruta completa del programa Streamripper",
     "kompletter Pfad zum Download-Verzeichnis": "Ruta completa de la carpeta de descarga",
@@ -98,5 +98,5 @@
     "Bitte Suchwort(e) eingeben": "Escriba término(s) de búsqueda",
     "Addon Update auf Version": "Actualización del complemento a la versión",
     "Update erfolgreich - weiter zum aktuellen Addon": "La actualización se ha realizado con éxito - Continuar con el complemento actual",
-    "Custom Url": "URL personalizada"
 }
+

@@ -59,8 +59,8 @@ msgstr "Url Personalizzato - Url:"
 #: 
 msgctxt "#30303"
 #: "Label for entry-field in Preferences"
-msgid "Custom Url: Name"
-msgstr "Url Personalizzato: Nome"
+msgid "Custom Url - Name:"
+msgstr "Url Personalizzato - Nome:"
 
 #: 
 msgctxt "#30112" 
@@ -145,6 +145,10 @@ msgctxt "#30501"
 msgid "Days until deletion"
 msgstr "Periodo di cancellazione (giorni)"
 
+msgctxt "#30205" 
+#: "Label for bool-field in Preferences "
+msgid "station not compatible? Try a new search"
+msgstr "stazione non compatibile? Prova una nuova ricerca"
 
 
 

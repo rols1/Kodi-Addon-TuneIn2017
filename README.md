@@ -1,6 +1,6 @@
 TuneIn2017
 ==================
-tunein.com-Addon für Kodi (vormals Plugin für den Plexmediaserver)
+tunein.com-Addon für Kodi ([vormals Plugin für den Plexmediaserver](https://github.com/rols1/TuneIn2017)).
 
 Download aktuelle Version: https://github.com/rols1/Kodi-Addon-TuneIn2017/releases
 ![Downloads](https://img.shields.io/github/downloads/rols1/Kodi-Addon-TuneIn2017/total.svg "Downloads")
@@ -16,14 +16,15 @@ EMail: rols1@gmx.de
 INSTALLATION:
 ===================  
 - Download der zip-Datei hier: https://github.com/rols1/Kodi-Addon-TuneIn2017/releases/latest
-- Im Kodi-Menü Addons/Addon-Browser anklicken: aus ZIP-Datei installieren
-- Heruntergeladene zip-Datei im Kodi-Browser auswählen.
+- Download script.module.kodi-six.zip hier https://github.com/romanvm/kodi.six/releases
+- Beide zip-Dateien mittels Kodi-Menü Addons/Addon-Browser installieren
 - Addon öffen und Addon-Einstellungen anpassen.
 - [bebilderte Anleitung](https://www.kodinerds.net/index.php/Thread/14234-Wie-installiert-man-Addons-die-nicht-über-den-Addon-Browser-verfügbar-sind/?page=Thread&threadID=14234)
 
 ### english:
 - Download zip-file from https://github.com/rols1/Kodi-Addon-TuneIn2017/releases/latest
-- choose downloaded zip-file with your Kodi-Browser
+- Download script.module.kodi-six.zip from https://github.com/romanvm/kodi.six/releases
+- install downloaded zip-files with your Kodi-Browser
 - start addon and make the appropriate settings
 - [further instructions with pictures](https://kodi.wiki/view/HOW-TO:Install_add-ons_from_zip_files) 
 
@@ -39,6 +40,7 @@ https://github.com/rols1/TuneIn2017/wiki/Pictures-and-Contexts-for-the-Localisat
 * Vlad - Ukrainian
 * Joyfik - French
 * Alessio79 - Italian
+* Patrizia - Spanish
 
 UPDATES:
 ===================  
@@ -47,16 +49,18 @@ Update-Modul integrated.
 Options:
 ===================  
 * Search
-* Download Option with Streamripper: [see more](https://github.com/rols1/TuneIn2017/wiki/Download-Option-with-Streamripper) 
+* Recording Option with Streamripper: [see more](https://github.com/rols1/TuneIn2017/wiki/Download-Option-with-Streamripper) 
 * Favourites and Folders (Tunein-Account required)
 * MyRadioStations - without any access to tunein (in combination with option StartWithMyRadioStations). Sample file with more infos comes with plugin in ```../plugin.audio.tunein2017/resources/myradiostations-Mix.txt```
 * Local radio (manually setting, only effective in plugin)
+* integrated slideshow
 
 Credits:
 ===================  
 - Credits to [dirble]https://github.com/dirble/streamscrobbler-python: Metadata for some streamservices, esp. Shoutcast
 - Credits to [solvek] https://github.com/solvek/TuneIn.bundle): Information for developer
 - Credits to [coder-alpha] https://forums.plex.tv/discussion/166602/rel-ccloudtv-channel-iptv/p1): (Channel updater, based on Channel updater by sharkone/BitTorrent.bundle)
+- Credits to [romanv](https://github.com/romanvm) for his script.module.kodi-six
 
  
 Bilder / Pictures:

@@ -1,19 +1,40 @@
 # -*- coding: utf-8 -*-
 # util_tunein2017.py
-#	
+#	26.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
+# Stand 10.04.2020	
 
-import os, sys, glob, shutil, time
-import urllib, urllib2, ssl
-from StringIO import StringIO
+# Python3-Kompatibilität:
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from kodi_six import xbmc, xbmcaddon, xbmcplugin, xbmcgui, xbmcvfs
+# o. Auswirkung auf die unicode-Strings in PYTHON3:
+from kodi_six.utils import py2_encode, py2_decode
+
+# Standard:
+import os, sys
+PYTHON2 = sys.version_info.major == 2
+PYTHON3 = sys.version_info.major == 3
+if PYTHON2:					
+	from urllib import quote, unquote, quote_plus, unquote_plus, urlencode, urlretrieve 
+	from urllib2 import Request, urlopen, URLError 
+	from urlparse import urljoin, urlparse, urlunparse , urlsplit, parse_qs 
+elif PYTHON3:				
+	from urllib.parse import quote, unquote, quote_plus, unquote_plus, urlencode, urljoin, urlparse, urlunparse, urlsplit, parse_qs  
+	from urllib.request import Request, urlopen, urlretrieve
+	from urllib.error import URLError
+	
+import glob, shutil, time
+import ssl
+from io import BytesIO	# Python2+3 -> get_page (compressed Content), Ersatz für StringIO
 import gzip, zipfile
-from urlparse import parse_qsl
 import random			# Zufallswerte für rating_key
 import base64 			# url-Kodierung für Kontextmenüs
 import json				# json -> Textstrings
 import pickle			# persistente Variablen/Objekte
 import re				# u.a. Reguläre Ausdrücke, z.B. in CalculateDuration
+import base64			# zusätzliche url-Kodierung für addDir/router
 	
-import xbmc, xbmcplugin, xbmcgui, xbmcaddon
 
 # Globals
 NAME		= 'TuneIn2017'
@@ -23,9 +44,9 @@ ADDON_ID      	= 'plugin.audio.tunein2017'
 SETTINGS 		= xbmcaddon.Addon(id=ADDON_ID)
 ADDON_NAME    	= SETTINGS.getAddonInfo('name')
 SETTINGS_LOC  	= SETTINGS.getAddonInfo('profile')
-ADDON_PATH    	= SETTINGS.getAddonInfo('path').decode('utf-8')	# Basis-Pfad Addon
+ADDON_PATH    	= SETTINGS.getAddonInfo('path')					# Basis-Pfad Addon
 ADDON_VERSION 	= SETTINGS.getAddonInfo('version')
-PLUGIN_URL 		= sys.argv[0]				# plugin://plugin.video.ardundzdf/
+PLUGIN_URL 		= sys.argv[0]
 HANDLE			= int(sys.argv[1])
 
 DEBUG			= SETTINGS.getSetting('pref_info_debug')
@@ -53,13 +74,45 @@ DICTSTORE 		= os.path.join("%s/Dict") % ADDON_DATA
 def PLog(msg, loglevel=xbmc.LOGDEBUG):
 	if DEBUG == 'false':
 		return
-	if isinstance(msg, unicode):
-		msg = msg.encode('utf-8')
+	#if isinstance(msg, unicode):	# entf. mit six
+	#	msg = msg.encode('utf-8')
+	
 	loglevel = xbmc.LOGNOTICE
 	# PLog('loglevel: ' + str(loglevel))
 	if loglevel >= 2:
 		xbmc.log("%s --> %s" % (NAME, msg), level=loglevel)
 	 
+#---------------------------------------------------------------- 
+# 10.04.2020 Konvertierung 3-zeiliger Dialoge in message (Multiline)
+#  	Anlass: 23-03-2020 Removal of deprecated features (PR) - siehe:
+#	https://forum.kodi.tv/showthread.php?tid=344263&pid=2933596#pid2933596
+#	https://github.com/xbmc/xbmc/blob/master/xbmc/interfaces/legacy/Dialog.h
+# ok triggert Modus: Dialog().ok, Dialog().yesno()
+#
+def MyDialog(msg1, msg2='', msg3='', ok=True, cancel='Abbruch', yes='JA', heading=''):
+	PLog('MyDialog:')
+	
+	msg = msg1
+	if msg2:							# 3 Zeilen -> Multiline
+		msg = "%s\n%s" % (msg, msg2)
+	if msg3:
+		msg = "%s\n%s" % (msg, msg3)
+	if heading == '':
+		heading = ADDON_NAME
+	
+	if ok:								# ok-Dialog
+		if PYTHON2:
+			return xbmcgui.Dialog().ok(heading=heading, line1=msg)
+		else:							# Matrix: line1 -> message
+			return xbmcgui.Dialog().ok(heading=heading, message=msg)
+
+	else:								# yesno-Dialog
+		if PYTHON2:
+			ret = xbmcgui.Dialog().yesno(heading=heading, line1=msg, nolabel=cancel, yeslabel=yes)
+		else:							# Matrix: line1 -> message
+			ret = xbmcgui.Dialog().yesno(heading=heading, message=msg, nolabel=cancel, yeslabel=yes)
+		return ret
+
 #---------------------------------------------------------------- 
 #	03.04.2019 data-Verzeichnis des Addons:
 #  		Check /Initialisierung / Migration
@@ -242,11 +295,13 @@ def ClearUp(directory, seconds):
 		for f in files:
 			# PLog(os.stat(f).st_mtime)
 			if os.stat(f).st_mtime < (now - seconds):
-				os.remove(f)
-				cnt_files = cnt_files + 1
-			if os.path.isdir(f):		# Leerverz. entfernen
-				if not os.listdir(f):
-					os.rmdir(f)
+				if os.path.isfile(f):	
+					PLog('entfernte Datei: ' + f)
+					os.remove(f)
+					cnt_files = cnt_files + 1
+				if os.path.isdir(f):		# Verz. ohne Leertest entf.
+					PLog('entferntes Verz.: ' + f)
+					shutil.rmtree(f, ignore_errors=True)
 					cnt_dirs = cnt_dirs + 1
 		PLog("ClearUp: entfernte Dateien %s, entfernte Ordner %s" % (str(cnt_files), str(cnt_dirs)))	
 		return True
@@ -258,12 +313,10 @@ def ClearUp(directory, seconds):
 # Listitems verlangen encodierte Strings auch bei Umlauten. Einige Quellen liegen in unicode 
 #	vor (s. json-Auswertung in get_page) und müssen rückkonvertiert  werden.
 # Hinw.: Teilstrings in unicode machen str-Strings zu unicode-Strings.
+# 19.11.2019 abgelöst durch py2_encode aus Kodi-six
 def UtfToStr(line):
-	if type(line) == unicode:
-		line =  line.encode('utf-8')
-		return line
-	else:
-		return line	
+	PLog('UtfToStr:')
+	return py2_encode(line)			# wirkt nur in Python2: Unicode -> str
 #----------------------------------------------------------------  
 # In Kodi fehlen die summary- und tagline-Zeilen der Plexversion. Diese ersetzen wir
 #	hier einfach durch infoLabels['Plot'], wobei summary und tagline durch 
@@ -281,15 +334,16 @@ def UtfToStr(line):
 
 def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline='', mediatype='', cmenu=True):
 	PLog('addDir:')
-	PLog('addDir - label: %s, action: %s, dirID: %s' % (label, action, dirID))
-	PLog('addDir - summary: %s, tagline: %s, mediatype: %s, cmenu: %s' % (summary, tagline, mediatype, cmenu))
-	
-	label=UtfToStr(label); thumb=UtfToStr(thumb); fanart=UtfToStr(fanart); 
-	summary=UtfToStr(summary); tagline=UtfToStr(tagline); 
-	fparams=UtfToStr(fparams);
+	PLog(type(label))
+	label=py2_encode(label)
+	PLog('addDir - label: {0}, action: {1}, dirID: {2}'.format(label, action, dirID))
+	PLog(type(summary)); PLog(type(tagline));
+	summary=py2_encode(summary); tagline=py2_encode(tagline); 
+	fparams=py2_encode(fparams); fanart=py2_encode(fanart); thumb=py2_encode(thumb);
+	PLog('addDir - summary: {0}, tagline: {1}, mediatype: {2}, cmenu: {3}'.format(summary, tagline, mediatype, cmenu))
 	
 	li.setLabel(label)			# Kodi Benutzeroberfläche: Arial-basiert für arabic-Font erf.
-	# PLog('summary, tagline: %s, %s' % (summary, tagline))
+	PLog('summary, tagline: %s, %s' % (summary, tagline))
 	Plot = ''
 	if tagline:								
 		Plot = tagline
@@ -309,33 +363,9 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 	xbmcplugin.addSortMethod(HANDLE, xbmcplugin.SORT_METHOD_UNSORTED)
 	PLog('PLUGIN_URL: ' + PLUGIN_URL)	# plugin://plugin.video.ardundzdf/
 	PLog('HANDLE: ' + str(HANDLE))
-	url = PLUGIN_URL+"?action="+action+"&dirID="+dirID+"&fanart="+fanart+"&thumb="+thumb+urllib.quote_plus(fparams)
-	PLog("addDir_url: " + urllib.unquote_plus(url))
+	url = PLUGIN_URL+"?action="+action+"&dirID="+dirID+"&fanart="+fanart+"&thumb="+thumb+quote_plus(fparams)
+	PLog("addDir_url: " + unquote_plus(url))
 		
-	
-	if SETTINGS.getSetting('pref_watchlist') ==  'true':	# Merkliste verwenden 
-		if cmenu:											# Kontextmenüs Merkliste hinzufügen	
-			Plot = Plot.replace('\n', '||')		# || Code für LF (\n scheitert in router)
-			# PLog('Plot: ' + Plot)
-			fparams_add = "&fparams={'action': 'add', 'name': '%s', 'thumb': '%s', 'Plot': '%s', 'url': '%s'}" \
-				%   (label, thumb,  urllib.quote_plus(Plot), base64.b64encode(urllib.quote_plus(url)))
-				#%   (label, thumb,  urllib.quote_plus(Plot), urllib.quote_plus(url))
-				# %   (label, thumb,  base64.b64encode(url))#möglich: 'Incorrect padding' error 
-			fparams_add = urllib.quote_plus(fparams_add)
-
-			fparams_del = "&fparams={'action': 'del', 'name': '%s'}" \
-				%   (label)									# name reicht für del
-				# %   (label, thumb,  base64.b64encode(url))
-			fparams_del = urllib.quote_plus(fparams_del)	
-
-			li.addContextMenuItems([('Zur Merkliste hinzufügen', 'RunAddon(%s, ?action=dirList&dirID=Watch%s)' \
-				% (ADDON_ID, fparams_add)), ('Aus Merkliste entfernen', 'RunAddon(%s, ?action=dirList&dirID=Watch%s)' \
-				% (ADDON_ID, fparams_del))])
-		else:
-			pass											# Kontextmenü entfernen klappt so nicht
-			#li.addContextMenuItems([('Zur Merkliste hinzufügen', 'RunAddon(%s, ?action=dirList&dirID=dummy)' \
-			#	% (ADDON_ID))], replaceItems=True)
-
 		
 	xbmcplugin.addDirectoryItem(handle=HANDLE,url=url,listitem=li,isFolder=isFolder)
 	
@@ -383,8 +413,12 @@ def RLoad(fname, abs_path=False): # ersetzt Resource.Load von Plex
 	path = os.path.join(fname) # abs. Pfad
 	PLog('RLoad: %s' % str(fname))
 	try:
-		with open(path,'r') as f:
-			page = f.read()		
+		if PYTHON2:
+			with open(path,'r') as f:
+				page = f.read()		
+		else:
+			with open(path,'r', encoding="utf8") as f:
+				page = f.read()		
 	except Exception as exception:
 		PLog(str(exception))
 		page = ''
@@ -443,11 +477,15 @@ def repl_char(cut_char, line):	# problematische Zeichen in Text entfernen, wenn 
 #  	14.04.2019 entfernt: (':', ' ')
 def repl_json_chars(line):	# für json.loads (z.B.. in router) json-Zeichen in line entfernen
 	line_ret = line
-	for r in	(('"', ''), ('\\', ''), ('\'', '')
-		, ('&', 'und'), ('(', '<'), (')', '>'),  ('∙', '|')):			
+	#PLog(type(line_ret))
+	for r in	((u'"', u''), (u'\\', u''), (u'\'', u'')
+		, (u'&', u'und'), ('(u', u'<'), (u'(', u'<'),  (u')', u'>'), (u'∙', u'|')
+		, (u'„', u'>'), (u'“', u'<'), (u'”', u'>'),(u'°', u' Grad')
+		, (u'\r', u''), (u'#', u'*')):			
 		line_ret = line_ret.replace(*r)
 	
 	return line_ret
+
 #---------------------------------------------------------------- 
 # strip-Funktion, die auch Zeilenumbrüche innerhalb des Strings entfernt
 #	\s [ \t\n\r\f\v - s. https://docs.python.org/3/library/re.html
@@ -537,13 +575,14 @@ def my_rfind(left_pattern, start_pattern, line):  # sucht ab start_pattern rück
 	return -1, ''								# Fehler, wenn Anfang line erreicht
 #----------------------------------------------------------------  	
 def cleanhtml(line): # ersetzt alle HTML-Tags zwischen < und >  mit 1 Leerzeichen
-	cleantext = line
+	cleantext = py2_decode(line)
 	cleanre = re.compile('<.*?>')
 	cleantext = re.sub(cleanre, ' ', line)
 	return cleantext
 #----------------------------------------------------------------  	
 def decode_url(line):	# in URL kodierte Umlaute und & wandeln, Bsp. f%C3%BCr -> für, 	&amp; -> &
-	urllib.unquote(line)
+	line = py2_decode(line)
+	unquote(line)
 	line = line.replace('&amp;', '&')
 	return line
 #----------------------------------------------------------------  	
@@ -554,18 +593,19 @@ def unescape(line):
 #	
 	if line == None or line == '':
 		return ''	
-	for r in	(("&amp;", "&"), ("&lt;", "<"), ("&gt;", ">")
-		, ("&#39;", "'"), ("&#039;", "'"), ("&quot;", '"'), ("&#x27;", "'")
-		, ("&ouml;", "ö"), ("&auml;", "ä"), ("&uuml;", "ü"), ("&szlig;", "ß")
-		, ("&Ouml;", "Ö"), ("&Auml;", "Ä"), ("&Uuml;", "Ü"), ("&apos;", "'")
-		, ("&nbsp;|&nbsp;", ""), ("&nbsp;", ""), 
+	line = py2_decode(line)
+	for r in	((u"&amp;", u"&"), (u"&lt;", u"<"), (u"&gt;", u">")
+		, (u"&#39;", u"'"), (u"&#039;", u"'"), (u"&quot;", u'"'), (u"&#x27;", u"'")
+		, (u"&ouml;", u"ö"), (u"&auml;", u"ä"), (u"&uuml;", u"ü"), (u"&szlig;", u"ß")
+		, (u"&Ouml;", u"Ö"), (u"&Auml;", u"Ä"), (u"&Uuml;", u"Ü"), (u"&apos;", u"'")
+		, (u"&nbsp;|&nbsp;", u""), (u"&nbsp;", u""), 
 		# Spezialfälle:
 		#	https://stackoverflow.com/questions/20329896/python-2-7-character-u2013
 		#	"sächsischer Genetiv", Bsp. Scott's
 		#	Carriage Return (Cr)
-		("–", "-"), ("&#x27;", "'"), ("&#xD;", ""), ("\xc2\xb7", "-"),
-		('undoacute;', 'o'), ('&eacute;', 'e'), ('&egrave;', 'e')):
-			
+		(u"–", u"-"), (u"&#x27;", u"'"), (u"&#xD;", u""), (u"\xc2\xb7", u"-"),
+		(u'undoacute;', u'o'), (u'&eacute;', u'e'), (u'&egrave;', u'e'),
+		(u'&atilde;', u'a')):
 		line = line.replace(*r)
 	return line
 #----------------------------------------------------------------  
@@ -582,12 +622,16 @@ def transl_json(line):	# json-Umlaute übersetzen
 	# Vorkommen: Loader-Beiträge ZDF/3Sat (ausgewertet als Strings)
 	# Recherche Bsp.: https://www.compart.com/de/unicode/U+00BA
 	# 
-#	line = UtfToStr(line)
-	for r in (('\\u00E4', "ä"), ('\\u00C4', "Ä"), ('\u00F6', "ö")		
-		, ('\\u00C6', "Ö"), ('\\u00D6', "Ö"),('\\u00FC', "ü"), ('\\u00DC', 'Ü')
-		, ('\\u00DF', 'ß'), ('\\u0026', '&'), ('\\u00AB', '"')
-		, ('\\u00BB', '"')
-		, ('\xc3\xa2', '*')):	# a mit Circumflex:  â<U+0088><U+0099> bzw. \xc3\xa2
+	line= py2_decode(line)	
+	for r in ((u'\\u00E4', u"ä"), (u'\\u00C4', u"Ä"), (u'\\u00F6', u"ö")		
+		, (u'\\u00C6', u"Ö"), (u'\\u00D6', u"Ö"),(u'\\u00FC', u"ü"), (u'\\u00DC', u'Ü')
+		, (u'\\u00DF', u'ß'), (u'\\u0026', u'&'), (u'\\u00AB', u'"')
+		, (u'\\u00BB', u'"')
+		, (u'\xc3\xa2', u'*')			# a mit Circumflex:  â<U+0088><U+0099> bzw. \xc3\xa2
+		, (u'u00B0', u' Grad')		# u00BA -> Grad (3Sat, 37 Grad)	
+		, (u'u00EA', u'e')			# 3Sat: Fête 
+		, (u'u00E9', u'e')			# 3Sat: Fabergé
+		, (u'u00E6', u'ae')):			# 3Sat: Kjaerstad
 
 		line = line.replace(*r)
 	return line	
@@ -595,8 +639,11 @@ def transl_json(line):	# json-Umlaute übersetzen
 # aus Kodi-Addon-ARDundZDF, Modul util
 def repl_json_chars(line):	# für json.loads (z.B.. in router) json-Zeichen in line entfernen
 	line_ret = line
-	for r in	(('"', ''), ('\\', ''), ('\'', '')
-		, ('&', 'und'), ('(', '<'), (')', '>'),  ('∙', '|')):			
+	#PLog(type(line_ret))
+	for r in	((u'"', u''), (u'\\', u''), (u'\'', u'')
+		, (u'&', u'und'), ('(u', u'<'), (u')', u'>'),  (u'∙', u'|')
+		, (u'„', u'>'), (u'“', u'<'), (u'”', u'>'),(u'°', u' Grad')
+		, (u'\r', u'')):			
 		line_ret = line_ret.replace(*r)
 	
 	return line_ret
@@ -622,7 +669,7 @@ def seconds_translate(seconds):
 # Holt User-Eingabe für Suche ab
 #	s.a. get_query (für Search , ZDF_Search)
 def get_keyboard_input():
-	kb = xbmc.Keyboard('', 'Bitte Suchwort(e) eingeben')
+	kb = xbmc.Keyboard('', L('Bitte Suchwort(e) eingeben'))
 	kb.doModal() # Onscreen keyboard
 	if kb.isConfirmed() == False:
 		return ""
@@ -646,7 +693,7 @@ def L(string):
 	lines = lines.splitlines()
 	lstring = ''	
 	for line in lines:
-		term1 = line.split(':')[0].strip()
+		term1 = line.split('":')[0].strip()
 		term1 = term1.strip()
 		term1 = term1.replace('"', '')			# Hochkommata entfernen
 		# PLog(term1)
@@ -657,7 +704,7 @@ def L(string):
 			lstring = lstring.replace(',', '')
 			break
 			
-	PLog(string); PLog(lstring)		
+	PLog(string); PLog(lstring)
 	if lstring:
 		return lstring
 	else:
@@ -679,6 +726,7 @@ def L(string):
 #		redirect-Url: 	dg-ndr-https-dus-dtag-cdn.sslcast.addradio.de/ndr/ndr1niedersachsen/..
 #		replaced-Url: 	dg-ndr-http-dus-dtag-cdn.cast.addradio.de/ndr/ndr1niedersachsen/..
 # url_template gesetzt von RadioAnstalten (Radio-Live-Sender)
+#
 # 18.06.2019 Kodi 17.6:  die template-Lösung funktioniert nicht mehr - dto. Redirect - 
 #				Code für beides entfernt. Hilft ab er nur bei wenigen Sendern.
 #				Neue Kodivers. ansch. nicht betroffen, Kodi 18.2. OK
@@ -686,7 +734,7 @@ def L(string):
 # CB enthält die Funktionsbez. für den Callback
 #	
 def PlayAudio(url, title, thumb, Plot, header=None, url_template=None, FavCall='', CB=''):
-	PLog('PlayAudio:'); PLog(title); PLog(FavCall); 
+	PLog('6:'); PLog(title); PLog(FavCall); 
 				
 	if url.startswith('http') == False:		# lokale Datei
 		url = os.path.abspath(url)
@@ -706,15 +754,46 @@ def PlayAudio(url, title, thumb, Plot, header=None, url_template=None, FavCall='
 	li.setInfo(type="music", infoLabels=ilabels)							
 	li.setContentLookup(False)
 	 	
-	xbmc.Player().play(url, li, False)			# Player nicht mehr spezifizieren (0,1,2 - deprecated)
+	if SETTINGS.getSetting('pref_musicslideshow') == 'true':
+		# Absicherung gegen Rekursion nach GetDirectory_Error 
+		#	nach exit in SlideShow2 - exit falls STOPFILE 
+		#	jünger als 4 sec:
+		STOPFILE = os.path.join(DICTSTORE, 'stop_slides')
+		if os.path.exists(STOPFILE):							
+			now = time.time()
+			PLog(now - os.stat(STOPFILE).st_mtime)
+			if now - os.stat(STOPFILE).st_mtime < 4:	
+				PLog("GetDirectory_Error_Rekursion")
+				xbmc.executebuiltin("PreviousMenu")
+				return
+			else:
+				os.remove(STOPFILE)							# Stopdatei entfernen	
+		xbmc.Player().play(url, li, False)					# Start vor modaler Slideshow			
+		import resources.lib.slides as slides
+		path = SETTINGS.getSetting('pref_slides_path')
+		PLog(path)
+		PLog('Start_SlideShow: %s' % path)
+		CWD = SETTINGS.getAddonInfo('path') 					# working dir
+		DialogSlides = slides.Slideshow('slides.xml', CWD, 'default')
+		DialogSlides.doModal()
+		xbmc.Player().stop()					
+		del DialogSlides
+		PLog("del_DialogSlides")
+		return				
+	else:
+		xbmc.Player().play(url, li, False)			
 
-	if '.asf' not in url and '.aac' not in url:	# Rekursion möglich, s. myradiostations-Debug.txt
-		if CB:									# Bsp. StationList
-			Callback(CB)						# 
+	# 08.08.2019 Verzicht auf Callback - weiteres Problem: falsche Kodierung der unicode-Strings
+	#	(Plot, summary, tagline). base64-Behandlung möglich (s. convBase64), aber aufwändig - den 
+	#	GetDirectory-Error nehmen wir in Kauf (nicht schön, aber unschädlich).
+	
+	#if '.asf' not in url and '.aac' not in url:# Rekursion möglich, s. myradiostations-Debug.txt
+	#	if CB:									# Bsp. StationList
+	#		Callback(CB)						# 
 			
 #----------------------------------------------------------------
 # Callback - Rücksprung zum Aufrufer
-#	Grund: CGUIMediaWindow::GetDirectory bei direkt-Calls aus Funktionen ohne Listitem.
+#	Grund: CGUIMediaWindow::GetDirectory error bei direkt-Calls aus Funktionen ohne Listitem.
 #	Dict(CB) enthält die Parameter für die Funktion CB
 #	Die Ermittlung der Funktionsadressen erfolgt im Haupt-PRG, (unterhalb router). 
 #	Die dazugehörigen Parameter werden in der Funktion CB unmittelbar nach dem Aufruf
@@ -730,7 +809,7 @@ def Callback(CB):
 	func = Dict('load', CB)						# Funktionsadresse (Fuß Haupt-PRG)
 	PLog(func)
 	func_pars = Dict('load', "Args_%s" % CB)	# Funktionsparameter
-	func_pars = urllib.unquote_plus(func_pars)
+	func_pars = unquote_plus(func_pars)
 	PLog("func_pars: " + func_pars)		
 												# unc_pars -> dict wie in router
 	func_pars = func_pars.replace("'", "\"")	# json.loads-kompatible string-Rahmen

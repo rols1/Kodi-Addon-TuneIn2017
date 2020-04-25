@@ -59,7 +59,7 @@ msgstr "Спеціальний URL - Url:"
 #: 
 msgctxt "#30303"
 #: "Label for entry-field in Preferences"
-msgid "Custom Url - Name"
+msgid "Custom Url - Name:"
 msgstr "Спеціальний URL - називати:"
 
 #: 
@@ -144,6 +144,11 @@ msgctxt "#30501"
 #: "Cache Settings"
 msgid "Days until deletion"
 msgstr "Дні до видалення"
+
+msgctxt "#30205" 
+#: "Label for bool-field in Preferences "
+msgid "station not compatible? Try a new search"
+msgstr "станція не сумісна? Спробуйте новий пошук"
 
 
 

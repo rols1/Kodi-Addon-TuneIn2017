@@ -2,7 +2,7 @@
 <settings>
    <category label="248">
 		<setting label="248" type="select"  
-		values="Afrikaans/af|Albanian/sq|Amharic/am|Arabic/ar/ar_SA|Armenian/hy|Azerbaijani/az|Basque/eu|Bengali/bn|Bulgarian/bg|Catalan/ca|Chinese (Hong Kong)/zh_HK|Chinese (Taiwan)/zh_TW|Chinese/zh_CN|Croatian/hr|Czech/cs/cs_CZ|Danish/da/da_DK/Author: Tommy Mikkelsen|Dutch/nl/nl_NL|English/en/en_US|English/en/en_GB/Author: rs|Estonian/et|Filipino/fil|Finnish/fi/fi_FI|French (Canada)/fr_CA|French/fr/fr_FR/Author: Joyfik|Galician/gl|Georgian/ka|German/de/de_DE/Author: rols1| Greek/el/el_GR|Gujarati/gu|Hebrew/iw|Hindi/hi/hi_IN|Hungarian/hu/hu_HU|Icelandic/is|Indonesian/id|Italian/it/it_IT/Author: Alessio79|Japanese/ja/ja_JP|Kannada/kn|Kazakh/kk|Khmer/km|Korean/ko/ko_KR|Kyrgyz/ky|Lao/lo|Latvian/lv|Lithuanian/lt|Macedonian/mk|Malay/ms|Malayalam/ml|Marathi/mr|Mongolian/mn|Myanmar (Burmese)/my|Nepali/ne|Norwegian/no|Persian/fa|Polish/pl/pl_PL/Author: Przemo|Portuguese (Brazil)/pt|Portuguese (Portugal)/pt_PT|Punjabi/pa|Romanian/ro|Russian/ru/ru_RU|Serbian/sr|Sinhala/si|Slovak/sk|Slovenian/sl|Spanish (Latin America)/es_419|Spanish (Spain)/es/es_ES/Author: Tengoalhot|Swahili/sw|Swedish/sv|Tamil/ta|Telugu/te|Thai/th|Turkish/tr/tr_TR|Ukrainian/uk/uk_UA/Author: Vlad (not ready)|Urdu/ur|Uzbek/uz|Vietnamese/vi|Zulu/zu"  
+		values="Afrikaans/af|Albanian/sq|Amharic/am|Arabic/ar/ar_SA|Armenian/hy|Azerbaijani/az|Basque/eu|Bengali/bn|Bulgarian/bg|Catalan/ca|Chinese (Hong Kong)/zh_HK|Chinese (Taiwan)/zh_TW|Chinese/zh_CN|Croatian/hr|Czech/cs/cs_CZ|Danish/da/da_DK/Author: Tommy Mikkelsen/85%|Dutch/nl/nl_NL|English/en/en_US|English/en/en_GB/Author: rs/100%|Estonian/et|Filipino/fil|Finnish/fi/fi_FI|French (Canada)/fr_CA|French/fr/fr_FR/Author: Joyfik/76%|Galician/gl|Georgian/ka|German/de/de_DE/Author: rols1/100%| Greek/el/el_GR|Gujarati/gu|Hebrew/iw|Hindi/hi/hi_IN|Hungarian/hu/hu_HU|Icelandic/is|Indonesian/id|Italian/it/it_IT/Author: Alessio79/79%|Japanese/ja/ja_JP|Kannada/kn|Kazakh/kk|Khmer/km|Korean/ko/ko_KR|Kyrgyz/ky|Lao/lo|Latvian/lv|Lithuanian/lt|Macedonian/mk|Malay/ms|Malayalam/ml|Marathi/mr|Mongolian/mn|Myanmar (Burmese)/my|Nepali/ne|Norwegian/no|Persian/fa|Polish/pl/pl_PL/Author: Przemo/79%|Portuguese (Brazil)/pt|Portuguese (Portugal)/pt_PT|Punjabi/pa|Romanian/ro|Russian/ru/ru_RU|Serbian/sr|Sinhala/si|Slovak/sk|Slovenian/sl|Spanish (Latin America)/es_419|Spanish (Spain)/es/es_ES/Author: Patrizia/100%|Swahili/sw|Swedish/sv|Tamil/ta|Telugu/te|Thai/th|Turkish/tr/tr_TR|Ukrainian/uk/uk_UA/Author: Vlad/35%|Urdu/ur|Uzbek/uz|Vietnamese/vi|Zulu/zu"  
 		default="German/de/de_DE" id="language"/>
 	</category>
 		
@@ -40,6 +40,7 @@
 		<setting label="30301"  type="text" id="folder" default="Favorit 1"/>
 		<setting label="30302" type="text" id="customUrl" default="http://myradio.com/stream.mp3" />
 		<setting label="30303" type="text" id="customName" default="MyRadio 1" />
+		<setting label="30205" type="bool" id="trynewsearch" default="true" />
 	</category>
 		
 	<category label="36428">
@@ -49,8 +50,14 @@
 	</category>
 	
 	 <category label="439">
-	<setting label="30501" type="select" values="1|10|30|100" default="30" id="DICT_store_days"/>
-</category> 
+		<setting label="30501" type="select" values="1|10|30|100" default="30" id="DICT_store_days"/>
+	</category> 
+	
+	<category label="108">
+    		<setting label="361" type="bool" id="pref_musicslideshow" default="false"/>
+		<setting label="774" type="folder" source="" id="pref_slides_path" default=""/>
+		<setting label="12378" type="select" id="pref_slides_time" default="10" values="5|10|15|20|30|60|120|240|600"/>
+	</category>
 
 		
 </settings>
