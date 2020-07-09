@@ -7,6 +7,10 @@ CHANGE HISTORY 	Kodi-Addon-TuneIn2017 (previosly plugin for Plexmediaserver)
 			Plex-Forum:
 			https://forums.plex.tv/discussion/288260/rel-tunein2017
 
+09.07.2020	1.6.0	get_m3u: if the master.m3u8 contains relative m3u8 urls and cannot 
+			be assembled, the master.m3u8 is returned instead of single resolutions.
+			fanart.png changed to fanart.jpg (dto. in addon.xml).		
+
 25.04.2020	1.5.9	Updater-Modul: update adjust_AddonXml - consideration of changes
 			in addon.xml by addon-external tools (change of position of fields).
 			Update language terms (Spanish - Patrizia) - changes in addon.xml, 

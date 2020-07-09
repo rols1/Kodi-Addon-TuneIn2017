@@ -40,8 +40,8 @@ from resources.lib.util_tunein2017 import *
 
 # +++++ TuneIn2017  - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.5.9'	
-VDATE = '25.04.2020'
+VERSION =  '1.6.0'	
+VDATE = '09.07.2020'
 
 # 
 #	
@@ -1501,8 +1501,12 @@ def get_pls(url):               # Playlist extrahieren
 	return pls
     
 #-----------------------------
+# 09.07.2020 bei relativen Pfaden Rückgabe der Original-Url. 
+#	Die Auswertung überlassen wir dem Kodi-Player
+# 
 def get_m3u(url):               # m3u extrahieren - Inhalte mehrerer Links werden zusammengelegt,
 	PLog('get_m3u: ' + url)		#	Details/Verfügbarkeit holt getStreamMeta
+	url_org = url
 	urls =url.splitlines()	
 	
 	m3u_cont = []
@@ -1520,6 +1524,10 @@ def get_m3u(url):               # m3u extrahieren - Inhalte mehrerer Links werde
 			for line in lines:
 				if line.startswith('http'):			# skip #EXTM3U, #EXTINF
 					m3u_cont.append(line)			# m3u-Inhalt anhängen
+					
+	if len(m3u_cont) == 0:					# relative Pfade -> Rückgabe url_org ohne Zerlegung
+		if '.m3u' in url_org:
+			m3u_cont.append(url_org)
 		
 	pls = m3u_cont	
 	lines = repl_dop(pls)					# möglich: identische Links in verschiedenen m3u8-Inhalten, 
@@ -2395,6 +2403,7 @@ def RecordStart(url,title,title_org,image,summ,typ,bitrate, CB=''):		# Aufnahme 
 	#		Versuch mit Titel -> Dateiname plus Timestamp abgebrochen (Endlosschleife bleibt,
 	#		streamripper verwendet weiter unterschiedl. Verz., abhängig  von Url) - Code
 	#		s. __init__.py_v1.2.5_mp3-download
+	# 12.05.2020 mit Param. "--debug" erzeugt streamripper gcs.txt im Download-Verz.
 	UserAgent = "Mozilla/5.0"
 	cmd = "%s %s --quiet -d %s -u %s"	% (AppPath, url_clean, DestDir, UserAgent)		
 	PLog('cmd: ' + cmd)
