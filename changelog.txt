@@ -7,6 +7,11 @@ CHANGE HISTORY 	Kodi-Addon-TuneIn2017 (previosly plugin for Plexmediaserver)
 			Plex-Forum:
 			https://forums.plex.tv/discussion/288260/rel-tunein2017
 
+24.08.2020 1.6.1	PlayAudio_pre, RequestTunein: GetOnlyRedirect-Check added (needed
+			for some icecaststreams).
+			SingleMRS: codec-error fixed (py2_encode(name)).
+			getHeaders, RequestTunein: obsolet log-outputs of headers removed.
+
 09.07.2020	1.6.0	get_m3u: if the master.m3u8 contains relative m3u8 urls and cannot 
 			be assembled, the master.m3u8 is returned instead of single resolutions.
 			fanart.png changed to fanart.jpg (dto. in addon.xml).		

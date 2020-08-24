@@ -40,8 +40,8 @@ from resources.lib.util_tunein2017 import *
 
 # +++++ TuneIn2017  - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.6.0'	
-VDATE = '09.07.2020'
+VERSION =  '1.6.1'	
+VDATE = '24.08.2020'
 
 # 
 #	
@@ -968,8 +968,9 @@ def GetContent(url, title, offset=0, li=''):
 #	Ab 29.04.2018: 3. Stufe - mit Zertifikatecheck (linux-Zertifikat, s. get_pls)
 #		Alternative: user-definiertes Zertifikat (Einstellungen) - z.B. fullchain.pem von Let's Encrypt 
 #
+# 24.08.2020 GetOnlyRedirect hinzugefügt für Tests in PlayAudio_pre:
 #
-def RequestTunein(FunctionName, url, GetOnlyHeader=None):
+def RequestTunein(FunctionName, url, GetOnlyHeader=None, GetOnlyRedirect=False):
 	PLog('RequestTunein: ' + url)
 
 	msg=''
@@ -992,12 +993,15 @@ def RequestTunein(FunctionName, url, GetOnlyHeader=None):
 		gcontext.verify_mode = ssl.CERT_NONE
 		ret = urlopen(req, context=gcontext, timeout=UrlopenTimeout)
 		new_url = ret.geturl()						# follow redirects (wie getStreamMeta)
-		PLog("new_url: " + new_url)				
+		PLog("new_url: " + new_url)	
+					
+		if GetOnlyRedirect:							# nur Redirect anfordern
+			return new_url, msg						# s. PlayAudio_pre				
 		
 		if GetOnlyHeader:
 			PLog("GetOnlyHeader:")
 			page = getHeaders(ret)		# Dict
-			PLog(page) 
+			# PLog(page) 
 			return page, ''
 		else:
 			compressed = ret.info().get('Content-Encoding') == 'gzip'
@@ -1361,15 +1365,17 @@ def StreamTests(url_list,summ_org):
 						summ = repl_json_chars(summ)
 					PLog('summ: ' + summ)		
 				if  ret.get('hasPortNumber') == 'true': # auch SHOUTcast ohne Metadaten möglich, Bsp. Holland FM Gran Canaria,
-					if url.endswith('/'):				#	
+					if url.endswith('/'):
 						url = '%s;' % url
+						PLog('url_add_semicol1')			
 					else:								# Stream mit Portnummer, aber ohne / am Urlende - Berücksichtigung
 						#  Icecast-Server. :
 						PLog('ret.get shoutcast: ' + ret.get('shoutcast'))
 						if 'Icecast' in ret.get('shoutcast'): 			# Bsp.  Sender Hi On Line,
 							pass										# 		http://mediaserv33.live-streams.nl:8036
 						else:											#  Bsp. Holland FM Gran Canaria,
-							url = '%s/;' % url							# 		http://stream01.streamhier.nl:9010	
+							url = '%s/;' % url							# 		http://stream01.streamhier.nl:9010
+							PLog('url_add_semicol2')	
 				else:	
 					if url.endswith('.fm/'):			# Bsp. http://mp3.dinamo.fm/ (SHOUTcast-Stream)
 						url = '%s;' % url
@@ -1391,6 +1397,7 @@ def StreamTests(url_list,summ_org):
 							PLog(ret.get('shoutcast'))
 							if 'shoutcast' in shoutcast.lower(): # an Shoutcast-url /; anhängen
 								url = '%s/;' % url	
+								PLog('url_add_semicol3')			
 																		
 			PLog('append: ' + url)	
 			PLog(summ); 									
@@ -1669,6 +1676,7 @@ def PlayAudio_pre(url, title, thumb, Plot, header=None, url_template=None, FavCa
 		else:
 			return PlayAudio(url, title, thumb, Plot, header, url_template, FavCall, CB)	# Ausgabe not_available
 		
+	
 	# Header-Check  
 	#	page hier Dict, PLog s. RequestTunein
 	page, msg = RequestTunein(FunctionName='PlayAudio_pre, Header-Check', url=url,GetOnlyHeader=True)
@@ -1698,6 +1706,12 @@ def PlayAudio_pre(url, title, thumb, Plot, header=None, url_template=None, FavCa
 	if RESOURCES_PATH in url:							# audience-Call entfällt
 		return PlayAudio(url, title, thumb, Plot, header, url_template, FavCall, CB) 
 	
+	# Redirect-Check 
+	#	korrigiert falschen Semikolon-Anhang in StreamTests (url_add_semicol1)
+	new_url, msg = RequestTunein(FunctionName='PlayAudio_pre, Header-Check', url=url,GetOnlyRedirect=True)
+	if new_url != url:
+		PLog('url_moved: %s -> %s' % (url, new_url))
+		url = new_url
 			
 	# Checks überstanden -> audience-Call + -> Kodi-Player 
 	#	page hier Dict, PLog s. RequestTunein
@@ -2255,6 +2269,7 @@ def SingleMRS(name, url, max_streams, image):
 	
 	# Callback-Params für PlayAudio -z.Z. nicht genutzt (Rekursion bei gestörten Streams
 	#	beobachtet)
+	name=py2_encode(name);
 	fparams="{'name': '%s', 'url': '%s',  'max_streams': '%s', 'image': '%s'}"  %\
 				(quote(name), quote(url), max_streams, quote(image))
 	Dict('store', 'Args_SingleMRS', fparams)				
@@ -2796,8 +2811,6 @@ def getHeaders(response):
 	else:
 		if headers:
 			headers = parse_headers(str(response.info()))
-
-	PLog(headers)
 		
 	return headers
 
