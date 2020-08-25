@@ -40,8 +40,8 @@ from resources.lib.util_tunein2017 import *
 
 # +++++ TuneIn2017  - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.6.1'	
-VDATE = '24.08.2020'
+VERSION =  '1.6.2'	
+VDATE = '25.08.2020'
 
 # 
 #	
@@ -886,7 +886,10 @@ def GetContent(url, title, offset=0, li=''):
 			if preset_id.startswith('p'):
 				preset_id = guideId				# mp3-Quelle in guideId., Bsp. t109814382
 			else:
-				preset_id = target_id	
+				if target_id:					# 25.08.2020 target_id bei Pocasts ev. leer
+					preset_id = target_id
+				else:
+					PLog('target_id_empty, use preset_id %s' % preset_id)	
 					
 			# local_url = 'http://opml.radiotime.com/Tune.ashx?id=%s&formats=%s' % (preset_id, Dict('load', 'formats'))
 			# 19.07.2019: nach IP-Sperre Call erweitert mit serial + partnerId - s. StationList

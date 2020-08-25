@@ -7,6 +7,9 @@ CHANGE HISTORY 	Kodi-Addon-TuneIn2017 (previosly plugin for Plexmediaserver)
 			Plex-Forum:
 			https://forums.plex.tv/discussion/288260/rel-tunein2017
 
+25.08.2020 1.6.2	GetContent( section Callback Station): on call-type 'Topic' only use
+			target_id if not empty - if empty use preset_id.
+
 24.08.2020 1.6.1	PlayAudio_pre, RequestTunein: GetOnlyRedirect-Check added (needed
 			for some icecaststreams).
 			SingleMRS: codec-error fixed (py2_encode(name)).
