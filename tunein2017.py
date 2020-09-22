@@ -44,8 +44,8 @@ from resources.lib.util_tunein2017 import *
 
 # +++++ TuneIn2017  - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.6.2'	
-VDATE = '25.08.2020'
+VERSION =  '1.6.3'	
+VDATE = '22.09.2020'
 
 # 
 #	
