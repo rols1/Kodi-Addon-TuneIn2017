@@ -20,6 +20,10 @@ elif PYTHON3:
 	from urllib.parse import quote, unquote, quote_plus, unquote_plus, urlencode, urljoin, urlparse, urlunparse, urlsplit, parse_qs
 	from urllib.request import Request, urlopen, urlretrieve
 	from urllib.error import URLError, HTTPError
+	try:									# https://github.com/xbmc/xbmc/pull/18345 (Matrix 19.0-alpha 2)
+		xbmc.translatePath = xbmcvfs.translatePath
+	except:
+		pass
 
 
 # Python
@@ -472,6 +476,27 @@ def getMenuIcon(key):	# gibt zum key passendes Icon aus MENU_ICON zurück
 def Search(query=''):
 	PLog('Search: ' + str(query))
 	oc_title2 = L('Suche nach')
+	query_file 	= os.path.join("%s/search_terms") % ADDON_DATA
+	
+	if query == '':													# Liste letzte Sucheingaben
+		query_recent= RLoad(query_file, abs_path=True)
+		if query_recent.strip():
+			head = L('Suche Station / Titel')
+			search_list = [head]
+			query_recent= query_recent.strip().splitlines()
+			query_recent=sorted(query_recent, key=str.lower)
+			search_list = search_list + query_recent
+			title = L('Suche')
+			ret = xbmcgui.Dialog().select(title, search_list, preselect=0)	
+			PLog(ret)
+			if ret == -1:
+				PLog("Liste Sucheingabe abgebrochen")
+				return Main()
+			elif ret == 0:
+				query = ''
+			else:
+				query = search_list[ret]
+	
 	
 	if  query == '':
 		query = get_keyboard_input()	# Modul util
@@ -482,15 +507,16 @@ def Search(query=''):
 	li = home(li)						# Home-Button
 	
 	query = query.strip()
+	query_org = query					# unquoted speichern
 	oc_title2 = L('Suche nach') + ' >%s<' % query
 	PLog(SearchWeb)
 	if SearchWeb == True:
-		query = quote(py2_encode(query))									# Web-Variante
+		query = quote(py2_encode(query))							# Web-Variante
 		url = 'https://tunein.com/search/?query=%s' % query		
 		PLog('url: ' + url)
 		li, cnt = GetContent(url=url, title=oc_title2, offset=0, li=li)
 	else:		
-		query = query.replace(' ', '+')										# opml-Variante - z.Z. nicht genutzt
+		query = query.replace(' ', '+')								# opml-Variante - z.Z. nicht genutzt
 		url = 'http://opml.radiotime.com/Search.ashx?query=%s&formats=%s' % (query,Dict('load', 'formats'))	
 
 		query = quote(py2_encode(query), "utf-8")
@@ -501,10 +527,21 @@ def Search(query=''):
 		title = L('Keine Suchergebnisse zu')
 		msg1 = L(title) 
 		msg2 = unquote(query)
-		# MyDialog(msg1, msg2, '')					# Austausch 06.02.2020
+		# MyDialog(msg1, msg2, '')									# Austausch 06.02.2020
 		#return li		
 		xbmcgui.Dialog().notification(msg1,msg2,R(ICON),5000)	
-		return		
+		return	
+		
+	query_recent= RLoad(query_file, abs_path=True)					# Sucheingabe speichern
+	query_recent= query_recent.strip().splitlines()
+	if len(query_recent) >= 24:										# 1. Eintrag löschen (ältester)
+		del query_recent[0]
+	query=py2_encode(query_org)										# unquoted speichern
+	if query not in query_recent:
+		query_recent.append(query)
+		query_recent = "\n".join(query_recent)
+		query_recent = py2_encode(query_recent)
+		RSave(query_file, query_recent)								# withcodec: code-error	
 		
 	xbmcplugin.endOfDirectory(HANDLE)	
 #-----------------------------
@@ -1042,6 +1079,8 @@ def RequestTunein(FunctionName, url, GetOnlyHeader=None, GetOnlyRedirect=False):
 			req.add_header('Accept-Language',  '%s, en;q=0.9, %s;q=0.7'	% (loc, loc))
 			req.add_header('CONSENT', loc)
 			ret = urlopen(req, cafile=cafile, timeout=UrlopenTimeout)
+			new_url = ret.geturl()						# follow redirects (wie getStreamMeta)
+			PLog("new_url: " + new_url)	
 			
 			if GetOnlyHeader:
 				PLog("GetOnlyHeader:")
@@ -1227,6 +1266,10 @@ def StationList(url, title, image, summ, typ, bitrate, preset_id):
 		summ  = '%s | %s' % (summ, server)
 		if summ.strip().startswith('|'):
 			summ = summ[2:]
+			
+		# 22.09.2020 nicht erlaubte Zeichen in Url einzeln quotieren:
+		# 	Bsp.: http://media.ccomrcdn..=Talk_Radio,_Sports&PCAST_TITLE=America's_Truckin_Network
+		url = (url.replace(',', '%2C').replace('\'', '%27'))
 		
 		fmt='mp3'								# Format nicht immer  sichtbar - Bsp. http://addrad.io/4WRMHX. Ermittlung
 		if 'aac' in url:						#	 in getStreamMeta (contenttype) hier bisher nicht genutzt
@@ -1347,7 +1390,8 @@ def StreamTests(url_list,summ_org):
 						bitrate = '0'					# wird nicht gegen Settings geprüft 
 					PLog('bitrate: ' + str(bitrate))						
 					if int(bitrate) <  int(SETTINGS.getSetting('minBitrate')):	# Bitrate-Settings berücksichtigen
-						continue
+						if bitrate != '0':				# 22.09.2020 skip Vergleich, falls bitrate fehlt od. None
+							continue
 					
 					try:
 						# mögl.: UnicodeDecodeError: 'utf8' codec can't decode..., Bsp.
@@ -1679,6 +1723,13 @@ def PlayAudio_pre(url, title, thumb, Plot, header=None, url_template=None, FavCa
 		else:
 			return PlayAudio(url, title, thumb, Plot, header, url_template, FavCall, CB)	# Ausgabe not_available
 		
+	# angehängte quotierte Url in Url (Kodi-Player versagt), Bsp.:
+	#	https://anchor.fm/s/523c580/podcast/play/10175627/https%3A%2F%2Fd3ctxlq1ktw2nl.cloudfront.net..
+	if '/https%3A%2F%2F' in url:
+		url = url.split('/https%3A%2F%2F')[1]
+		url = 'https%3A%2F%2F' + url
+		url = unquote(url)
+		PLog('url_in_url: %s' %url)
 	
 	# Header-Check  
 	#	page hier Dict, PLog s. RequestTunein
@@ -2718,6 +2769,9 @@ def getStreamMeta(address):
 	
 	try:
 		response = urlopen(request, context=gcontext, timeout=UrlopenTimeout)
+		#cafile = os.path.join("%s", "xbmc_cacert.pem") % RESOURCES_PATH	# bei Bedarf Zertifikat nutzen
+		#response = urlopen(request, cafile=cafile, timeout=UrlopenTimeout)
+		
 		new_url = response.geturl()					# follow redirects, hier für Header-Auswertung, Kodi-Player
 		PLog("new_url: " + new_url)					#	folgt selbständig Redirects
 			

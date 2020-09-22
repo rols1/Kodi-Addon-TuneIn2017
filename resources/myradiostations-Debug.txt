@@ -51,6 +51,9 @@ MyRadio 1 | http://myradio.com/stream.mp3
 
 # .aac-Stream, aber ohne Rekursion wie British Forces Broadcasting Service:
 ANTENNE BAYERN	| http://www.antenne.de/webradio/antenne.aac.pls
+
+# Icecast-Station, Rückgabe bitrate=None in StreamTests, skip Settings-Abgleich;
+Cool 99.3	| http://crystalout.surfernetwork.com:8001/KADA_MP3
 ######################################################################################
 
 

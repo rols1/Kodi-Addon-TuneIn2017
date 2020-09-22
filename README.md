@@ -71,4 +71,5 @@ Bilder / Pictures:
 
 ![img](https://github.com/rols1/PluginPictures/blob/master/Kodi/TuneIn2017/Station_Ottava_Player.png)
 
+#### more screenshots: https://github.com/rols1/PluginPictures/tree/master/Kodi/TuneIn2017
 

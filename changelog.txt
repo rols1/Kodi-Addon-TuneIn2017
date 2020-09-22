@@ -7,6 +7,16 @@ CHANGE HISTORY 	Kodi-Addon-TuneIn2017 (previosly plugin for Plexmediaserver)
 			Plex-Forum:
 			https://forums.plex.tv/discussion/288260/rel-tunein2017
 
+
+22.09.2020 1.6.3	Matrix-Adaption 9.0-alpha 2: change xbmc.translatePath -> 
+			xbmcvfs.translatePath via try/except.
+			Matrix-Adaption in modul util_tunein2017: set xbmc.LOGNOTICE/xbmc.LOGINFO
+			dependent on PY2/PY3. 
+			Search: use list of search-terms (max. 25).
+			StationList (line 1270): quoting special charakters in stream-url.
+			StreamTests: skip comparison bitrate with Settings, if bitrate is missing.
+			Logo Tunein2017: replace missing logo in addons root-directory.	
+
 25.08.2020 1.6.2	GetContent( section Callback Station): on call-type 'Topic' only use
 			target_id if not empty - if empty use preset_id.
 

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # util_tunein2017.py
 #	26.11.2019 Migration Python3 Modul kodi_six + manuelle Anpassungen
-# Stand 10.04.2020	
+# Stand 21.09.2020	
 
 # Python3-Kompatibilität:
 from __future__ import absolute_import
@@ -19,10 +19,16 @@ if PYTHON2:
 	from urllib import quote, unquote, quote_plus, unquote_plus, urlencode, urlretrieve 
 	from urllib2 import Request, urlopen, URLError 
 	from urlparse import urljoin, urlparse, urlunparse , urlsplit, parse_qs 
+	LOG_MSG = xbmc.LOGNOTICE 				# s. PLog
 elif PYTHON3:				
 	from urllib.parse import quote, unquote, quote_plus, unquote_plus, urlencode, urljoin, urlparse, urlunparse, urlsplit, parse_qs  
 	from urllib.request import Request, urlopen, urlretrieve
 	from urllib.error import URLError
+	LOG_MSG = xbmc.LOGINFO 					# s. PLog
+	try:									# https://github.com/xbmc/xbmc/pull/18345 (Matrix 19.0-alpha 2)
+		xbmc.translatePath = xbmcvfs.translatePath
+	except:
+		pass
 	
 import glob, shutil, time
 import ssl
@@ -70,17 +76,20 @@ DICTSTORE 		= os.path.join("%s/Dict") % ADDON_DATA
 #
 #	convert_util_imports.py generiert aus util.py die Zuordnungen PLog=util.PLog; ...
 ####################################################################################################
-#----------------------------------------------------------------  
+#---------------------------------------------------------------- 
+# 21.09.2020 LOGNOTICE/LOGINFO in  Abhängigkeit von PY2/PY3 gesetzt:
+#	https://www.kodinerds.net/index.php/Thread/64244-RELEASE-Kodi-Addon-ARDundZDF/?postID=606035
+#	LOG_MSG - s. Modulkopf
+#
 def PLog(msg, loglevel=xbmc.LOGDEBUG):
 	if DEBUG == 'false':
 		return
 	#if isinstance(msg, unicode):	# entf. mit six
 	#	msg = msg.encode('utf-8')
 	
-	loglevel = xbmc.LOGNOTICE
-	# PLog('loglevel: ' + str(loglevel))
-	if loglevel >= 2:
-		xbmc.log("%s --> %s" % (NAME, msg), level=loglevel)
+	# loglevel = xbmc.LOGNOTICE		# s.o.		
+	# PLog('loglevel: ' + str(LOG_MSG))
+	xbmc.log("%s --> %s" % (NAME, msg), level=LOG_MSG)
 	 
 #---------------------------------------------------------------- 
 # 10.04.2020 Konvertierung 3-zeiliger Dialoge in message (Multiline)
