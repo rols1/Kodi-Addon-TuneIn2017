@@ -44,8 +44,8 @@ from resources.lib.util_tunein2017 import *
 
 # +++++ TuneIn2017  - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.6.3'	
-VDATE = '22.09.2020'
+VERSION =  '1.6.4'	
+VDATE = '11.10.2020'
 
 # 
 #	
@@ -1056,7 +1056,7 @@ def RequestTunein(FunctionName, url, GetOnlyHeader=None, GetOnlyRedirect=False):
 			ret.close()
 			PLog(page[:200])
 	except Exception as exception:
-		error_txt = "RequestTunein: %s-1: %s" % (FunctionName, str(exception))
+		error_txt = "RequestTunein1: %s-1: %s" % (FunctionName, str(exception))
 		error_txt = error_txt + ' | ' + url				 			 	 
 		msg =  error_txt
 		PLog(msg)
@@ -1080,18 +1080,17 @@ def RequestTunein(FunctionName, url, GetOnlyHeader=None, GetOnlyRedirect=False):
 			req.add_header('CONSENT', loc)
 			ret = urlopen(req, cafile=cafile, timeout=UrlopenTimeout)
 			new_url = ret.geturl()						# follow redirects (wie getStreamMeta)
-			PLog("new_url: " + new_url)	
-			
+			PLog("new_url: " + new_url)			
+		
 			if GetOnlyHeader:
-				PLog("GetOnlyHeader:")
-				page = getHeaders(ret)		# Dict
-				PLog(page)  # Bei Bedarf, nicht kürzen
+				PLog("GetOnlyHeader2:")
+				# PLog(page)  # Bei Bedarf, nicht kürzen
 				return page, ''
 			else:
 				page = ret.read()
 			PLog(page[:160])
 		except Exception as exception:
-			error_txt = "RequestTunein: %s-2: %s" % (FunctionName, str(exception)) 
+			error_txt = "RequestTunein2: %s-2: %s" % (FunctionName, str(exception)) 
 			error_txt = error_txt + ' | ' + url				 			 	 
 			msg =  error_txt
 			PLog(msg)
@@ -1762,10 +1761,14 @@ def PlayAudio_pre(url, title, thumb, Plot, header=None, url_template=None, FavCa
 	
 	# Redirect-Check 
 	#	korrigiert falschen Semikolon-Anhang in StreamTests (url_add_semicol1)
+	# 	11.10.2020 leere new_url abgefangen
 	new_url, msg = RequestTunein(FunctionName='PlayAudio_pre, Header-Check', url=url,GetOnlyRedirect=True)
 	if new_url != url:
 		PLog('url_moved: %s -> %s' % (url, new_url))
-		url = new_url
+		if new_url.strip() != '':						# falls new_url leer (Excep. page2), url verwenden
+			url = new_url								# 	Bsp.: el atico 133 -> El Spotify de la Música Clásica
+		else:
+			PLog('new_url_empty, using url')
 			
 	# Checks überstanden -> audience-Call + -> Kodi-Player 
 	#	page hier Dict, PLog s. RequestTunein

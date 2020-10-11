@@ -7,6 +7,7 @@ CHANGE HISTORY 	Kodi-Addon-TuneIn2017 (previosly plugin for Plexmediaserver)
 			Plex-Forum:
 			https://forums.plex.tv/discussion/288260/rel-tunein2017
 
+11.10.2020 1.6.4	PlayAudio_pre: use original url if RequestTunein returns an empty new location.	
 
 22.09.2020 1.6.3	Matrix-Adaption 9.0-alpha 2: change xbmc.translatePath -> 
 			xbmcvfs.translatePath via try/except.
