@@ -44,8 +44,8 @@ from resources.lib.util_tunein2017 import *
 
 # +++++ TuneIn2017  - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.6.4'	
-VDATE = '11.10.2020'
+VERSION =  '1.6.5'	
+VDATE = '22.04.2021'
 
 # 
 #	
@@ -448,6 +448,7 @@ def home(li):							# Home-Button
 #-----------------------------	
 def getMenuIcon(key):	# gibt zum key passendes Icon aus MENU_ICON zurück	
 	icon = ''			#
+	PLog("key: " + key)
 	for icon in MENU_ICON:
 		if key == 'local':
 			icon = R('menu-lokale.png')
@@ -459,9 +460,9 @@ def getMenuIcon(key):	# gibt zum key passendes Icon aus MENU_ICON zurück
 			icon = R('menu-musik.png')
 		elif key == 'sports':
 			icon = R('menu-sport.png')
-		elif key == 'News-c57922':
-			icon = R('menu-news.png')
-		elif key == 'talk':
+		#elif key == 'News-c57922':	
+		#	icon = R('menu-news.png')
+		elif key == 'News--Talk-c57922':	# 22.04.2021 News + Talk zusammengelegt
 			icon = R('menu-talk.png')
 		elif key == 'podcasts':
 			icon = R('menu-pod.png')
