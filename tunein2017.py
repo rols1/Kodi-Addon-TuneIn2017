@@ -44,8 +44,8 @@ from resources.lib.util_tunein2017 import *
 
 # +++++ TuneIn2017  - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.6.5'	
-VDATE = '22.04.2021'
+VERSION =  '1.6.6'	
+VDATE = '16.09.2021'
 
 # 
 #	
@@ -1249,7 +1249,8 @@ def StationList(url, title, image, summ, typ, bitrate, preset_id):
 				msg1 = L('Fehler') 
 				msg2 = '\n'.join(err_list)
 				MyDialog(msg1, msg2, '')
-			return li
+			if SETTINGS.getSetting('UseFavourites') == "false":		
+				return li						# Löschen des Favoriten ermöglichen
 		else:
 			msg1 = L('keinen Stream gefunden zu') + ": %s" % title
 			msg2 = L("Bitte den Eintrag in Einstellungen ueberpruefen!")
@@ -1281,14 +1282,14 @@ def StationList(url, title, image, summ, typ, bitrate, preset_id):
 
 		PLog(url); PLog(summ); 
 		url=py2_encode(url); title=py2_encode(title); 
-		image=py2_encode(image); summ=py2_encode(summ); 		# Play-Button
+		image=py2_encode(image); summ=py2_encode(summ); 					# Play-Button
 		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'sid': '%s', 'CB': 'StationList'}" %\
 			(quote_plus(url), quote_plus(title), quote_plus(image), quote(summ), preset_id)
 		addDir(li=li, label=title, action="dirList", dirID="PlayAudio_pre", fanart=image, thumb=image, 
 			fparams=fparams, summary=summ)
 		PLog("fparams: " + fparams)	
 			
-	if SETTINGS.getSetting('UseRecording') == "true":			# Aufnahme- und Stop-Button
+	if SETTINGS.getSetting('UseRecording') == "true" and err_flag == False:	# Aufnahme- und Stop-Button
 		title = L("Aufnahme") + ' | ' + L("starten")		
 		url=py2_encode(url); title=py2_encode(title); 
 		title_org=py2_encode(title_org); image=py2_encode(image);
@@ -1314,7 +1315,7 @@ def StationList(url, title, image, summ, typ, bitrate, preset_id):
 			PLog('foldername: ' + foldername)
 			PLog('foldercnt: ' + foldercnt)
 			PLog(summ)
-			if sidExist == False:		
+			if sidExist == False and err_flag == False:		
 				title = L("Favorit") + ' | ' + L("hinzufuegen")	# hinzufuegen immer in Ordner General	
 				fparams="&fparams={'ID': 'add', 'preset_id': '%s', 'folderId': 'dummy'}" % preset_id
 				addDir(li=li, label=title, action="dirList", dirID="Favourit", fanart=R(ICON_FAV_ADD), thumb=R(ICON_FAV_ADD), 

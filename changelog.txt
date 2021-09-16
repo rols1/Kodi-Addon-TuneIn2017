@@ -7,7 +7,9 @@ CHANGE HISTORY 	Kodi-Addon-TuneIn2017 (previosly plugin for Plexmediaserver)
 			Plex-Forum:
 			https://forums.plex.tv/discussion/288260/rel-tunein2017
 
-22.10.2021 1.6.5	getMenuIcon: adapted to merged menus News + Talk (icon menu-talk.png).
+16.09.2021 1.6.6	allow remove/move favourit if no stream available.	
+
+22.10.2020 1.6.5	getMenuIcon: adapted to merged menus News + Talk (icon menu-talk.png).
 
 11.10.2020 1.6.4	PlayAudio_pre: use original url if RequestTunein returns an empty new location.	
 
