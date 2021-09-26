@@ -7,6 +7,9 @@ CHANGE HISTORY 	Kodi-Addon-TuneIn2017 (previosly plugin for Plexmediaserver)
 			Plex-Forum:
 			https://forums.plex.tv/discussion/288260/rel-tunein2017
 
+26.09.2021	1.6.7	RequestTunein: ssl.SSLContext(ssl.PROTOCOL_TLSv1) changed to
+ 			ssl.create_default_context() for security reasons. 
+ 
 16.09.2021 1.6.6	allow remove/move favourit if no stream available.	
 
 22.10.2020 1.6.5	getMenuIcon: adapted to merged menus News + Talk (icon menu-talk.png).
