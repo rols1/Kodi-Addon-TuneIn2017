@@ -1029,7 +1029,8 @@ def RequestTunein(FunctionName, url, GetOnlyHeader=None, GetOnlyRedirect=False):
 		req.add_header('Accept-Language',  '%s, en;q=0.9, %s;q=0.7'	% (loc, loc))
 			
 		req.add_header('CONSENT', loc)				# loc_browser ebenfalls nicht benötigt
-		gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)  
+		# gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)  # insecure
+		gcontext = ssl.create_default_context()
 		gcontext.check_hostname = False
 		gcontext.verify_mode = ssl.CERT_NONE
 		ret = urlopen(req, context=gcontext, timeout=UrlopenTimeout)
