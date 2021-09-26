@@ -1036,7 +1036,7 @@ def RequestTunein(FunctionName, url, GetOnlyHeader=None, GetOnlyRedirect=False):
 		ret = urlopen(req, context=gcontext, timeout=UrlopenTimeout)
 		new_url = ret.geturl()						# follow redirects (wie getStreamMeta)
 		PLog("new_url: " + new_url)	
-					
+				
 		if GetOnlyRedirect:							# nur Redirect anfordern
 			return new_url, msg						# s. PlayAudio_pre				
 		
