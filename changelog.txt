@@ -8,7 +8,7 @@ CHANGE HISTORY 	Kodi-Addon-TuneIn2017 (previosly plugin for Plexmediaserver)
 			https://forums.plex.tv/discussion/288260/rel-tunein2017
 
 26.09.2021	1.6.7	RequestTunein: ssl.SSLContext(ssl.PROTOCOL_TLSv1) changed to
- 			ssl.create_default_context() for security reasons. 
+ 			ssl.create_default_context() for security reasons - dto. in getStreamMeta.
  
 16.09.2021 1.6.6	allow remove/move favourit if no stream available.	
 

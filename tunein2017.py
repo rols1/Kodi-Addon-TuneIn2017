@@ -2769,7 +2769,8 @@ def getStreamMeta(address):
 	user_agent = 'iTunes/9.1.1'
 	request.add_header('User-Agent', user_agent)
 	request.add_header('icy-metadata', 1)
-	gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1) 	# 08.10.2017 SSLContext für https://hr-youfm-live.sslcast.addradio.de
+	#gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1) 	# 08.10.2017 SSLContext für https://hr-youfm-live.sslcast.addradio.de
+	gcontext = ssl.create_default_context()
 	gcontext.check_hostname = False
 	gcontext.verify_mode = ssl.CERT_NONE
 	
