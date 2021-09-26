@@ -1027,7 +1027,7 @@ def RequestTunein(FunctionName, url, GetOnlyHeader=None, GetOnlyRedirect=False):
 		# Quelle Language-Werte: Chrome-HAR
 		# req.add_header('Accept-Language',  'da_DK, en;q=0.9, da_DK;q=0.7')	# Debug
 		req.add_header('Accept-Language',  '%s, en;q=0.9, %s;q=0.7'	% (loc, loc))
-			
+ 			
 		req.add_header('CONSENT', loc)				# loc_browser ebenfalls nicht benötigt
 		gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)  
 		gcontext.check_hostname = False
