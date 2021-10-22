@@ -44,8 +44,8 @@ from resources.lib.util_tunein2017 import *
 
 # +++++ TuneIn2017  - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.6.7'	
-VDATE = '26.09.2021'
+VERSION =  '1.6.8'	
+VDATE = '22.10.2021'
 
 # 
 #	
@@ -303,8 +303,8 @@ def Main():
 	page, msg = RequestTunein(FunctionName='Main', url=ROOT_URL)	# Hauptmenü von Webseite
 	PLog(len(page))
 
-	page = stringextract('"homeMenuItem"', 'leftSide__authContainer', page)
-	items = blockextract('common__link', page)
+	page = stringextract('"homeMenuItem"', '"bottomAuth"', page)	# Navigations-Menü linke Seite	22.10.2021
+	items = blockextract('common-module__link', page)
 	if len(items) > 0:												# kein Abbruch, weiter mit MyRadioStations + Fav's
 		del items[0]			# Home löschen
 	else:
@@ -320,7 +320,7 @@ def Main():
 		url = 'https://tunein.com' + stringextract('href="', '"', item)	#  Bsp. href="/radio/local/"
 		key = url[:-1].split('/')[-1]
 		thumb = getMenuIcon(key)
-		PLog(url);	PLog(key);	PLog(thumb);	
+		PLog("item_url: " + url);	PLog(key);	PLog(thumb);	
 		try:	
 			title = re.search('">(.*)</a>', item).group(1)			# Bsp. data-reactid="64">Local Radio</a>
 			PLog("title: " + title)
@@ -747,7 +747,8 @@ def GetContent(url, title, offset=0, li=''):
 	PLog(page[:80])
 	# RSave('/tmp/x.txt', page)		# Debug: Save Content	
 	# PLog(page)
-	link_list = blockextract('guide-item__guideItemLink', page) # Link-List außerhalb json-Bereich
+#	link_list = blockextract('guide-item__guideItemLink', page) # Link-List außerhalb json-Bereich 22.10.2021
+	link_list = blockextract('__guideItemLink___', page) # Link-List außerhalb json-Bereich
 	PLog("link_list: " + str(len(link_list)))
 	
 	# 05.12.2019 Auswertung TargetItemId (-> preset_id bei type=station, s.u.)
@@ -771,6 +772,12 @@ def GetContent(url, title, offset=0, li=''):
 		del indices[:delnr]
 		PLog(delnr)				
 	PLog(len(indices))
+	
+#	for index in indices:							# Container ermitteln 22.10.2021
+#		if '"type":"Container"' in index:
+#			title = stringextract('"title":"', '"', index)
+			
+			
 		
 	subtitle=''; 	
 	li_cnt=0										# Anzahl items in loop - (getrennt für Links + Stations)
@@ -880,7 +887,7 @@ def GetContent(url, title, offset=0, li=''):
 					msg2 = stringextract('title":"', '"', msg2)
 					msg1 = title
 					PLog(msg2)
-					MyDialog(msg1, msg2, '')	
+#					MyDialog(msg1, msg2, '')							# 22.10.2021
 				continue
 											
 			PLog('Link_url: %s, url_org: %s' % (local_url, url_org)); # PLog(image);	# Bei Bedarf
@@ -984,14 +991,14 @@ def GetContent(url, title, offset=0, li=''):
 	PLog('li_cnt: ' + str(li_cnt))
 	PLog(endOfDirectory)	
 	if endOfDirectory == True:
-		if li_cnt == 0:
-			if subtitle:					# Hinweis auf künftige Sendung möglich (keine akt. Sendung)
-				title_org = title_org + " | %s" % subtitle	
-			msg1 = L('keine Eintraege gefunden') + ": " + title_org 
-			msg1 = py2_encode(msg1)
-			PLog(msg1)
-			MyDialog(msg1, '', '')	
-			return li						# verursacht zwar Directory-Error, bleibt aber in der Liste.
+#		if li_cnt == 0:
+#			if subtitle:					# Hinweis auf künftige Sendung möglich (keine akt. Sendung)
+#				title_org = title_org + " | %s" % subtitle	
+#			msg1 = L('keine Eintraege gefunden') + ": " + title_org 
+#			msg1 = py2_encode(msg1)
+#			PLog(msg1)
+#			MyDialog(msg1, '', '')	
+#			return li						# verursacht zwar Directory-Error, bleibt aber in der Liste.
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True) 
 	else:
 		return li, li_cnt	
