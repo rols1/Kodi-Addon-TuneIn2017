@@ -236,10 +236,10 @@ def getDirZipped(path, zipf):
 
 def Dict(mode, Dict_name='', value='', CacheTime=None):
 	PLog('Dict: ' + mode)
-	# PLog('Dict: ' + str(Dict_name))
+	PLog('Dict: ' + str(Dict_name))
 	# PLog('Dict: ' + str(type(value)))
 	dictfile = "%s/%s" % (DICTSTORE, Dict_name)
-	# PLog("dictfile: " + dictfile)
+	PLog("dictfile: " + dictfile)
 	
 	if mode == 'store':	
 		with open(dictfile, 'wb') as f: pickle.dump(value, f, protocol=pickle.HIGHEST_PROTOCOL)

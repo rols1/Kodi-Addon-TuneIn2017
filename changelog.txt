@@ -7,9 +7,11 @@ CHANGE HISTORY 	Kodi-Addon-TuneIn2017 (previosly plugin for Plexmediaserver)
 			Plex-Forum:
 			https://forums.plex.tv/discussion/288260/rel-tunein2017
 
+24.10.2021	1.6.9	rebuilded container-listing like tunein website: added code in
+			GetContent for detecting, listing and selection of container.
+
 22.10.2021	1.6.8	Main: Fix for changed navigation-menu on Website.
 			GetContent: fix block-building (__guideItemLink___).
-			Next in 1.6.8: building of categories.
 
 26.09.2021	1.6.7	RequestTunein: ssl.SSLContext(ssl.PROTOCOL_TLSv1) changed to
  			ssl.create_default_context() for security reasons - dto. in getStreamMeta.

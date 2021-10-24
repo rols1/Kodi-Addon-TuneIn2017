@@ -44,8 +44,8 @@ from resources.lib.util_tunein2017 import *
 
 # +++++ TuneIn2017  - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.6.8'	
-VDATE = '22.10.2021'
+VERSION =  '1.6.9'	
+VDATE = '24.10.2021'
 
 # 
 #	
@@ -109,7 +109,9 @@ MENU_ICON 	=  	{'menu-lokale.png', 'menu-musik.png', 'menu-sport.png', 'menu-new
 #	zusätzliche API-Calls: api.tunein.com/categories, api.tunein.com/profiles.
 #	opml-Calls weiter verwendet für Fav's, Folders, audience_url, Account-Queries.
 #	formats=mp3,aac,ogg,flash,html - festgelegt in Main
+#	Ausnahme: RECENTS_URL (keine Ergebnisse mit Web-Url)
 # alte ROOT_URL 	= 'https://opml.radiotime.com/Browse.ashx?formats=%s'
+
 BASE_URL	= 'https://tunein.com'
 ROOT_URL 	= 'https://tunein.com/radio/home/'						
 USER_URL 	= 'https://opml.radiotime.com/Browse.ashx?c=presets&partnerId=RadioTime&username=%s'
@@ -313,7 +315,19 @@ def Main():
 		msg3 = L('Ursache unbekannt')								# ohne Tunein-Menüs weiter
 		MyDialog(msg1, msg2, msg3)
 		return li
-			
+	
+	# Tunein-Navigationsmenü:	
+	# local:	Ausgabe abhängig von IP-Lokalisierung bzw. Zuweisung im Menü "By Location", 
+	#				ohne Kat's
+	# recents:	abhängig von Konsum (ältere Sender einer serial-id entfallen), ohne Kat's 
+	# trending: Ausgabe abhängig von Länderkennung, ohne Kat's
+	# music: 	Kat's mit Icons, Kat Entdecken enthält Sub-Kat's (Blues, Folk usw.) o.Icons
+	# sports: 	Kat's mit Icons, Kat "Entdecke Globales Sportradio" enthält Sub-Kat's o.Icons
+	# News--Talk-c57922: Kat's mit Icons
+	# podcasts:	Kat's mit Icons, Sub-Kat's o.Icons in Kat Entdecken und Kat Top-Podcast-Genres
+	# regions:	Kat Regionen o. Icons, Kat Sender mit Icons (abhängig von IP-Lokalisierung) - Zuweisung
+	#				einer Region via Button für Menü "Local Radio" im Addon 
+	# languages: Kat Sprachen o. Icons	
 	PLog(len(items))
 	for item in items:												# Tunein-Menüs + Icons zeigen
 		# PLog('item: ' + item)
@@ -575,8 +589,9 @@ def SetLocation(url, title, region, myLocationRemove):
 #		Anfangsbuchstaben der Parameter - s. uppercase / lowercase.
 #	Unterscheidung Link / Station mittels mytype ("type")
 #
-def GetContent(url, title, offset=0, li=''):
-	PLog('GetContent:'); PLog(url); PLog(offset); PLog(title); PLog(li);
+def GetContent(url, title, offset=0, li='', container=''):
+	PLog('GetContent:'); PLog(url); PLog(offset); PLog(title); 
+	PLog(li); PLog(container);
 	offset = int(offset)
 	title = py2_encode(title)
 	title_org = title
@@ -675,7 +690,7 @@ def GetContent(url, title, offset=0, li=''):
 	# ------------------------------------------------------------------	
 	# Anpassung RECENTS_URL an Formate (Einstellungen) und serial-ID		RECENTS_URL
 	# ------------------------------------------------------------------
-	if 'categories/recents' in url:
+	if 'categories/recents' in url:		# s. Zuweisung in Main
 		formats = Dict('load', 'formats'); serial = Dict('load', 'serial')
 		# PLog(formats); PLog(serial);
 		url = url % (formats, serial)
@@ -734,7 +749,7 @@ def GetContent(url, title, offset=0, li=''):
 	# ------------------------------------------------------------------	
 	PLog('url: ' + url)	
 	page, msg = RequestTunein(FunctionName='GetContent', url=url)
-	# RSave('/tmp/x.html', py2_encode(page))	# Debug
+	# RSave('/tmp/x.html', py2_encode(page))		# Debug: Save html-Content	
 	if page == '':	
 		msg1 = msg
 		MyDialog(msg1, '', '')
@@ -745,10 +760,9 @@ def GetContent(url, title, offset=0, li=''):
 	#	page = page [:page.find('"users":')]
 	PLog('pagelen: ' + str(len(page)))	
 	PLog(page[:80])
-	# RSave('/tmp/x.txt', page)		# Debug: Save Content	
+	# RSave('/tmp/Recent.json', py2_encode(page))	# Debug: Save json-Content	
 	# PLog(page)
-#	link_list = blockextract('guide-item__guideItemLink', page) # Link-List außerhalb json-Bereich 22.10.2021
-	link_list = blockextract('__guideItemLink___', page) # Link-List außerhalb json-Bereich
+	link_list = blockextract('__guideItemLink___', page) # Link-List außerhalb json-Bereich 22.10.2021
 	PLog("link_list: " + str(len(link_list)))
 	
 	# 05.12.2019 Auswertung TargetItemId (-> preset_id bei type=station, s.u.)
@@ -759,6 +773,39 @@ def GetContent(url, title, offset=0, li=''):
 			.replace('Type','type').replace('ContainerType','containerType').replace('Token','token')
 			.replace('Subtitle','subtitle').replace('Index','index').replace('GuideId','guideId').replace('"Url"','"url"')
 			.replace('Duration','duration').replace('Token','token').replace('TargetItemId','targetItemId'))			
+
+
+	# ------------------------------------------------------------------	
+	# 																	Callback Container-Titel
+	# ------------------------------------------------------------------
+	# mögliche Container in page detektieren + listen (step  1),
+	#	gewählten Container in page finden + separieren  (step  2)
+	if container == '':										# 1. step: Container-Titel listen
+		if '"type":"Container"' in page:
+			indices = blockextract('"type":"Container"', page)
+			if len(indices) > 1:							# keine Liste bei nur 1 Container
+				for index in indices:
+					#if 'NFL Football Radio' in index:		# Debug
+					#	PLog(index)
+					title = stringextract('"title":"', '"', index)
+					PLog("Container_title: " + title)
+					url=py2_encode(url); title=py2_encode(title);
+					fparams="&fparams={'url': '%s', 'title': '%s', 'container': '%s'}"  %\
+						(quote(url), quote(title), quote(title))
+					addDir(li=li, label=title, action="dirList", dirID="GetContent", 
+						fanart=R(ICON), thumb=R(ICON), fparams=fparams)
+				xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+			
+	else:
+		indices = blockextract('"type":"Container"', page)
+		for index in indices:								# 2. step: weiter mit Container
+			title = stringextract('"title":"', '"', index)
+			PLog("Container_title: " + title)
+			if container in title:
+				PLog("found_container: " + title)
+				page = index								# Block=Container 
+				break		
+
 
 	# Suche (27.12.2019), Untergruppen Sprachen: Block=index
 	if 'attributes=filter' or  'search/?query=' in url: 						
@@ -773,22 +820,19 @@ def GetContent(url, title, offset=0, li=''):
 		PLog(delnr)				
 	PLog(len(indices))
 	
-#	for index in indices:							# Container ermitteln 22.10.2021
-#		if '"type":"Container"' in index:
-#			title = stringextract('"title":"', '"', index)
-			
-			
 		
 	subtitle=''; 	
 	li_cnt=0										# Anzahl items in loop - (getrennt für Links + Stations)
 	for index in indices:		
-		# PLog('index: ' + index)		
+		PLog('index: ' + index)		
 		# einleitenden Container überspringen, dto. hasButtonStrip":true / "hasIconInSubtitle":false /
 		#	"expandableDescription" / "initialLinesCount" / "hasExpander":true
 		#	Bsp. Bill Burr's Monday Morning Podcast
 		if "children" in index:									# ohne eigenen Inhalt, children folgen
 			PLog('skip: "children" in index')
 			continue
+
+
 		if	'"hasProgressBar":true' in index:					
 			PLog('skip: "hasProgressBar":true in index')
 			continue
@@ -850,8 +894,10 @@ def GetContent(url, title, offset=0, li=''):
 		title=repl_json_chars(title) 
 	# ------------------------------------------------------------------	
 	# 																	Callback Link
-	# ------------------------------------------------------------------	
-		if mytype == 'Link' or mytype == 'Category' or mytype == 'Program':		# Callback Link
+	# ------------------------------------------------------------------
+#		# 24.10.2021 Berücksichtigung 'Container'
+		if mytype == 'Link' or mytype == 'Category' or mytype == 'Program' or mytype == 'Container':		# Callback Link
+#		if mytype == 'Link' or mytype == 'Category' or mytype == 'Program':		# Callback Link
 			# die Url im Datensatz ist im Plugin nicht verwendbar ( api-Call -> profiles)
 			# 	daher verwenden wir die fertigen Links aus dem linken Menü der Webseite ('guide-item__guideItemLink
 			#	Die Links mixt Tunein mit preset_id, guideId, linkfilter. 
@@ -924,6 +970,7 @@ def GetContent(url, title, offset=0, li=''):
 			addDir(li=li, label=title, action="dirList", dirID="GetContent", 
 				fanart=R(ICON), thumb=R(ICON), summary=summ_mehr, fparams=fparams)
 			li_cnt = li_cnt + 1	
+
 	# ------------------------------------------------------------------	
 	# 																	Callback Station
 	# ------------------------------------------------------------------	
