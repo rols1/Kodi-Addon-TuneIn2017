@@ -29,7 +29,7 @@ INSTALLATION:
 - Download script.module.kodi-six.zip from https://github.com/romanvm/kodi.six/releases
 - install downloaded zip-files with your Kodi-Browser
 - start addon and make the appropriate settings
-- [section 5 How to install from a ZIP file, with pictures](https://kodi.wiki/view/Add-on_manager) 
+- [Add-on manager Kodi wicki, section 5 How to install from a ZIP file, with pictures](https://kodi.wiki/view/Add-on_manager) 
 
 Want to help translate this plugin?
 ===================  
