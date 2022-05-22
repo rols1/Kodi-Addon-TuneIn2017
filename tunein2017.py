@@ -44,8 +44,8 @@ from resources.lib.util_tunein2017 import *
 
 # +++++ TuneIn2017  - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.6.9'	
-VDATE = '24.10.2021'
+VERSION =  '1.7.0'	
+VDATE = '22.10.2022'
 
 # 
 #	
@@ -305,8 +305,7 @@ def Main():
 	page, msg = RequestTunein(FunctionName='Main', url=ROOT_URL)	# Hauptmenü von Webseite
 	PLog(len(page))
 
-	page = stringextract('"homeMenuItem"', '"bottomAuth"', page)	# Navigations-Menü linke Seite	22.10.2021
-	items = blockextract('common-module__link', page)
+	items = blockextract('common-module__link', page)				# Navigations-Menü linke Seite	21.10.2022		
 	if len(items) > 0:												# kein Abbruch, weiter mit MyRadioStations + Fav's
 		del items[0]			# Home löschen
 	else:
@@ -334,6 +333,8 @@ def Main():
 		url = 'https://tunein.com' + stringextract('href="', '"', item)	#  Bsp. href="/radio/local/"
 		key = url[:-1].split('/')[-1]
 		thumb = getMenuIcon(key)
+		if thumb == '':												# irrelevant menus (Login, Register,..)
+			continue
 		PLog("item_url: " + url);	PLog(key);	PLog(thumb);	
 		try:	
 			title = re.search('">(.*)</a>', item).group(1)			# Bsp. data-reactid="64">Local Radio</a>
@@ -352,6 +353,9 @@ def Main():
 			(quote(url), quote(title))
 		addDir(li=li, label=title, action="dirList", dirID="GetContent", 
 			fanart=thumb, thumb=thumb, fparams=fparams)
+		
+		if key == "languages":										# menu end 
+			break
 		
 #-----------------------------	
 	PLog(SETTINGS.getSetting('UseRecording'))						# Check laufende Aufnahmen 
@@ -461,14 +465,14 @@ def home(li):							# Home-Button
 	return li
 #-----------------------------	
 def getMenuIcon(key):	# gibt zum key passendes Icon aus MENU_ICON zurück	
+	PLog("getMenuIcon: " + key)
 	icon = ''			#
-	PLog("key: " + key)
 	for icon in MENU_ICON:
 		if key == 'local':
 			icon = R('menu-lokale.png')
-		if key == 'recents':
+		elif key == 'recents':
 			icon = R('menu-kuerzlich.png')
-		if key == 'trending':
+		elif key == 'trending':
 			icon = R('menu-trend.png')
 		elif key == 'music':
 			icon = R('menu-musik.png')
@@ -486,6 +490,8 @@ def getMenuIcon(key):	# gibt zum key passendes Icon aus MENU_ICON zurück
 			icon = R('menu-sprachen.png')
 		elif key == 'premium':
 			icon = R('menu-pro.png')
+		else:
+			icon = ''
 	return icon	
 #-----------------------------
 def Search(query=''):
@@ -824,7 +830,7 @@ def GetContent(url, title, offset=0, li='', container=''):
 	subtitle=''; 	
 	li_cnt=0										# Anzahl items in loop - (getrennt für Links + Stations)
 	for index in indices:		
-		PLog('index: ' + index)		
+		PLog('index: ' + index[:100])		
 		# einleitenden Container überspringen, dto. hasButtonStrip":true / "hasIconInSubtitle":false /
 		#	"expandableDescription" / "initialLinesCount" / "hasExpander":true
 		#	Bsp. Bill Burr's Monday Morning Podcast

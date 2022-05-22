@@ -6,6 +6,11 @@ CHANGE HISTORY 	Kodi-Addon-TuneIn2017 (previosly plugin for Plexmediaserver)
 			https://www.kodinerds.net/index.php/Thread/66559-RELEASE-Kodi-Addon-TuneIn2017
 			Plex-Forum:
 			https://forums.plex.tv/discussion/288260/rel-tunein2017
+			
+22.052022	1.7.0	Main: Fixes after changes in Tunein website (start + end of main menu,
+			getting addon icons).
+			GetContent: cut log statement of index (max. 100 chars).
+			Github-Release-ZIP: changed to Matrix-version, Github-README updated.
 
 24.10.2021	1.6.9	rebuilded container-listing like tunein website: added code in
 			GetContent for detecting, listing and selection of container.

@@ -4,6 +4,7 @@ tunein.com-Addon für Kodi ([vormals Plugin für den Plexmediaserver](https://gi
 
 Download aktuelle Version: https://github.com/rols1/Kodi-Addon-TuneIn2017/releases
 ![Downloads](https://img.shields.io/github/downloads/rols1/Kodi-Addon-TuneIn2017/total.svg "Downloads")
+<b>(Kodi Matrix)</b> oder [kodinerds-Repo](https://repo.kodinerds.net) <b>(Kodi Krypton, Leia, Kodi Matrix)</b> - siehe INSTALLATION.
 
 #### Rückmeldungen willkommen / Feedeback welcome: 
 Support-Thread: https://www.kodinerds.net/index.php/Thread/66559-RELEASE-Kodi-Addon-TuneIn2017 <br>
@@ -15,18 +16,20 @@ EMail: rols1@gmx.de
 
 INSTALLATION:
 ===================  
+### Hinweis für ältere Kodi-Versionen (Leia, Krypton): für die Erstinstallation muss die [Krypton-Version](https://repo.kodinerds.net) auf kodinerds.net verwendet werden. Dies gilt auch für ein Downgrade einer Kodi-Matrix-Version zu Leia, Krypton.
 - Download der zip-Datei hier: https://github.com/rols1/Kodi-Addon-TuneIn2017/releases/latest
 - Download script.module.kodi-six.zip hier https://github.com/romanvm/kodi.six/releases
 - Beide zip-Dateien mittels Kodi-Menü Addons/Addon-Browser installieren
 - Addon öffen und Addon-Einstellungen anpassen.
-- [bebilderte Anleitung](https://www.kodinerds.net/index.php/Thread/14234-Wie-installiert-man-Addons-die-nicht-über-den-Addon-Browser-verfügbar-sind/?page=Thread&threadID=14234)
+- [Empfehlenswert: Kodi Anleitung & Beschreibung von Rene8001](https://www.kodinerds.net/index.php/Thread/47479-Hilfe-f%C3%BCr-Neulinge-Kodi-Anleitung-Einstellungen-GooglePlay-FireTV/?pageNo=1)
 
 ### english:
+### Note for older Kodi versions (Leia, Krypton): for the initial installation the [Krypton-Version](https://repo.kodinerds.net) on kodinerds.net must be used. This also icludes a downgrade of Kodi Matrix version to Leia or Krypton.
 - Download zip-file from https://github.com/rols1/Kodi-Addon-TuneIn2017/releases/latest
 - Download script.module.kodi-six.zip from https://github.com/romanvm/kodi.six/releases
 - install downloaded zip-files with your Kodi-Browser
 - start addon and make the appropriate settings
-- [further instructions with pictures](https://kodi.wiki/view/HOW-TO:Install_add-ons_from_zip_files) 
+- [section 5 How to install from a ZIP file, with pictures](https://kodi.wiki/view/Add-on_manager) 
 
 Want to help translate this plugin?
 ===================  

@@ -743,7 +743,7 @@ def L(string):
 # CB enthält die Funktionsbez. für den Callback
 #	
 def PlayAudio(url, title, thumb, Plot, header=None, url_template=None, FavCall='', CB=''):
-	PLog('6:'); PLog(title); PLog(FavCall); 
+	PLog('PlayAudio:'); PLog(title); PLog(FavCall); 
 				
 	if url.startswith('http') == False:		# lokale Datei
 		url = os.path.abspath(url)
