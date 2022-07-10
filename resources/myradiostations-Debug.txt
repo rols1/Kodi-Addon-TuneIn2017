@@ -17,8 +17,6 @@
 #	
 #	If you want start only with this stations switch the option in addon-settings.
 
-#	Examples are extracted from https://wiki.ubuntuusers.de/Internetradio/Stationen/
-
 # 	Not compatible formats: mmsh://..., .asf
 
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

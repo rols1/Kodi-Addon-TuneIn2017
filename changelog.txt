@@ -6,8 +6,12 @@ CHANGE HISTORY 	Kodi-Addon-TuneIn2017 (previosly plugin for Plexmediaserver)
 			https://www.kodinerds.net/index.php/Thread/66559-RELEASE-Kodi-Addon-TuneIn2017
 			Plex-Forum:
 			https://forums.plex.tv/discussion/288260/rel-tunein2017
+
+10.07.2022	1.7.1	getStreamMeta: Permanent-Redirect-Check expanded from 308 to 301.
+			myradiostations-TV-Audio.txt, myradiostations-Mix.txt: renewed url's.
+			Release-ZIP on Github-Repo: changed to Matrix version. 
 			
-22.052022	1.7.0	Main: Fixes after changes in Tunein website (start + end of main menu,
+22.05.2022	1.7.0	Main: Fixes after changes in Tunein website (start + end of main menu,
 			getting addon icons).
 			GetContent: cut log statement of index (max. 100 chars).
 			Github-Release-ZIP: changed to Matrix-version, Github-README updated.

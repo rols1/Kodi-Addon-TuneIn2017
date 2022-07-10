@@ -17,8 +17,6 @@
 #	
 #	If you want start only with this stations switch the option in preferences.
 
-#	Examples are extracted from https://wiki.ubuntuusers.de/Internetradio/Stationen/
-
 # 	Not compatible formats: mmsh://..., .asf
 
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -26,25 +24,27 @@
 
 ######################################################################################
 ##################### Audio-Streams deutscher TV-Sender ##############################
-# Url's gefunden im  Logfile von Kodi-Addon-ARDundZDF - nach Senderwahl im Menü 
-#	TV-Livestreams und Auswahl der Bandbreite "vermutlich nur Audio" (nur
-#	sichtbar mit Sofortstart AUS in den Settings).
-# 	Suche in Logfile nach "PlayVideo:"
+# Master-Url's für TV-Sender (Logfile Kodi-Addon-ARDundZDF *_streamlinks:*) 
+#	Kodi-Player extrahiert Audistream via ffmpeg
+#
 # 
-Arte	| https://artelive-lh.akamaihd.net/i/artelive_de@393591/index_5_a-b.m3u8?sd=10&rebase=on
-ONE	| http://onelivestream-lh.akamaihd.net/i/one_livestream@568814/index_1_a-p.m3u8?sd=10&rebase=on
-ARD-alpha 		| https://brlive-lh.akamaihd.net/i/bralpha_germany@119899/index_184_a-p.m3u8?sd=10&rebase=on
-Tagesschau24 		| http://tagesschau-lh.akamaihd.net/i/tagesschau_1@119231/index_184_a-p.m3u8?sd=10&rebase=on
-Deutsche Welle 		| https://dwstream72-lh.akamaihd.net/i/dwstream72_live@123556/index_5_a-p.m3u8?sd=10&rebase=on
-BR Fernsehen-Nord 	| http://brlive-lh.akamaihd.net/i/bfsnord_germany@119898/index_184_a-b.m3u8?sd=10&rebase=on
-BR Fernsehen-Süd 	| https://brlive-lh.akamaihd.net/i/bfssued_germany@119890/index_184_a-b.m3u8?sd=10&rebase=on
-MDR Sachsen 		| https://mdrsnhls-lh.akamaihd.net/i/livetvmdrsachsen_de@513998/index_184_a-b.m3u8?sd=10&rebase=on
-MDR+ Eventlivestreams 	| https://mdrevent2hls-lh.akamaihd.net/i/livetvmdrevent2_ww@513991/index_138_a-b.m3u8?sd=10&rebase=on
-NDR Niedersachsen 	|https://ndrfs-lh.akamaihd.net/i/ndrfs_nds@430233/index_184_a-b.m3u8?sd=10&rebase=on&id=
-rbb Fernsehen Bb 	| https://rbblive-lh.akamaihd.net/i/rbb_brandenburg@349369/index_1_a-b.m3u8?sd=10&rebase=on
-SWR Fernsehen BW 	| https://swrbwhls-i.akamaihd.net/hls/live/667638-b/swrbwd/master_64.m3u8
-WDR Fernsehen 		| https://wdrfsgeo-lh.akamaihd.net/i/wdrfs_geogeblockt@530016/index_184_a-b.m3u8?sd=10&rebase=on
-WDR/ARD Event Sportschau| https://wdrardevent1-lh.akamaihd.net/i/ardevent1_weltweit@566648/index_184_a-b.m3u8?sd=10&rebase=on
+Arte	| https://arteliveext.akamaized.net/hls/live/2030993/artelive_de/index.m3u8
+Das Erste		| https://derste247liveut.akamaized.net/hls/live/662734/daserste_ut_de/index.m3u8
+BR Fernsehen-Süd 	| https://bfr-suedde.akamaized.net/hls/live/2031536/brfssued_ut_de/index.m3u8
+HR	| https://hrhlsde.akamaized.net/hls/live/2024526/hrhlsde/index.m3u8
+MDR Sachsen 		| https://mdrtvsnhls.akamaized.net/hls/live/2016928/mdrtvsn/index.m3u8
+NDR Niedersachsen 	| https://mcdn.ndr.de/ndr/hls/ndr_fs/ndr_nds/master.m3u8
+Deutsche Welle 		| https://dwamdstream102.akamaized.net/hls/live/2015525/dwstream102/index.m3u8
+Radio Bremen		| https://rbhlslive.akamaized.net/hls/live/2020435/rbfs/master.m3u8
+rbb Fernsehen Bb 	| https://rbb-hls-brandenburg.akamaized.net/hls/live/2017825/rbb_brandenburg/index.m3u8
+KIKA	| https://kikageohls.akamaized.net/hls/live/2022693-b/livetvkika_de/master.m3u8
+3Sat	| https://zdf-hls-18.akamaized.net/hls/live/2016501/dach/high/master.m3u8
+ARD-alpha 		| https://ard-alphade.akamaized.net/hls/live/2031535/ardalpha_ut_de/index.m3u8
+#
+ZDF	| https://zdf-hls-15.akamaized.net/hls/live/2016498/de/high/master.m3u8
+ZDFneo	| https://zdf-hls-16.akamaized.net/hls/live/2016499/de/high/master.m3u8
+ZDFinfo	| https://zdf-hls-17.akamaized.net/hls/live/2016500/de/high/master.m3u8
+Phoenix	| https://zdf-hls-19.akamaized.net/hls/live/2016502/de/high/master.m3u8
 
 ######################################################################################
 

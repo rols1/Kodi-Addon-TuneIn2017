@@ -17,8 +17,6 @@
 #	
 #	If you want start only with this stations switch the option in addon-settings.
 
-#	Examples are extracted from https://wiki.ubuntuusers.de/Internetradio/Stationen/
-
 # 	Not compatible formats: mmsh://..., .asf
 
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -26,46 +24,40 @@
 
 ######################################################################################
 # ##################### Mix -mp3-streams from german stations #######################
-NDR 90.3 Hamburg Sounds | http://addrad.io/4WRJv3
-NDR 1 Niedersachsen | http://ndr-ndr1niedersachsen-hannover.cast.addradio.de/ndr/ndr1niedersachsen/hannover/mp3/128/stream.mp3	
-NDR 1 Welle Nord |  http://ndr-ndr1wellenord-kiel.cast.addradio.de/ndr/ndr1wellenord/kiel/mp3/128/stream.mp3
+NDR 90.3 Hamburg Sounds | https://icecast.ndr.de/ndr/ndr903/hamburg/mp3/128/stream.mp3
+NDR 1 Niedersachsen | https://icecast.ndr.de/ndr/ndr1niedersachsen/lueneburg/mp3/128/stream.mp3	
+NDR 1 Welle Nord |  https://icecast.ndr.de/ndr/ndr1wellenord/norderstedt/mp3/128/stream.mp3
 
-RBB Antenne Brandenburg | https://rbb-antennebrandenburg-live.sslcast.addradio.de/rbb/antennebrandenburg/live/mp3/128/stream.mp3
-RBB Fritz | https://rbb-fritz-live.sslcast.addradio.de/rbb/fritz/live/mp3/128/stream.mp3
-RBB radioeins | https://rbb-radioeins-live.sslcast.addradio.de/rbb/radioeins/live/mp3/48/stream.mp3
+RBB 88.8 | https://dispatcher.rndfnk.com/rbb/rbb888/live/mp3/mid
+RBB Kultur | https://dispatcher.rndfnk.com/rbb/rbbkultur/live/mp3/high
 
-SWR3 | https://swr-swr3-live.sslcast.addradio.de/swr/swr3/live/mp3/128/stream.mp3
-SWR4 Rheinland-Pfalz | https://swr-swr4-rp.sslcast.addradio.de/swr/swr4/rp/mp3/128/stream.mp3
+SWR3 | https://liveradio.swr.de/sw282p3/swr3/play.mp3
+SWR4 | https://liveradio.swr.de/sw282p3/swr4tr/play.mp3
 
-HR 3 |https://hr-hr3-live.sslcast.addradio.de/hr/hr3/live/mp3/128/stream.mp3
-HR YOU-FM | https://hr-youfm-live.sslcast.addradio.de/hr/youfm/live/mp3/128/stream.mp3
+HR 3 | https://dispatcher.rndfnk.com/hr/hr3/live/mp3/high?aggregator=ard-at
+HR 1 | https://dispatcher.rndfnk.com/hr/hr1/live/mp3/high?aggregator=ard-at
 
-Bayern 1 | http://br-br1-obb.cast.addradio.de/br/br1/obb/mp3/128/stream.mp3
-Bayern 3 | http://br-br3-live.cast.addradio.de/br/br3/live/mp3/128/stream.mp3
+Bayern 1 | https://dispatcher.rndfnk.com/br/br1/franken/mp3/mid?aggregator=ard-at
+Bayern 3 | https://dispatcher.rndfnk.com/br/br3/live/mp3/mid?aggregator=ard-at
 
 ######################################################################################
 # ##################### Mix - different playlist/audio formats #######################
-#
-friskyRadio (England) | http://www.friskyradio.com/frisky.m3u	# 4 x mp3
 #
 BFBS Radio 1  | http://tx.sharp-stream.com/icecast.php?i=ssvcbfbs1.aac   
 BFBS Radio 2 | http://tx.sharp-stream.com/icecast.php?i=ssvcbfbs2.aac   
 BFBS Gibraltar | http://tx.sharp-stream.com/icecast.php?i=ssvcbfbs7.aac  
 BFBS Scotland (Schottland) | http://tx.sharp-stream.com/icecast.php?i=ssvcbfbs18.aac
 #
-Atlantic Sound Factory | http://www.asfradio.com/launch.asp?p=pls
-Atlantic Sound Factory | http://www.asfradio.com/launch.asp?p=ram
+Atlantic Sound Factory | http://ais-sa2.cdnstream1.com/2279_128.mp3
 #
-Radio X (Basel) | http://mp3.radiox.ch:8000/standard.ogg.m3u	
-Radio X (Basel) | http://mp3.radiox.ch:8000/standard.aac.m3u	
+Radio X (Basel) | http://mp3.radiox.ch/standard.mp3	
 #
-Frequence 3 (France) | http://streams.frequence3.net/mp3-192.m3u
+Frequence 3 (France) | https://frequence3.net-radio.fr/frequence3-64.aac
 #
 Dolfijn FM (Germany) | http://85.214.231.253:8080/stream.mp3
 Querfunk  (Germany, Karlsruhe) | http://mp3.querfunk.de/qfhi
-RundFunk Meißner Eschwege (Germany) | http://s8.pop-stream.de:8650/listen.pls
 Radio Unerhört Marburg (Germany) | http://stream.radio-rum.de:8000/rum.mp3.m3u
-bigFM (Germany) | http://srv05.bigstreams.de/bigfm-mp3-64.m3u
+bigFM (Berlin) | https://audiotainment-sw.streamabc.net/atsw-bigfmberlin-mp3-128-8926421?sABC=62pnrs5p%230%233948so65os838pn972qp67n19832n8n7%23gharva&aw_0_1st.playerid=tunein&amsparams=playerid:tunein;skey:1657466716
 #
 # 1 Flac-Stream:
 Radio Paradise Rock (Flac) |http://stream.radioparadise.com/rock-flac 

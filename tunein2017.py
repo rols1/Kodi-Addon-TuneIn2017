@@ -44,8 +44,8 @@ from resources.lib.util_tunein2017 import *
 
 # +++++ TuneIn2017  - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.7.0'	
-VDATE = '22.10.2022'
+VERSION =  '1.7.1'	
+VDATE = '10.07.2022'
 
 # 
 #	
@@ -2817,7 +2817,7 @@ def getStreamMeta(address):
 	# Test auf angehängte Portnummer = zusätzl. Indikator für Stream, Anhängen von ; in StationList
 	#	aber nur, wenn Link direkt mit Portnummer oder Portnummer + / endet, Bsp. http://rs1.radiostreamer.com:8020/
 	hasPortNumber='false'
-	p = urlparse(address)
+	p = urlparse(address)				# p.netloc s. Permanent-Redirect-Url
 	if p.port and p.path == '':	
 		hasPortNumber='true'		
 	if p.port and p.path:
@@ -2835,13 +2835,26 @@ def getStreamMeta(address):
 	gcontext.verify_mode = ssl.CERT_NONE
 	
 	try:
-		response = urlopen(request, context=gcontext, timeout=UrlopenTimeout)
-		#cafile = os.path.join("%s", "xbmc_cacert.pem") % RESOURCES_PATH	# bei Bedarf Zertifikat nutzen
-		#response = urlopen(request, cafile=cafile, timeout=UrlopenTimeout)
+		new_url=''; response='';e=''
+		try:
+			response = urlopen(request, context=gcontext, timeout=UrlopenTimeout)
+			new_url = response.geturl()					# follow redirects, hier für Header-Auswertung, Kodi-Player
+		except Exception as e:
+			err = str(e)
+			PLog(err)
+			# Debug: Audiothek Rubrik Sport www.ardaudiothek.de/rubrik/sport/42914734 (301 Moved Permanently)
+			if "308:" in str(e) or "301:" in str(e):	# Permanent-Redirect-Url
+				new_url = e.hdrs.get("Location")
+				if new_url.startswith("http") == False:	# Serveradr. vorh.?
+					new_url = 'https://%s%s' % (p.netloc, new_url)
+				PLog("HTTP308_301_new_url: " + new_url)		
 		
-		new_url = response.geturl()					# follow redirects, hier für Header-Auswertung, Kodi-Player
-		PLog("new_url: " + new_url)					#	folgt selbständig Redirects
+		PLog("new_url: " + new_url)	
+		if new_url == '':								# vorzeitiger Abbruch 
+			error = err
+			return {"status": status, "metadata": "", "hasPortNumber": hasPortNumber, "shoutcast": "", "error": error}
 			
+		
 		headers = getHeaders(response)
 		# PLog(headers)
 				   
