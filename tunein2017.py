@@ -44,8 +44,8 @@ from resources.lib.util_tunein2017 import *
 
 # +++++ TuneIn2017  - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.7.1'	
-VDATE = '10.07.2022'
+VERSION =  '1.7.2'	
+VDATE = '28.01.2023'
 
 # 
 #	
@@ -337,10 +337,10 @@ def Main():
 			continue
 		PLog("item_url: " + url);	PLog(key);	PLog(thumb);	
 		try:	
-			title = re.search('">(.*)</a>', item).group(1)			# Bsp. data-reactid="64">Local Radio</a>
+			title = re.search('</div>(.*)</a>', item).group(1)		# Bsp. </div>Sport</a>
 			PLog("title: " + title)
 		except:
-			title = key.title()
+			title = key
 		title = title.replace('\\u002F', '/')
 		title = unescape(title)
 				
@@ -795,6 +795,10 @@ def GetContent(url, title, offset=0, li='', container=''):
 					#	PLog(index)
 					title = stringextract('"title":"', '"', index)
 					PLog("Container_title: " + title)
+					if 'DynamicPrompt' in title:			# 28.01.2023 bisher o. Auswertung
+						PLog("skip_DynamicPrompt")
+						continue
+					
 					url=py2_encode(url); title=py2_encode(title);
 					fparams="&fparams={'url': '%s', 'title': '%s', 'container': '%s'}"  %\
 						(quote(url), quote(title), quote(title))
@@ -838,10 +842,10 @@ def GetContent(url, title, offset=0, li='', container=''):
 			PLog('skip: "children" in index')
 			continue
 
-
 		if	'"hasProgressBar":true' in index:					
 			PLog('skip: "hasProgressBar":true in index')
 			continue
+		
 			
 		# 05.12.2019 preset_id stimmt nicht mehr mit id für Fav überein - Austausch mit target_id
 		# preset_id 	= stringextract('"id":"', '"', index)		# dto. targetItemId, scope, guideId -> url
@@ -892,9 +896,9 @@ def GetContent(url, title, offset=0, li='', container=''):
 			
 		if title in ShareText or subtitle in ShareText:		# Ergänzung: Höre .. auf TuneIn
 			ShareText = ''			
-		if seoName in title:				# seoName = Titel
+		if seoName in title:								# seoName = Titel
 			seoName = ''
-											
+
 		mytype = mytype.title()
 		title=title.replace(u'(', u'<').replace(u')', u'>')	# klappt nicht in repl_json_chars
 		title=repl_json_chars(title) 
@@ -903,7 +907,6 @@ def GetContent(url, title, offset=0, li='', container=''):
 	# ------------------------------------------------------------------
 #		# 24.10.2021 Berücksichtigung 'Container'
 		if mytype == 'Link' or mytype == 'Category' or mytype == 'Program' or mytype == 'Container':		# Callback Link
-#		if mytype == 'Link' or mytype == 'Category' or mytype == 'Program':		# Callback Link
 			# die Url im Datensatz ist im Plugin nicht verwendbar ( api-Call -> profiles)
 			# 	daher verwenden wir die fertigen Links aus dem linken Menü der Webseite ('guide-item__guideItemLink
 			#	Die Links mixt Tunein mit preset_id, guideId, linkfilter. 
@@ -1024,7 +1027,8 @@ def GetContent(url, title, offset=0, li='', container=''):
 		if max_count:
 			# Mehr Seiten anzeigen:		
 			cnt = li_cnt + offset		# 
-			PLog('Mehr_Test: %s | %s | %s | %s' % (max_count, li_cnt, cnt, page_cnt) )
+			PLog('Mehr_Test: %s | %s | %s | %s' % (max_count, li_cnt, cnt, page_cnt))
+			
 			if cnt >= page_cnt:			# Gesamtzahl erreicht - Abbruch
 				offset=0
 				break					# Schleife beenden
