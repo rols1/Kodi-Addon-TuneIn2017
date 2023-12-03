@@ -44,8 +44,8 @@ from resources.lib.util_tunein2017 import *
 
 # +++++ TuneIn2017  - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.7.2'	
-VDATE = '28.01.2023'
+VERSION =  '1.7.3'	
+VDATE = '03.12.2023'
 
 # 
 #	
@@ -111,6 +111,8 @@ MENU_ICON 	=  	{'menu-lokale.png', 'menu-musik.png', 'menu-sport.png', 'menu-new
 #	formats=mp3,aac,ogg,flash,html - festgelegt in Main
 #	Ausnahme: RECENTS_URL (keine Ergebnisse mit Web-Url)
 # alte ROOT_URL 	= 'https://opml.radiotime.com/Browse.ashx?formats=%s'
+# 03.12.2023 Problem (nicht lösbar): Submenüs Sendungen bleiben leer, wenn tunein
+#	Werbung oder den Hinweis auf spätere Sendung vorschaltet.
 
 BASE_URL	= 'https://tunein.com'
 ROOT_URL 	= 'https://tunein.com/radio/home/'						
@@ -770,6 +772,7 @@ def GetContent(url, title, offset=0, li='', container=''):
 	# PLog(page)
 	link_list = blockextract('__guideItemLink___', page) # Link-List außerhalb json-Bereich 22.10.2021
 	PLog("link_list: " + str(len(link_list)))
+		
 	
 	# 05.12.2019 Auswertung TargetItemId (-> preset_id bei type=station, s.u.)
 	#	Blockbildung ausgetauscht (index -> token) - Block unvollständig, TargetItemId fehlte
@@ -834,10 +837,17 @@ def GetContent(url, title, offset=0, li='', container=''):
 	subtitle=''; 	
 	li_cnt=0										# Anzahl items in loop - (getrennt für Links + Stations)
 	for index in indices:		
-		PLog('index: ' + index[:100])		
+		PLog('index: ' + index[:100])
+		# 03.12.2023 Tunein-Hinweis: Sendung erst später verfügbar	
+		if '"type":"Prompt"' in index:
+			accessTitle = stringextract('accessibilityTitle":"', '"', index)
+			msg1 = accessTitle
+			MyDialog(msg1, '', '')
+			return li
+		
 		# einleitenden Container überspringen, dto. hasButtonStrip":true / "hasIconInSubtitle":false /
 		#	"expandableDescription" / "initialLinesCount" / "hasExpander":true
-		#	Bsp. Bill Burr's Monday Morning Podcast
+		#	Bsp. Bill Burr's Monday Morning Podcast		
 		if "children" in index:									# ohne eigenen Inhalt, children folgen
 			PLog('skip: "children" in index')
 			continue
@@ -879,6 +889,8 @@ def GetContent(url, title, offset=0, li='', container=''):
 		FollowText	= stringextract('"followText":"', '"', index)
 		ShareText	= stringextract('"shareText":"', '"', index)
 		path 		= stringextract('"path":"', '"', index)		# -> url_title - url-Abgleich
+		if path.startswith("http") == False:
+			path = stringextract('"url":"', '"', index)	
 		linkfilter 	= stringextract('"filter":"', '"', index)	# dto.
 		linkfilter	= 'filter%3D' + linkfilter
 		
@@ -1047,7 +1059,7 @@ def GetContent(url, title, offset=0, li='', container=''):
 		# break	# Debug Stop
 	PLog('li_cnt: ' + str(li_cnt))
 	PLog(endOfDirectory)	
-	if endOfDirectory == True:
+	if endOfDirectory == True:		
 #		if li_cnt == 0:
 #			if subtitle:					# Hinweis auf künftige Sendung möglich (keine akt. Sendung)
 #				title_org = title_org + " | %s" % subtitle	
