@@ -45,6 +45,7 @@
 		
 	<category label="36428">
 	<setting label="30401"  type="bool" id="UseRecording" default="false"/>
+	<setting label="Podcast-Download"  type="bool" id="UseDownload" default="false"/>
 	<setting label="30402" type="executable" id="StreamripperPath" default="/usr/bin/streamripper"/>
 	<setting label="30403" type="folder" option="writeable" source=""  id="DownloadDir"  default="/tmp"/>
 	</category>

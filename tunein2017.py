@@ -27,25 +27,26 @@ elif PYTHON3:
 
 
 # Python
-import ssl				# HTTPS-Handshake
-from io import BytesIO	# Python2+3 -> get_page (compressed Content), Ersatz für StringIO
+import ssl						# HTTPS-Handshake
+from io import BytesIO			# Python2+3 -> get_page (compressed Content), Ersatz für StringIO
 import gzip, zipfile
 
-import shlex			# Parameter-Expansion
-import signal			# für os.kill
-import time				# Verzögerung
-import random			# Zufallswerte für rating_key
-import re				# u.a. Reguläre Ausdrücke, z.B. in CalculateDuration
-import json				# json -> Textstrings
-import base64			# zusätzliche url-Kodierung für addDir/router
+import shlex					# Parameter-Expansion
+import signal					# für os.kill
+import time						# Verzögerung
+import random					# Zufallswerte für rating_key
+import re						# u.a. Reguläre Ausdrücke, z.B. in CalculateDuration
+import json						# json -> Textstrings
+import base64					# zusätzliche url-Kodierung für addDir/router
+from threading import Thread	# thread_getfile
 
-import resources.lib.updater 			as updater		
+import resources.lib.updater as updater		
 from resources.lib.util_tunein2017 import *
 
 # +++++ TuneIn2017  - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.7.3'	
-VDATE = '03.12.2023'
+VERSION =  '1.7.4'	
+VDATE = '15.12.2023'
 
 # 
 #	
@@ -78,6 +79,7 @@ ICON_NEXT 				= "icon-next.png"
 ICON_CANCEL 			= "icon-error.png"
 ICON_MEHR 				= "icon-mehr.png"
 ICON_SEARCH 			= 'suche.png'
+ICON_DL					= 'icon-downl.png'
 
 ICON_RECORD				= 'icon-record.png'						
 ICON_STOP				= 'icon-stop.png'
@@ -319,7 +321,7 @@ def Main():
 	
 	# Tunein-Navigationsmenü:	
 	# local:	Ausgabe abhängig von IP-Lokalisierung bzw. Zuweisung im Menü "By Location", 
-	#				ohne Kat's
+	#				ohne Kat's - 12/2023 fehlt im Webmenü, unten angehängt
 	# recents:	abhängig von Konsum (ältere Sender einer serial-id entfallen), ohne Kat's 
 	# trending: Ausgabe abhängig von Länderkennung, ohne Kat's
 	# music: 	Kat's mit Icons, Kat Entdecken enthält Sub-Kat's (Blues, Folk usw.) o.Icons
@@ -329,7 +331,7 @@ def Main():
 	# regions:	Kat Regionen o. Icons, Kat Sender mit Icons (abhängig von IP-Lokalisierung) - Zuweisung
 	#				einer Region via Button für Menü "Local Radio" im Addon 
 	# languages: Kat Sprachen o. Icons	
-	PLog(len(items))
+	PLog(len(items)); 
 	for item in items:												# Tunein-Menüs + Icons zeigen
 		# PLog('item: ' + item)
 		url = 'https://tunein.com' + stringextract('href="', '"', item)	#  Bsp. href="/radio/local/"
@@ -337,9 +339,10 @@ def Main():
 		thumb = getMenuIcon(key)
 		if thumb == '':												# irrelevant menus (Login, Register,..)
 			continue
-		PLog("item_url: " + url);	PLog(key);	PLog(thumb);	
+		PLog("item_url: %s" % url);	PLog(key);	PLog(thumb);	
 		try:	
 			title = re.search('</div>(.*)</a>', item).group(1)		# Bsp. </div>Sport</a>
+			title = cleanhtml(title)
 			PLog("title: " + title)
 		except:
 			title = key
@@ -358,7 +361,17 @@ def Main():
 		
 		if key == "languages":										# menu end 
 			break
-		
+	
+#-----------------------------	
+	title  = L("Lokale Sender")										# fehlt im Webmenü
+	url = "/radio/local/"; thumb = getMenuIcon("local")
+	url=py2_encode(url); title=py2_encode(title); 
+	fparams="&fparams={'url': '%s', 'title': '%s', 'offset': '0'}"  %\
+		(quote(url), quote(title))
+	addDir(li=li, label=title, action="dirList", dirID="GetContent", 
+		fanart=thumb, thumb=thumb, fparams=fparams)
+
+
 #-----------------------------	
 	PLog(SETTINGS.getSetting('UseRecording'))						# Check laufende Aufnahmen 
 	pid = Dict('load', 'PID')
@@ -392,7 +405,7 @@ def Main():
 				call_update = True
 				title = L('neues Update vorhanden') +  ' - ' + L('jetzt installieren')
 				summary = L('Plugin Version:') + " " + VERSION + ', Github Version: ' + latest_version
-				# Bsp.: https://github.com/rols1/Kodi-Addon-ARDundZDF/releases/download/0.5.4/Kodi-Addon-ARDundZDF.zip
+				# Bsp.: https://github.com/rols1/Kodi-Addon-TuneIn2017/releases/download/1.7.3/Kodi-Addon-TuneIn2017.zip
 				url = 'https://github.com/{0}/releases/download/{1}/{2}.zip'.format(GITHUB_REPOSITORY, latest_version, REPO_NAME)
 				url=py2_encode(url); latest_version=py2_encode(latest_version);
 				fparams="&fparams={'url': '%s', 'ver': '%s'}" % (quote_plus(url), latest_version) 
@@ -492,6 +505,8 @@ def getMenuIcon(key):	# gibt zum key passendes Icon aus MENU_ICON zurück
 			icon = R('menu-sprachen.png')
 		elif key == 'premium':
 			icon = R('menu-pro.png')
+		#elif key == 'audiobooks':			# scheinbar nur Premium-Inhalte
+		#	icon = R('menu-audiobook.png')
 		else:
 			icon = ''
 	return icon	
@@ -569,7 +584,7 @@ def Search(query=''):
 	xbmcplugin.endOfDirectory(HANDLE)	
 #-----------------------------
 
-# SetLocation (Aufruf GetContent): Region für Lokales Radiomanuell setzen/entfernen
+# SetLocation (Aufruf GetContent): Region für Lokales Radio manuell setzen/entfernen
 def SetLocation(url, title, region, myLocationRemove):	
 	PLog('SetLocation: %s' % region)
 	PLog('myLocationRemove: ' + myLocationRemove)
@@ -755,7 +770,7 @@ def GetContent(url, title, offset=0, li='', container=''):
 	# ------------------------------------------------------------------	
 	# 																		Get Content
 	# ------------------------------------------------------------------	
-	PLog('url: ' + url)	
+	PLog('content_url: ' + url)	
 	page, msg = RequestTunein(FunctionName='GetContent', url=url)
 	# RSave('/tmp/x.html', py2_encode(page))		# Debug: Save html-Content	
 	if page == '':	
@@ -763,26 +778,21 @@ def GetContent(url, title, offset=0, li='', container=''):
 		MyDialog(msg1, '', '')
 		return li
 
-	# Hinw.: Seite nicht ab initialStateEl begrenzen - fehlt bei api-Ausgaben (Bsp. Recents) 
-	#if '"users":' in page:
-	#	page = page [:page.find('"users":')]
-	PLog('pagelen: ' + str(len(page)))	
 	PLog(page[:80])
-	# RSave('/tmp/Recent.json', py2_encode(page))	# Debug: Save json-Content	
+	# RSave('/tmp/Recent.html', py2_encode(page))	# Debug	
 	# PLog(page)
 	link_list = blockextract('__guideItemLink___', page) # Link-List außerhalb json-Bereich 22.10.2021
 	PLog("link_list: " + str(len(link_list)))
-		
 	
-	# 05.12.2019 Auswertung TargetItemId (-> preset_id bei type=station, s.u.)
-	#	Blockbildung ausgetauscht (index -> token) - Block unvollständig, TargetItemId fehlte
-	if 'doctypehtml' not in page:								# api-call: Uppercase für Parameter im json-Inhalt
-		page = (page.replace('"Title"','"title"').replace('"Image"','"image"').replace('"Category"','"category"')
-			.replace('"FollowText"','"followText"').replace('"ShareText"','"shareText"').replace('"Id"','"id"')
-			.replace('Type','type').replace('ContainerType','containerType').replace('Token','token')
-			.replace('Subtitle','subtitle').replace('Index','index').replace('GuideId','guideId').replace('"Url"','"url"')
-			.replace('Duration','duration').replace('Token','token').replace('TargetItemId','targetItemId'))			
-
+	jsonObject = get_Web_json(page)	
+	PLog(page[:80])
+	# keys - Anpassung an unterschiedliche lower-/uper-Cases -> lower:
+	jsonObject = lower_key(jsonObject)
+	# string-Verarbeitung:
+	page = str(jsonObject)
+	page = (page.replace("'", '"').replace('": "', '":"'))	
+	#RSave('/tmp2/x_Recent.json', py2_encode(page))	# Debug	
+	PLog(page[:80])
 
 	# ------------------------------------------------------------------	
 	# 																	Callback Container-Titel
@@ -819,13 +829,14 @@ def GetContent(url, title, offset=0, li='', container=''):
 				page = index								# Block=Container 
 				break		
 
-
 	# Suche (27.12.2019), Untergruppen Sprachen: Block=index
 	if 'attributes=filter' or  'search/?query=' in url: 						
 		indices = blockextract('"index":', page)
 	else:
 		indices = blockextract('"token":', page)		# 05.12.2019 token ersetzt index 
-	page_cnt = len(indices)	
+	page_cnt = len(indices)
+	PLog('"token":' in page)
+	
 	PLog('indices: %d, max_count: %d, offset: %d' % (page_cnt, max_count, offset))
 	if 	max_count:									# '' = 'Mehr..'-Option ausgeschaltet?
 		delnr = min(page_cnt, offset)
@@ -840,10 +851,13 @@ def GetContent(url, title, offset=0, li='', container=''):
 		PLog('index: ' + index[:100])
 		# 03.12.2023 Tunein-Hinweis: Sendung erst später verfügbar	
 		if '"type":"Prompt"' in index:
-			accessTitle = stringextract('accessibilityTitle":"', '"', index)
-			msg1 = accessTitle
-			MyDialog(msg1, '', '')
-			return li
+			accessTitle = stringextract('accessibilitytitle":"', '"', index)
+			if accessTitle:
+				msg1 = accessTitle
+				PLog("accessTitle: " + accessTitle)
+				xbmcgui.Dialog().notification('TuneIn:',msg1,R(ICON),3000, sound=False)
+				#MyDialog(msg1, '', '')					# nervt: Probiere TuneIn Premium..
+				return
 		
 		# einleitenden Container überspringen, dto. hasButtonStrip":true / "hasIconInSubtitle":false /
 		#	"expandableDescription" / "initialLinesCount" / "hasExpander":true
@@ -859,8 +873,8 @@ def GetContent(url, title, offset=0, li='', container=''):
 			
 		# 05.12.2019 preset_id stimmt nicht mehr mit id für Fav überein - Austausch mit target_id
 		# preset_id 	= stringextract('"id":"', '"', index)		# dto. targetItemId, scope, guideId -> url
-		target_id 	= stringextract('"targetItemId":"', '"', index)	# 
-		guideId 	= stringextract('"guideId":"', '"', index)		# Bsp. t121001218 -> opml-url zum mp3-Quelle
+		target_id 	= stringextract('"targetitemid":"', '"', index)	# 
+		guideId 	= stringextract('"guideid":"', '"', index)		# Bsp. t121001218 -> opml-url zum mp3-Quelle
 		preset_id 	= stringextract('"id":"', '"', index)			# dto. targetItemId, scope, guideId -> url
 		
 		# url-Korrektur u.a.
@@ -870,8 +884,8 @@ def GetContent(url, title, offset=0, li='', container=''):
 		title		= stringextract('"title":', '",', index)		# Sonderbhdl. wg. "\"Sticky Fingers\" ...
 		title		= title[1:].replace('\\"', '"')	
 		subtitle	= stringextract('"subtitle":"', '"', index)		# Datum lokal
-		publishTime	= stringextract('"publishTime":"', '"', index)	# Format 2017-10-26T16:50:58
-		seoName		= stringextract('"seoName":"', '"', index)		# -> url-Abgleich
+		publishTime	= stringextract('"publishtime":"', '"', index)	# Format 2017-10-26T16:50:58
+		seoName		= stringextract('"seoname":"', '"', index)		# -> url-Abgleich
 		if '"description"' in index:
 			descr		= stringextract('"description":"', '"', index)	
 		else:
@@ -886,8 +900,8 @@ def GetContent(url, title, offset=0, li='', container=''):
 		image	= stringextract('"image":"', '"', index)		# Javascript Unicode escape \\u002F
 		if image == '':
 			image=R(ICON)
-		FollowText	= stringextract('"followText":"', '"', index)
-		ShareText	= stringextract('"shareText":"', '"', index)
+		FollowText	= stringextract('"followtext":"', '"', index)
+		ShareText	= stringextract('"sharetext":"', '"', index)
 		path 		= stringextract('"path":"', '"', index)		# -> url_title - url-Abgleich
 		if path.startswith("http") == False:
 			path = stringextract('"url":"', '"', index)	
@@ -896,7 +910,7 @@ def GetContent(url, title, offset=0, li='', container=''):
 		
 		play_part	= stringextract('"play"', '}', index)		# Check auf abspielbaren Inhalt in Programm
 		# PLog(play_part)
-		sec_gId		=  stringextract('"guideId":"', '"', play_part)# macht ev. Programm/Category zur Station		
+		sec_gId		=  stringextract('"guideid":"', '"', play_part)# macht ev. Programm/Category zur Station		
 		if sec_gId.startswith('t') or  sec_gId.startswith('s'):
 			 guideId = sec_gId
 			 
@@ -917,7 +931,7 @@ def GetContent(url, title, offset=0, li='', container=''):
 	# ------------------------------------------------------------------	
 	# 																	Callback Link
 	# ------------------------------------------------------------------
-#		# 24.10.2021 Berücksichtigung 'Container'
+		# 24.10.2021 Berücksichtigung 'Container'
 		if mytype == 'Link' or mytype == 'Category' or mytype == 'Program' or mytype == 'Container':		# Callback Link
 			# die Url im Datensatz ist im Plugin nicht verwendbar ( api-Call -> profiles)
 			# 	daher verwenden wir die fertigen Links aus dem linken Menü der Webseite ('guide-item__guideItemLink
@@ -938,11 +952,14 @@ def GetContent(url, title, offset=0, li='', container=''):
 			PLog('url_title: ' + url_title)
 			for link in link_list:
 				local_url = BASE_URL + stringextract('href="', '"', link)
-				if url_title in local_url:			
-					PLog('url_found: ' + local_url)
-					url_found = True
-					link_list.remove(link)								# Sätze mit ident. linkfilter möglich
-					break
+				PLog("url_title: %s, local_url: %s" % (url_title, local_url))
+				PLog(url_title in url_org)
+				if url_title in local_url:
+					if url_title not in url_org:						# Selbstreferenz			
+						PLog('url_found: ' + local_url)
+						url_found = True
+						link_list.remove(link)							# Sätze mit ident. linkfilter möglich
+						break
 					
 			if not url_found: 					# Tunein-Info, übersetzt -  mögl.: will be available on ..
 				msg1 = ('skip: no preset_id in link for: %s | %s' % (title,preset_id)) 
@@ -954,7 +971,7 @@ def GetContent(url, title, offset=0, li='', container=''):
 					msg2 = stringextract('title":"', '"', msg2)
 					msg1 = title
 					PLog(msg2)
-#					MyDialog(msg1, msg2, '')							# 22.10.2021
+					#MyDialog(msg1, msg2, '')							# 22.10.2021
 				continue
 											
 			PLog('Link_url: %s, url_org: %s' % (local_url, url_org)); # PLog(image);	# Bei Bedarf
@@ -1089,6 +1106,8 @@ def GetContent(url, title, offset=0, li='', container=''):
 #
 def RequestTunein(FunctionName, url, GetOnlyHeader=None, GetOnlyRedirect=False):
 	PLog('RequestTunein: ' + url)
+	if url.startswith("http") == False:
+		url = "https://tunein.com" + url
 
 	msg=''
 	loc = Dict('load', 'loc')						# Bsp. fr, 	loc_browser nicht benötigt
@@ -1140,7 +1159,7 @@ def RequestTunein(FunctionName, url, GetOnlyHeader=None, GetOnlyRedirect=False):
 		PLog(msg)
 		# msg = L('keine Eintraege gefunden') + " | %s" % msg	
 		page=''
-		
+
 	if page == '':	
 		PLog('page2:')			
 		msg=''			
@@ -1179,6 +1198,57 @@ def RequestTunein(FunctionName, url, GetOnlyHeader=None, GetOnlyRedirect=False):
 	return page, msg
 	
 #-----------------------------
+# ermittelt json-Inhalt der Webseite
+# bei Fehlschlag Rückgabe []
+# Aufruf GetContent
+#
+def get_Web_json(page):
+	PLog('get_Web_json:')
+	jsonObject=[]
+	if page.startswith("{"):						# json-Inhalt
+		try:
+			jsonObject = json.loads(page)
+			PLog("jsonObjects: %d" % len(jsonObject))
+		except Exception as exception:
+			PLog("get_Web_json_error1: " + str(exception))
+		return jsonObject
+		
+	#											# Web-Seite
+	mark1 = u'window.INITIAL_STATE='; mark2 = u';</script><script>'		
+	pos1 = page.find(mark1)
+	pos2 = page.find(mark2)
+	PLog(pos1); PLog(pos2)
+	if pos1 < 0 or pos2 < 0:
+		PLog("json-Daten fehlen")
+		return jsonObject						# leer
+
+	page = page[pos1+len(mark1):pos2]
+	page = page.replace('\\x3c', '<')			# < vor Link <a https://..
+	PLog(page[:100])
+	#RSave('/tmp2/x_tunein.json', page)	# Debug	
+		
+	try:
+		jsonObject = json.loads(page)
+		PLog("jsonObjects: %d" % len(jsonObject))
+	except Exception as exception:
+		PLog("get_Web_json_error2: " + str(exception))
+		
+	return jsonObject
+		
+#-----------------------------
+# erzeugt neues Dict mit lower keys
+def lower_key(mydict):
+	if type(mydict) is dict:
+		newdict = {}
+		for key, item in mydict.items():
+			newdict[key.lower()] = lower_key(item)
+		return newdict
+	elif type(mydict) is list:
+		return [lower_key(obj) for obj in mydict]
+	else:
+		return mydict
+
+#-----------------------------
 # Auswertung der Streamlinks. Aufrufe ohne Playliste starten mit Ziffer 4:
 #	1. opml-Info laden, Bsp. http://opml.radiotime.com/Tune.ashx?id=s24878
 #	2. Test Inhalt von Tune.ashx auf Playlist-Datei (.pls) -
@@ -1212,7 +1282,7 @@ def StationList(url, title, image, summ, typ, bitrate, preset_id):
 				(quote(url), quote(title), quote(summ), quote(image), typ, preset_id)
 	Dict('store', 'Args_StationList', fparams)				
 
-	PLog(title);PLog(image);PLog(summ);PLog(typ);PLog(bitrate);PLog(preset_id)
+	PLog(title);PLog(image);PLog(summ[:80]);PLog(typ);PLog(bitrate);PLog(preset_id)
 	title_org=title; summ_org=summ; bitrate_org=bitrate; 					# sichern
 	typ_org=typ; url_org=url		
 	
@@ -1335,7 +1405,8 @@ def StationList(url, title, image, summ, typ, bitrate, preset_id):
 			MyDialog(msg1, msg2, msg3)
 			return li
 
-	i=1; 
+	i=1
+	PLog("buttons:")
 	for line in url_list:
 		PLog(line)
 		url   = line.split('|||')[0]
@@ -1378,9 +1449,8 @@ def StationList(url, title, image, summ, typ, bitrate, preset_id):
 			fparams=fparams, summary=summ)
 
 		title = L("Aufnahme") + ' | ' + L("beenden")		
-		url=py2_encode(url); title=py2_encode(title); summ=py2_encode(summ);
 		fparams="&fparams={'url': '%s', 'title': '%s', 'summ': '%s', 'CB': 'StationList'}" %\
-			(quote_plus(url), quote_plus(title),  quote_plus(summ))
+			(quote_plus(url), quote_plus(title_org),  quote_plus(summ))
 		addDir(li=li, label=title, action="dirList", dirID="RecordStop", fanart=R(ICON_STOP), thumb=R(ICON_STOP), 
 			fparams=fparams, summary=summ)
 			
@@ -1412,6 +1482,19 @@ def StationList(url, title, image, summ, typ, bitrate, preset_id):
 					(quote_plus(title), preset_id)
 				addDir(li=li, label=title, action="dirList", dirID="FolderMenu", fanart=R(ICON_FAV_MOVE), 
 					thumb=R(ICON_FAV_MOVE), fparams=fparams, summary=summ)
+
+	PLog("check_Download_Button:")														# Podcasts -> Downloads
+	dest_path,dfname = check_Download(typ, url, title_org)	
+	if dest_path and dfname:
+			title = "Download: " + dfname 		
+			url = py2_encode(url);
+			title_org=py2_encode(title_org); image=py2_encode(image);
+			summ=py2_encode(summ); dfname=py2_encode(dfname)
+			dest_path=py2_encode(dest_path)
+			fparams="&fparams={'url': '%s', 'title': '%s', 'dest_path': '%s', 'dfname': '%s'}" %\
+				(quote_plus(url), quote_plus(title_org), quote_plus(dest_path), quote_plus(dfname))
+			addDir(li=li, label=title, action="dirList", dirID="Download", fanart=R(ICON_DL), thumb=R(ICON_DL), 
+				fparams=fparams, summary=summ)
 											
 	PLog(len(url_list))		
 	url_list = repl_dop(url_list)				# Doppler entfernen	
@@ -1608,7 +1691,6 @@ def get_pls(url):               # Playlist extrahieren
 						return error_txt
 				else:	
 					error_txt = error_txt + ' | ' + url
-#					error_txt = error_txt.decode(encoding="utf-8")
 					PLog(error_txt)
 					return error_txt
 												
@@ -1843,11 +1925,14 @@ def PlayAudio_pre(url, title, thumb, Plot, header=None, url_template=None, FavCa
 	# 	11.10.2020 leere new_url abgefangen
 	new_url, msg = RequestTunein(FunctionName='PlayAudio_pre, Header-Check', url=url,GetOnlyRedirect=True)
 	if new_url != url:
-		PLog('url_moved: %s -> %s' % (url, new_url))
-		if new_url.strip() != '':						# falls new_url leer (Excep. page2), url verwenden
-			url = new_url								# 	Bsp.: el atico 133 -> El Spotify de la Música Clásica
-		else:
-			PLog('new_url_empty, using url')
+		PLog('moved_or_empty: %s -> %s' % (url, new_url))
+	if new_url != url:
+		url = new_url
+		if new_url == "":									# Error in RequestTunein
+			msg1 = L('Fehler') 
+			msg2 = msg
+			MyDialog(msg1, msg2, '')
+			return 		
 			
 	# Checks überstanden -> audience-Call + -> Kodi-Player 
 	#	page hier Dict, PLog s. RequestTunein
@@ -2479,8 +2564,8 @@ def SingleMRS(name, url, max_streams, image):
 		if summ.strip().startswith('|'):
 			summ = summ[3:]
 		
-		fmt='mp3'								# Format nicht immer  sichtbar - Bsp. http://addrad.io/4WRMHX. Ermittlung
-		if 'aac' in url:						#	 in getStreamMeta (contenttype) hier bisher nicht genutzt
+		fmt='mp3'								# Format nicht immer  sichtbar - Bsp. http://addrad.io/4WRMHX. Ermitt-
+		if 'aac' in url:						#	  lung in getStreamMeta (contenttype) hier bisher nicht genutzt
 			fmt='aac'
 		if url.endswith('.asf') or '=asf' in url: # Achtung: www.asfradio.com
 			fmt='asf'
@@ -2499,35 +2584,60 @@ def SingleMRS(name, url, max_streams, image):
 		image=py2_encode(image); Plot=py2_encode(Plot); 
 		fparams="&fparams={'url': '%s', 'title': '%s', 'thumb': '%s', 'Plot': '%s', 'CB': ''}" %\
 			(quote_plus(url), quote_plus(title), quote_plus(image), quote_plus(Plot))
-		addDir(li=li, label=title, action="dirList", dirID="PlayAudio_pre", fanart=image, thumb=image, fparams=fparams, 
-			summary=summ)
+		addDir(li=li, label=title, action="dirList", dirID="PlayAudio_pre", fanart=image, thumb=image, 
+			fparams=fparams, summary=summ)
 	
 	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 
 ####################################################################################################
 #									Recording-Funktionen
 ####################################################################################################
-# 
+# 14.12.2023 Umlenkung Podcasts -> Downloads
+#	Recording eines Podcasts (Fehlschlag check_Download): Ablage in 
+#	Streamripper_rips/incomplete/ - .mp3 (Downloadverzeichnis).
+#
 def RecordStart(url,title,title_org,image,summ,typ,bitrate, CB=''):		# Aufnahme Start 
-	PLog('RecordStart')
+	PLog('RecordStart:')
 	PLog(sys.platform)
+	url_org=url												# Abgleich RecordStop
 	
-	p_prot, p_path = url.split('//')	# Url-Korrektur für streamripper bei Doppelpunkten in Url (aber nicht mit Port) 
-	PLog(p_path)							#	s. https://sourceforge.net/p/streamripper/discussion/19083/thread/300b7a0f/
-										#	dagegen wird ; akzeptiert, Bsp. ..tunein;skey..
-	p_path = (p_path.replace('id:', 'id%23').replace('secret:', 'secret%23').replace('key:', 'key%23'))	# ev.  ergänzen
+	dest_path,dfname = check_Download(typ, url,title_org)	# Podcasts -> Downloads
+	if dest_path and dfname:
+		Download(url, title_org, dest_path, dfname)
+		return
+	
+	new_url, msg = RequestTunein(FunctionName='RecordStart', url=url,GetOnlyRedirect=True)
+	if new_url != url:
+		url = new_url
+		if new_url == "":									# Error in RequestTunein
+			msg1 = L('Fehler') 
+			msg2 = msg
+			MyDialog(msg1, msg2, '')
+			return 		
+	
+	# Url-Korrektur für streamripper bei Doppelpunkten in Url (aber nicht mit Port) 
+	#	s. https://sourceforge.net/p/streamripper/discussion/19083/thread/300b7a0f/
+	#	dagegen wird ; akzeptiert, Bsp. ..tunein;skey..
+	p_prot, p_path = url.split('//')	
+	
+	p_path = unquote(p_path)
+	PLog("p_path: " + p_path)
+	p_path = p_path.replace(":", "%3A")	
+	#p_path = quote(p_path, safe="#@:?,&=/")				# nicht verwenden, replacing reicht
+	
 	url_clean = '%s//%s'	% (p_prot, p_path)
+	PLog("url_clean: " + url_clean)
 	
 	AppPath	= SETTINGS.getSetting('StreamripperPath')
 	PLog('AppPath: ' + AppPath)	 
 	AppExist = False
-	if AppPath:										# Test: PRG existent?
+	if AppPath:												# Test: PRG existent?
 		PLog(os.path.exists(AppPath))
-		if 'linux' in sys.platform:					# linux2, weitere linuxe?							
+		if 'linux' in sys.platform:							# linux2, weitere linuxe?							
 			if os.path.exists(AppPath):				
 				AppExist = True
-		else:										# für andere, spez. Windows kein Test (os.stat kann fehlschlagen)
-			AppExist = True		
+		else:												# für andere, spez. Windows kein Test,
+			AppExist = True									#	 (os.stat kann fehlschlagen)
 	else:
 		AppExist = False
 	if AppExist == False:
@@ -2536,7 +2646,7 @@ def RecordStart(url,title,title_org,image,summ,typ,bitrate, CB=''):		# Aufnahme 
 		MyDialog(msg1, '', '')
 		return 		
 	
-	DestDir = SETTINGS.getSetting('DownloadDir')	# bei leerem Verz. speichert Streamripper ins Heimatverz.
+	DestDir = SETTINGS.getSetting('DownloadDir')			# bei leerem Verz. speichert Streamripper ins Heimatverz.
 	PLog('DestDir: ' + DestDir)	 
 	if DestDir:
 		DestDir = DestDir.strip()
@@ -2563,118 +2673,132 @@ def RecordStart(url,title,title_org,image,summ,typ,bitrate, CB=''):		# Aufnahme 
 	if sys.platform == 'win32':							
 		args = cmd
 	else:
-		args = shlex.split(cmd)							# ValueError: No closing quotation (1 x, Ursache n.b.)
+		args = shlex.split(cmd)				
+	 
+	PLog("args: " + str(args))
 	PLog(len(args))
-	PLog(args)
 
 	PID_lines = Dict('load', 'PID')
-	PLog(PID_lines)
+	PLog("PID_lines: " + str(PID_lines))
 	if PID_lines:
 		for PID_line in PID_lines:							# Prüfung auf exist. Aufnahme
-			PLog(PID_line)									# Aufbau: Pid|Url|Sender|Info
-			pid_url = PID_line.split('|')[1]
-			if pid_url == url:								# läuft bereits
-				pid = PID_line.split('|')[0]		
-				summ = PID_line.split('|')[3]	
-				title_new = title_org + ': ' + L('Aufnahme') +  ' ' + L('gestartet')
-				msg1 =  '%s:\n%s | %s | PID: %s' % (title_new, title_org, url, pid)	
+			PLog(PID_line)									# Muster: pid||url_org||title_org||summ
+			pid = PID_line.split('||')[0]
+			pid_url = PID_line.split('||')[1]
+			pid_title = PID_line.split('||')[2]
+			if pid_url == url_org:							# läuft bereits
 				PLog(OS_DETECT)	
-				PLog('Test existing Record: ' + msg1)
-				PLog(msg1)
-				MyDialog(msg1, '', '')
+				msg =  'PID %s | %s | %s' % (pid_url, title_org, url_org)	
+				PLog('existing Record: ' + msg)
+				msg1 =  L('Fehler') + ' - existing Record: PID %s' % pid
+				msg2 =  '%s' % title_org[:50]
+				msg3 =  '%s' % pid_url[:50]
+				MyDialog(msg1, msg2, msg3)
 				return 		
 
-	# Popen-Objekt mit Pid außerhalb nicht mehr ansprechbar (call.pid). Daher speichern wir im Dict die Prozess-ID direkt.
-	# PHT-Problem (Linux + Windows): return ObjectContainer nach Dict['PID'].append führt PHT direkt wieder hierher 
-	# 	(vor append OK) - Problem der Stackverwaltung im Framwork? Den erneuten Durchlauf von PHT fangen wir oben in 
-	#	Prüfung auf exist. Aufnahme ab.
-	# PHT-Problem  in Kodi nicht existent
-	call=''
+	# 13.12.1023 Rückgabe Popen "None args" statt "object at" - daher nur 
+	#	nur noch Auswertung der PID	
 	try:
 		PLog(OS_DETECT)	
-		call = subprocess.Popen(args, shell=False)		# shell=False erfordert shlex-Nutzung	
-		# output,error = call.communicate()				# klemmt hier (anders als im ARD-Plugin)
-		PLog('call: ' + str(call))						# Bsp. <subprocess.Popen object at 0x7f16fad2e290>
-		if str(call).find('object at') > 0:  			# subprocess.Popen object OK
-			PID_line = '%s|%s|%s|%s'	% (call.pid, url, title_org, summ) 	# Muster: 																
-			PLog(PID_line)	
-			PID = Dict('load', 'PID')					# [] vorbelegt in Main
-			PID.append(PID_line)						# 
-			PLog(PID)
-			Dict('store', 'PID', PID)
-			title_new = L('Aufnahme') + ' ' + L('gestartet')
-			msg1 =  '%s: \n %s | %s | PID: %s' % (title_new, title_org, url, call.pid)
-			PLog(msg1)
-			MyDialog(msg1, '', '')
-			return 		
+		call = subprocess.Popen(args, shell=False)			# shell=False erfordert shlex-Nutzung
+		pid = call.pid
+		PLog('call: %s, pid: %s' % (call, pid))				# call: <subprocess.Popen object at 0x7f16fad2e290>
+
+		PID_line = '%s||%s||%s||%s'	% (pid, url_org, title_org, summ) 	# Muster															
+		PLog(PID_line)	
+		PID = Dict('load', 'PID')							# [] vorbelegt in Main
+		PID.append(PID_line)	
+		PLog(PID); 
+		Dict('store', 'PID', PID)
+		info = L('Aufnahme') + ' ' + L('gestartet')
+		msg1 =  '%s (PID %s):' % (info, pid)	
+		msg2 =  '%s | %s.. | ' % (title_org, url_org[:50])	
+		PLog(msg1); PLog(msg2)
+		MyDialog(msg1, msg2, '')
+		return 		
 							
-	except Exception as exception:
+	except Exception as exception:							# Bsp.: No such file or directory: ..
 		msg1 = L('Aufnahme fehlgeschlagen')
 		msg2 = str(exception)
-		PLog(msg1); PLog(msg2)		
+		PLog(msg1); PLog(msg2); PLog(url)
 		MyDialog(msg1, msg2, '')
 		return 		
 		
 	msg1 = L('Aufnahme') + ' ' + L('fehlgeschlagen') + '\n' + L('Ursache unbekannt')
-	PLog(msg1)	
+	PLog(msg1); PLog(url)	
 	MyDialog(msg1, '', '')
-#	return 		
+	return 		
 	 	
 #-----------------------------
-def RecordStop(url,title,summ, CB=''):					# Aufnahme Stop
-	PLog('RecordStop:')
+# url hier url vor redirect!
+def RecordStop(url,title,summ, CB=''):						# Aufnahme Stop
+	PLog('RecordStop: ' + title)
 	
-	pid = ''
+	RECS=[]; selected=0; cnt=0
 	PID_lines = Dict('load', 'PID')
-	PLog(PID_lines)
-	for PID_line in PID_lines:							# Prüfung auf exist. Aufnahme
-		PLog(PID_line)									# Format: call|url|title_org|summ
-		pid_url = PID_line.split('|')[1]
-		if pid_url == url:
-			pid = PID_line.split('|')[0]
-			PLog(pid)
-			break
+	if PID_lines:
+		for PID_line in PID_lines:							# PID_lines -> Textviewer
+			PLog(PID_line)									# Format: pid||url_org||title_org||summ
+			pid, pid_url, pid_title, pid_summ = PID_line.split('||')
+			pid = "%6s" % pid
+			pid_title = "%24s.." % pid_title[:24]
+			pid_url = "%20s.." % pid_url[:20]
+			line = "%s | %s | %s" % (pid, pid_title, pid_url)
+			if url == pid_url:
+				selected = cnt 
+			RECS.append(line)
+			cnt=cnt+1
 			
-	if pid == '' or int(pid) == 0:
-		msg1 = url + ': ' + L('keine laufende Aufnahme gefunden')
+	if len(RECS) == 0:
+		msg1 = L('keine laufende Aufnahme gefunden')		# ohne Titel, Url
 		PLog(msg1)
-		MyDialog(msg1, '', '')
-		# if CB:	Callback(CB)		# nicht genutzt
-		return			
-			
+		MyDialog(msg1, "", "")
+		return	
+		
+	title =   L("Aufnahme") + ' | ' + L("beenden")
+	ret = xbmcgui.Dialog().select(title, RECS)				# Auswahl
+	if ret == -1:											# Abbruch, Esc
+		return
+		
+	PLog(RECS[ret])
+	pid = re.search(u'(\d+)', RECS[ret]).group(1)
+	PLog("pid_to_stop: " + pid)	
 	# Problem kill unter Linux: da wir hier Popen aus Sicherheitsgründen ohne shell ausführen, hinterlässt kill 
 	#	einen Zombie. Dies ist aber zu vernachlässigen, da aktuelle Distr. Zombies nach wenigen Sekunden autom.
 	#	entfernen. 
 	#	Auch call.terminate() in einem Thread (Thread StreamripperStop wieder entfernt) hinterlässt Zombies.
 	#	Alternative (für das Plugin Overkill) wäre die Verwendung von psutil (https://github.com/giampaolo/psutil) 
-	pid = int(pid)
+	pid = int(pid); oserr=""
 	try:
-		os.kill(pid, signal.SIGTERM)	# Verzicht auf running-Abfrage os.kill(pid, 0)
+		os.kill(pid, signal.SIGTERM)			# Verzicht auf running-Abfrage os.kill(pid, 0)
 		time.sleep(1)
-		if 'linux' in sys.platform:		# Windows: 	object has no attribute 'SIGKILL'						
+		if 'linux' in sys.platform:				# Windows: 	object has no attribute 'SIGKILL'						
 			os.kill(pid, signal.SIGKILL)	
 		pidExist = True
 	except OSError as err:
 		pidExist = False
-		error='Error: ' + str(err)
-		PLog(error)
+		oserr='Error: ' + str(err)
+		PLog(oserr)
 						
 	if pidExist == False:
-		msg1 = str(err) 
-		msg2 =  '%s:\n%s | %s | PID: %s' % (title, msg1, url, pid)	
+		msg1 = oserr
+		msg2 = 'PID: %s' % pid					# nur pid, Sendertitel kann | enthalten
+		msg3 = "%s.." % ( url[:40])	
 	else:
 		msg1 = L('Aufnahme') + ' ' + L('beendet')
-		msg2 =  '%s | %s | PID: %s' % (title, url, pid)
+		msg2 = 'PID: %s' % pid
+		msg3 = "%s.." % ( url[:40])	
 			
-	PID_lines.remove(PID_line)		# Eintrag Prozessliste entfernen - unabhängig vom Erfolg
+	del PID_lines[selected]						# Eintrag Prozessliste entfernen - unabhängig vom Erfolg
 	PLog(PID_lines)
 	Dict('store', 'PID', PID_lines)	
-	MyDialog(msg1, msg2, '')
+	MyDialog(msg1, msg2, msg3)
 	return 		
 					
 #-----------------------------
 # Liste laufender Aufnahmen mit Stop-Button - Prozess wird nicht geprüft!
-def RecordsList(title):			# title=L("laufende Aufnahmen")
+# 
+def RecordsList(title):			
 	PLog('RecordsList')
 	li = xbmcgui.ListItem()
 	li = home(li)						# Home-Button
@@ -2729,7 +2853,7 @@ def SearchUpdate(title):
 	summ = ret[3]			# Changes
 	tag = ret[4]			# tag, Bsp. 029
 	
-	# Bsp.: https://github.com/rols1/Kodi-Addon-ARDundZDF/releases/download/0.5.4/Kodi-Addon-ARDundZDF.zip
+	# Bsp.: https://github.com/rols1/Kodi-Addon-TuneIn2017/releases/download/1.7.3/Kodi-Addon-TuneIn2017.zip
 	url = 'https://github.com/{0}/releases/download/{1}/{2}.zip'.format(GITHUB_REPOSITORY, latest_version, REPO_NAME)
 
 	PLog(int_lv); PLog(int_lc); PLog(latest_version); PLog(summ);  PLog(url);
@@ -3044,6 +3168,119 @@ def shoutcastCheck(response, headers, itsOld):
 	else:
 		PLog("No metaint")
 		return False
+#---------------------------------------------------------------- 
+# 04.12.2023 neu
+# Download only for mytype=Topic (s. GetContent)
+# 	-> Background: thread_getfile
+# Aufruf StationList
+#
+def Download(url, title, dest_path, dfname):  
+	PLog('Download: ' + title)
+	PLog(url) 
+
+	if os.path.exists(dest_path) == False:
+		msg1 = L('Download-Verzeichnis') + ' ' + L("nicht gefunden")
+		PLog(msg1); PLog(dest_path)
+		MyDialog(msg1, '', '')
+		return
+			
+	vsize=''
+	clen = get_content_length(url)
+	if clen:
+		vsize = " (%s) " % humanbytes(clen)
+	else:
+		vsize = u" (? MB) "
+
+	msg1 = "Download " + vsize + L("starten")	
+	ret=MyDialog(msg1, "", "", ok=False, yes='OK')
+	if ret  == False:
+		return
+	
+	PLog("System: " + sys.platform)
+	fulldestpath = os.path.join(dest_path, dfname)
+	
+	PLog("start_thread_getfile")
+	path_url_list=''; timemark=''; notice=True
+	background_thread = Thread(target=thread_getfile, args=(url,fulldestpath))
+	background_thread.start()		
+	
+	xbmcplugin.endOfDirectory(HANDLE)								# return blockt hier bis Thread-Ende
+	
+#---------------------------
+def check_Download(typ, url, title):
+	PLog("check_Download: ")
+	PLog("Setting: %s" % SETTINGS.getSetting('UseDownload'))
+	PLog("typ: %s, url: %s" % (typ, url))
+
+	dest_path=""; dfname=""
+	# Muster / Plattformen in Url:
+	# Megaphone, podtrac, podigee, buzzsprout u.a.: publishing platforms for podcasters
+	pod_marks = [u"podcast", u"/feed/", u"Podcast", u"podtrac.com", u"megaphone.fm", 
+				u"audio.podigee-cdn", u"buzzsprout.com", u"audiomeans.fr"]
+	pod_mark=""
+	for mark in pod_marks:
+		if mark in url:
+			pod_mark = mark
+			break
+	
+	if SETTINGS.getSetting('UseDownload') == "true":
+		if typ == "Topic" or pod_mark:	
+			dest_path = SETTINGS.getSetting('DownloadDir')			# identisch für Download + Recording
+			max_length = 255 - len(dest_path)
+			dfname = make_filenames(title.strip(), max_length)
+			dfname = dfname + '.mp3'								# '.mp3'
+			PLog(dfname) 
+	
+	PLog("dest_path: %s, dfname: %s" % (dest_path, dfname))
+	return dest_path,dfname
+	
+#---------------------------
+# interne Download-Routine für MP3 mittels urlretrieve 
+# vorh. Dateien werden überschrieben.
+# Aufrufer: Download
+#
+def thread_getfile(url, fulldestpath):
+	PLog("thread_getfile:")
+	PLog(url); PLog(fulldestpath); 
+	icon = R(ICON_DL)
+	
+	try:
+		urlretrieve(url, fulldestpath)
+		msg1 = "Download " + L("beendet")	
+	except Exception as exception:
+		PLog("thread_getfile_error: " + str(exception))
+		msg1 = "Download " + L("fehlgeschlagen")
+
+	PLog(msg1)
+	xbmcgui.Dialog().notification(msg1, "", icon, 3000)		# Fertig-Info
+
+	return
+
+#---------------------------
+# ermittelt Dateilänge für Downloads (leer bei Problem mit HTTPMessage-Objekt)
+# Aufrufer: Download
+#
+def get_content_length(url):
+	PLog('get_content_length:')
+	UrlopenTimeout = 3
+	try:
+		req = Request(url)	
+		r = urlopen(req)
+		if PYTHON2:					
+			h = r.headers.dict
+			clen = h['content-length']
+		else:
+			h = r.getheader('Content-Length')
+			clen = h
+		# PLog(h)
+		
+	except Exception as exception:
+		err = str(exception)
+		PLog(err)
+		clen = ''
+	
+	PLog(clen)
+	return clen
 #---------------------------------------------------
 ##################################### Routing ##############################################################
 # 17.11.2019 mit Modul six + parse_qs erscheinen die Werte als Liste,

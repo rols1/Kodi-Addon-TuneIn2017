@@ -40,7 +40,7 @@ import json				# json -> Textstrings
 import pickle			# persistente Variablen/Objekte
 import re				# u.a. Reguläre Ausdrücke, z.B. in CalculateDuration
 import base64			# zusätzliche url-Kodierung für addDir/router
-	
+import string	
 
 # Globals
 NAME		= 'TuneIn2017'
@@ -657,6 +657,77 @@ def repl_json_chars(line):	# für json.loads (z.B.. in router) json-Zeichen in l
 	
 	return line_ret
 #---------------------------------------------------------------- 
+# Dateinamen für Downloads 
+# erzeugt - hoffentlich - sichere Dateinamen (ohne Extension)
+# zugeschnitten auf Titelerzeugung in meinen Plugins 
+# Migration PY2/PY3: py2_decode aus kodi-six
+# 24.04.2020 Entf. von Farb- und Fettmarkierungen 
+# 
+def make_filenames(title, max_length=255):
+	PLog('make_filenames:')
+	
+	title = py2_decode(title)
+	title = cleanmark(title)
+
+	title = title.replace(u'|', ' ') 
+	title = title.replace(u':', ' ')
+	title = title.replace(u'/', ' ')					# mögl. Serienkennung 1/8, 2/8, ..
+	
+	fname = transl_umlaute(title)						# Umlaute	
+	
+	valid_chars = "-_ %s%s" % (string.ascii_letters, string.digits)
+	fname = ''.join(c for c in fname if c in valid_chars)
+	fname = fname.replace(u' ', u'_')
+	fname = fname.replace(u'___', u'_')
+	return fname[:max_length]
+#---------------------------------------------------------------- 
+def valid_string(s):
+	valid_chars = "-_ %s%s" % (string.ascii_letters, string.digits)
+	ret = ''.join(c for c in s if c in valid_chars)
+	return ret
+	 
+#----------------------------------------------------------------  
+# Umlaute übersetzen, wenn decode nicht funktioniert
+# Migration PY2/PY3: py2_decode aus kodi-six
+def transl_umlaute(line):	
+	line= py2_decode(line)	
+	line_ret = line
+	line_ret = line_ret.replace(u"Ä", u"Ae", len(line_ret))
+	line_ret = line_ret.replace(u"ä", u"ae", len(line_ret))
+	line_ret = line_ret.replace(u"Ü", u"Ue", len(line_ret))
+	line_ret = line_ret.replace(u'ü', u'ue', len(line_ret))
+	line_ret = line_ret.replace(u"Ö", u"Oe", len(line_ret))
+	line_ret = line_ret.replace(u"ö", u"oe", len(line_ret))
+	line_ret = line_ret.replace(u"ß", u"ss", len(line_ret))	
+	return line_ret
+#----------------------------------------------------------------  
+def cleanmark(line): # entfernt Farb-/Fett-Markierungen
+	# PLog(type(line))
+	cleantext = py2_decode(line)
+	cleantext = re.sub(r"\[/?[BI]\]", '', cleantext, flags=re.I)
+	cleantext = re.sub(r"\[/?COLOR.*?\]", '', cleantext, flags=re.I)
+	return cleantext
+#----------------------------------------------------------------  
+def humanbytes(B):
+	'Return the given bytes as a human friendly KB, MB, GB, or TB string'
+	# aus https://stackoverflow.com/questions/12523586/python-format-size-application-converting-b-to-kb-mb-gb-tb/37423778
+	B = float(B)
+	KB = float(1024)
+	MB = float(KB ** 2) # 1,048,576
+	GB = float(KB ** 3) # 1,073,741,824
+	TB = float(KB ** 4) # 1,099,511,627,776
+
+	if B < KB:
+	  return '{0} {1}'.format(B,'Bytes' if 0 == B > 1 else 'Byte')
+	elif KB <= B < MB:
+	  return '{0:.2f} KB'.format(B/KB)
+	elif MB <= B < GB:
+	  return '{0:.2f} MB'.format(B/MB)
+	elif GB <= B < TB:
+	  return '{0:.2f} GB'.format(B/GB)
+	elif TB <= B:
+	  return '{0:.2f} TB'.format(B/TB)
+#---------------------------------------------------------------- 
 # Format seconds	86400	(String, Int, Float)
 # Rückgabe:  		1d, 0h, 0m, 0s	
 def seconds_translate(seconds):
@@ -695,17 +766,20 @@ def get_keyboard_input():
 def L(string):	
 	PLog('L: ' + string)
 	loc_file = Dict('load', 'loc_file')
+	PLog(os.path.exists(loc_file))
 	if os.path.exists(loc_file) == False:	
 		return 	string
 	
 	lines = RLoad(loc_file, abs_path=True)
+	#PLog("lines: " + lines) 	# Debug
 	lines = lines.splitlines()
+	PLog(len(lines))
 	lstring = ''	
 	for line in lines:
 		term1 = line.split('":')[0].strip()
 		term1 = term1.strip()
 		term1 = term1.replace('"', '')			# Hochkommata entfernen
-		# PLog(term1)
+		#PLog("string: %s, term1: %s" % (string, term1))
 		if term1 == string:						# string stimmt mit Basis-String überein?
 			lstring = line.split(':')[1]		# 	dann Ziel-String zurückgeben
 			lstring = lstring.strip()
@@ -713,11 +787,11 @@ def L(string):
 			lstring = lstring.replace(',', '')
 			break
 			
-	PLog(string); PLog(lstring)
+	PLog('string: %s, lstring: %s' % (string,lstring))
 	if lstring:
 		return lstring
 	else:
-		return string						# Rückgabe Basis-String, falls kein Paar gefunden
+		return string							# Rückgabe Basis-String, falls kein Paar gefunden
 #----------------------------------------------------------------
 
 #################################################################
