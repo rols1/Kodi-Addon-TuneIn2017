@@ -45,8 +45,8 @@ from resources.lib.util_tunein2017 import *
 
 # +++++ TuneIn2017  - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.7.4'	
-VDATE = '15.12.2023'
+VERSION =  '1.7.5'	
+VDATE = '11.04.2024'
 
 # 
 #	
@@ -127,7 +127,7 @@ REPO_URL 			= 'https://github.com/{0}/releases/latest'.format(GITHUB_REPOSITORY)
 
 # Globale Variablen für Tunein:
 # partnerId		= 'RadioTime'	ab 19.07.2019 auf akt. Wert erweitert 
-partnerId		= 'RadioTime&version=3.34&itemUrlScheme=secure&reqAttempt=1'
+partnerId		= 'RadioTime&version=6.29&itemUrlScheme=secure&reqAttempt=1'
 
 # Start-Variablen aus Plex-Version
 UrlopenTimeout = 4			# Timeout sec, 24.01.2020 von 3 auf 4
@@ -555,7 +555,7 @@ def Search(query=''):
 		li, cnt = GetContent(url=url, title=oc_title2, offset=0, li=li)
 	else:		
 		query = query.replace(' ', '+')								# opml-Variante - z.Z. nicht genutzt
-		url = 'http://opml.radiotime.com/Search.ashx?query=%s&formats=%s' % (query,Dict('load', 'formats'))	
+		url = 'https://opml.radiotime.com/Search.ashx?query=%s&formats=%s' % (query,Dict('load', 'formats'))	
 
 		query = quote(py2_encode(query), "utf-8")
 		PLog('url: ' + url)
@@ -1021,11 +1021,11 @@ def GetContent(url, title, offset=0, li='', container=''):
 				else:
 					PLog('target_id_empty, use preset_id %s' % preset_id)	
 					
-			# local_url = 'http://opml.radiotime.com/Tune.ashx?id=%s&formats=%s' % (preset_id, Dict('load', 'formats'))
+			# local_url = 'https://opml.radiotime.com/Tune.ashx?id=%s&formats=%s' % (preset_id, Dict('load', 'formats'))
 			# 19.07.2019: nach IP-Sperre Call erweitert mit serial + partnerId - s. StationList
 			# 26.11.2019: erneute Tests (Anlass: geoblock AFN) ohne serial + partnerId - anscheinend wieder OK 
-			# local_url = 'http://opml.radiotime.com/Tune.ashx?id=%s&formats=%s&serial=%s&partnerId=%s' % (preset_id, Dict('load', 'formats'), serial, partnerId)
-			local_url = 'http://opml.radiotime.com/Tune.ashx?id=%s&formats=%s' % (preset_id, Dict('load', 'formats'))
+			# local_url = 'https://opml.radiotime.com/Tune.ashx?id=%s&formats=%s&serial=%s&partnerId=%s' % (preset_id, Dict('load', 'formats'), serial, partnerId)
+			local_url = 'https://opml.radiotime.com/Tune.ashx?id=%s&formats=%s' % (preset_id, Dict('load', 'formats'))
 			PLog('Station_url: ' + local_url);	# PLog(image);	# Bei Bedarf
 			
 			summ 	= 	subtitle			# summary -> subtitle od. FollowText
@@ -1250,7 +1250,7 @@ def lower_key(mydict):
 
 #-----------------------------
 # Auswertung der Streamlinks. Aufrufe ohne Playliste starten mit Ziffer 4:
-#	1. opml-Info laden, Bsp. http://opml.radiotime.com/Tune.ashx?id=s24878
+#	1. opml-Info laden, Bsp. https://opml.radiotime.com/Tune.ashx?id=s24878
 #	2. Test Inhalt von Tune.ashx auf Playlist-Datei (.pls) -
 #		2.1. Playlist (.pls oder/und .m3u) laden, bei Problemen mittels urllib2 + Zertifikat
 #		2.2. Streamlinks aus Playlist extrahieren -> in url-Liste
@@ -1280,7 +1280,7 @@ def StationList(url, title, image, summ, typ, bitrate, preset_id):
 	url=py2_encode(url); title=py2_encode(title); summ=py2_encode(summ); image=py2_encode(image);
 	fparams="{'url': '%s', 'title': '%s', 'summ': '%s', 'image': '%s', 'typ': '%s', 'bitrate': 'unknown',  'preset_id': '%s'}"  %\
 				(quote(url), quote(title), quote(summ), quote(image), typ, preset_id)
-	Dict('store', 'Args_StationList', fparams)				
+	Dict('store', 'Args_StationList', fparams)						
 
 	PLog(title);PLog(image);PLog(summ[:80]);PLog(typ);PLog(bitrate);PLog(preset_id)
 	title_org=title; summ_org=summ; bitrate_org=bitrate; 					# sichern
@@ -1291,7 +1291,7 @@ def StationList(url, title, image, summ, typ, bitrate, preset_id):
 		
 	if summ:
 		if 'No compatible stream' in summ or 'Does not stream' in summ: 	# Kennzeichnung + mp3 von TuneIn 
-			if 'Tune.ashx?' in url == False:								# "trozdem"-Streams überspringen - s. GetContent
+			if 'Tune.ashx?' in url == False:								# "trotzdem"-Streams überspringen - s. GetContent
 				url = R('notcompatible.enUS.mp3') # Bsp. 106.7 | Z106.7 Jackson
 				url=py2_encode(url); title=py2_encode(title); 
 				image=py2_encode(image); summ=py2_encode(summ); 	
@@ -1353,11 +1353,18 @@ def StationList(url, title, image, summ, typ, bitrate, preset_id):
 		cont = url								# sowie url's aus GetContent- 
 		PLog('custom_content: ' + cont)
 		
+	if url.endswith("notcompatible.enUS.mp3"):	# Check securenetsystems-Url
+		PLog("check_securenetsystems_url:")
+		local_url = 'https://opml.radiotime.com/Tune.ashx?id=%s&formats=%s' % (preset_id, Dict('load', 'formats'))
+		cont, msg = RequestTunein(FunctionName='StationList, Tune.ashx-Call', url=local_url)
+		PLog('securenetsystems_url: ' + cont)
+			
+		
 	# .pls-Auswertung ziehen wir vor, auch wenn (vereinzelt) .m3u-Links enthalten sein können
 	if '.pls' in cont:					# Tune.ashx enthält häufig Links zu Playlist (.pls, .m3u)				
 		cont = get_pls(cont)
 		if cont.startswith('get_pls-error'): 	# Bsp. Rolling Stones by Radio UNO Digital, pls-Url: 
-			msg1 = cont							# http://radiounodigital.com/Players-Tunein/rollingstones.pls
+			msg1 = cont							# https://radiounodigital.com/Players-Tunein/rollingstones.pls
 			MyDialog(msg1, '', '')
 			return li
 	
@@ -1405,6 +1412,13 @@ def StationList(url, title, image, summ, typ, bitrate, preset_id):
 			MyDialog(msg1, msg2, msg3)
 			return li
 
+	if SETTINGS.getSetting('StartStreamsDirect') == "true": 	# ersten Stream direkt starten
+		PLog("StartStreamsDirect: " + title_org)
+		url   = url_list[0].split('|||')[0]
+		summ  = url_list[0].split('|||')[1]
+		PlayAudio_pre(url, title_org, image, summ, preset_id)
+		return									# endOfDirectory + return -> Rekursion
+		
 	i=1
 	PLog("buttons:")
 	for line in url_list:
@@ -1417,14 +1431,24 @@ def StationList(url, title, image, summ, typ, bitrate, preset_id):
 			summ = summ[2:]
 			
 		# 22.09.2020 nicht erlaubte Zeichen in Url einzeln quotieren:
-		# 	Bsp.: http://media.ccomrcdn..=Talk_Radio,_Sports&PCAST_TITLE=America's_Truckin_Network
+		# 	Bsp.: https://media.ccomrcdn..=Talk_Radio,_Sports&PCAST_TITLE=America's_Truckin_Network
 		url = (url.replace(',', '%2C').replace('\'', '%27'))
 		
-		fmt='mp3'								# Format nicht immer  sichtbar - Bsp. http://addrad.io/4WRMHX. Ermittlung
+		fmt='audio ?'							# Format nicht immer  sichtbar - Bsp. https://addrad.io/4WRMHX. Ermittlung
 		if 'aac' in url:						#	 in getStreamMeta (contenttype) hier bisher nicht genutzt
 			fmt='aac'
-		if 'flac' in url:
+		elif 'flac' in url:
 			fmt='flac'
+		elif 'mp3' in url:
+			fmt='mp3'
+		elif '.ogg' in url:						# 11.04.2024 
+			fmt='ogg'
+			
+		if ".securenetsystems." in url or '.ogg' in url:	
+			if " - " in title_org:				# Not Supported entfernen
+				pos = title_org.find(" - ")
+				title_org = title_org[:pos]
+			
 		title = title_org + ' | %s %s | %s'  % (L("Stream"), str(i), fmt)
 		i=i+1
 
@@ -1456,7 +1480,7 @@ def StationList(url, title, image, summ, typ, bitrate, preset_id):
 			
 	if SETTINGS.getSetting('UseFavourites') == "true":	# Favorit hinzufügen/Löschen
 		if preset_id != None:			# None möglich - keine Einzelstation, Verweis auf Folgen, Bsp.:
-										# # http://opml.radiotime.com/Tune.ashx?c=pbrowse&id=p680102 (stream_type=download)
+										# # https://opml.radiotime.com/Tune.ashx?c=pbrowse&id=p680102 (stream_type=download)
 			sidExist,foldername,guide_id,foldercnt = SearchInFolders(preset_id, ID='preset_id') # vorhanden, Ordner?
 			PLog('sidExist: ' + str(sidExist))
 			PLog('foldername: ' + foldername)
@@ -1529,14 +1553,14 @@ def StreamTests(url_list,summ_org):
 			if url.endswith('.mp3'):			# .mp3 bei getStreamMeta durchwinken
 				st=1; ret={}
 			else:
-				ret = getStreamMeta(url)		# Sonderfälle: Shoutcast, Icecast usw. Bsp. http://rs1.radiostreamer.com:8020,
-				PLog(ret)						# 	http://217.198.148.101:80/
+				ret = getStreamMeta(url)		# Sonderfälle: Shoutcast, Icecast usw. Bsp. https://rs1.radiostreamer.com:8020,
+				PLog(ret)						# 	https://217.198.148.101:80/
 				st = ret.get('status')	
 			PLog('ret.get.status: ' + str(st))
 			
-			if st == 0:							# nicht erreichbar, verwerfen. Bsp. http://server-uk4.radioseninternetuy.com:9528
+			if st == 0:							# nicht erreichbar, verwerfen. Bsp. https://server-uk4.radioseninternetuy.com:9528
 				err = ret.get('error')			# Bsp.  City FM 92.9 (Taichung, Taiwan):
-				err = err + '\r\n' + url		#	URLError: timed out, http://124.219.41.230:8000/929.mp3
+				err = err + '\r\n' + url		#	URLError: timed out, https://124.219.41.230:8000/929.mp3
 				err_flag = True
 				err_list.append(err)
 				PLog(err)
@@ -1580,25 +1604,25 @@ def StreamTests(url_list,summ_org):
 						#  Icecast-Server. :
 						PLog('ret.get shoutcast: ' + ret.get('shoutcast'))
 						if 'Icecast' in ret.get('shoutcast'): 			# Bsp.  Sender Hi On Line,
-							pass										# 		http://mediaserv33.live-streams.nl:8036
+							pass										# 		https://mediaserv33.live-streams.nl:8036
 						else:											#  Bsp. Holland FM Gran Canaria,
-							url = '%s/;' % url							# 		http://stream01.streamhier.nl:9010
+							url = '%s/;' % url							# 		https://stream01.streamhier.nl:9010
 							PLog('url_add_semicol2')	
 				else:	
-					if url.endswith('.fm/'):			# Bsp. http://mp3.dinamo.fm/ (SHOUTcast-Stream)
+					if url.endswith('.fm/'):			# Bsp. https://mp3.dinamo.fm/ (SHOUTcast-Stream)
 						url = '%s;' % url
 					else:								# ohne Portnummer, ohne Pfad: letzter Test auf Shoutcast-Status 
 						#p = urlparse(url)				# Test auf url-Parameter nicht verlässlich
 						#if 	p.params == '':	
 						url_split = url.split('/')		
 						PLog(len(url_split))
-						if len(url_split) <= 4:			# Bsp. http://station.io, http://sl64.hnux.com/
+						if len(url_split) <= 4:			# Bsp. https://station.io, https://sl64.hnux.com/
 							if url.endswith('/'):
 								url = url[:len(url)-1]	# letztes / entfernen 
 							# 27.09.2018 Verzicht auf "Stream is up"-Test. Falls keine Shoutcast-Seite, würde der
 							#	Stream geladen, was hier zum Timeout führt. Falls erforderlich, hier Test auf 
 							#  	ret.get('shoutcast') voranstellen.
-							#cont = HTTP.Request(url).content# Bsp. Radio Soma -> http://live.radiosoma.com
+							#cont = HTTP.Request(url).content# Bsp. Radio Soma -> https://live.radiosoma.com
 							#if 	'<b>Stream is up' in cont:			# 26.09.2018 früheres '.. up at' manchmal zu lang
 							#PLog('Shoutcast ohne Portnummer: <b>Stream is up at')
 							shoutcast = str(ret.get('shoutcast'))
@@ -1623,10 +1647,10 @@ def get_pls(url):               # Playlist extrahieren
 	url_org = url
 	
 	# erlaubte Playlist-Formate - Endungen oder Fragmente der Url:
-	#	Bsp. http://www.asfradio.com/launch.asp?p=pls
+	#	Bsp. https://www.asfradio.com/launch.asp?p=pls
 	format_list = ['.pls', '.m3u', '=pls', '=m3u', '=ram', '=asx']
 	
-	urls =url.splitlines()	# mehrere möglich, auch SHOUTcast- und m3u-Links, Bsp. http://64.150.176.192:8043/
+	urls =url.splitlines()	# mehrere möglich, auch SHOUTcast- und m3u-Links, Bsp. https://64.150.176.192:8043/
 
 	pls_cont = []
 	for url in urls:
@@ -1656,7 +1680,7 @@ def get_pls(url):               # Playlist extrahieren
 		#	Ab 29.04.2018: alternativ user-definiertes Zertifikat (Einstellungen) - wie RequestTunein
 		#	Aber: falls ssl.SSLContext verwendet wird, schlägt der Request fehl.
 		#	Hinw.: 	gcontext nicht mit	cafile verwenden (ValueError)
-		#	Bsp.: KSJZ.db SmoothLounge, Playlist http://smoothlounge.com/streams/smoothlounge_128.pls
+		#	Bsp.: KSJZ.db SmoothLounge, Playlist https://smoothlounge.com/streams/smoothlounge_128.pls
 		# Ansatz, falls dies unter Windows fehlschlägt: in der url-Liste nach einzelner HTP-Adresse (ohne .pls) suchen
 		
 		if cont == '':							# 2. Versuch
@@ -1674,11 +1698,11 @@ def get_pls(url):               # Playlist extrahieren
 				error_txt = 'get_pls-error: ' + str(exception)	# hier nicht repr() verwenden
 				# Rettungsversuch - hilft bei SomaFM-Stationen:
 				# HTTP Error 302: Found - Redirection to url 'itunes://somafm.com/xmasrocks130.pls?bugfix=safari7' is not allowed
-				if 'itunes://' in error_txt:	# Bsp. http://api.somafm.com/xmasrocks130.pls
+				if 'itunes://' in error_txt:	# Bsp. https://api.somafm.com/xmasrocks130.pls
 					PLog(url)
 					PLog(str(exception))
 					url=stringextract('\'', '\'', str(exception))
-					url=url.replace('itunes://', 'http://')
+					url=url.replace('itunes://', 'https://')
 					PLog('neue itunes-url: ' + url)
 					req = Request(url)		# 3. Versuch
 					req = urlopen(req, cafile=cafile, timeout=UrlopenTimeout) 
@@ -1696,11 +1720,11 @@ def get_pls(url):               # Playlist extrahieren
 												
 		if cont:									# Streamlinks aus Playlist extrahieren 
 			lines =cont.splitlines()	
-			for line in lines:						# Bsp. [playlist] NumberOfEntries=1 File1=http://s8.pop-stream.de:8650/
+			for line in lines:						# Bsp. [playlist] NumberOfEntries=1 File1=https://s8.pop-stream.de:8650/
 				line = line.strip()
 				if line.startswith('http'):
 					pls_cont.append(line)
-				if '=http' in line:					# Bsp. File1=http://195.150.20.9:8000/..
+				if '=http' in line:					# Bsp. File1=https://195.150.20.9:8000/..
 					line_url = line.split('=')[1]
 					pls_cont.append(line_url)						
 		 			 	 		   
@@ -1725,8 +1749,8 @@ def get_m3u(url):               # m3u extrahieren - Inhalte mehrerer Links werde
 	
 	m3u_cont = []
 	for url in urls:	
-		# Bsp. http://icy3.abacast.com/progvoices-progvoicesmp3-32.m3u?source=TuneIn
-		#	oder Radio Soma http://www.radiosoma.com/RadioSoma_107.9_MHz.m3u
+		# Bsp. https://icy3.abacast.com/progvoices-progvoicesmp3-32.m3u?source=TuneIn
+		#	oder Radio Soma https://www.radiosoma.com/RadioSoma_107.9_MHz.m3u
 		if url.startswith('http') and '.m3u' in url:	
 			try:									
 				req, msg = RequestTunein(FunctionName='get_m3u', url=url)
@@ -1868,6 +1892,14 @@ def PlayAudio_pre(url, title, thumb, Plot, header=None, url_template=None, FavCa
 		return PlayAudio(url, title, thumb, Plot, header, url_template, FavCall, CB)	# Ausgabe Tonleiter
 
 	if 'notcompatible.enUS' in url or 'nostream.enUS' in url:
+		# 10.04.2024
+		securenet_url = 'Favorit_url_preset_id_%s' % sid
+		PLog("try_securenet_url")
+		url =  Dict("load", securenet_url)
+		if url:
+			return PlayAudio(url, title, thumb, Plot, header)
+			
+		
 		#url =  os.path.join("%s", 'Sounds', 'notcompatible.enUS.mp3') % (RESOURCES_PATH)			
 		# 30.09.2019 einige nichtkompatible Streams sind via Websuche erreichbar
 		# daher hier neuer Versuch - s. Settings
@@ -1937,7 +1969,7 @@ def PlayAudio_pre(url, title, thumb, Plot, header=None, url_template=None, FavCa
 	# Checks überstanden -> audience-Call + -> Kodi-Player 
 	#	page hier Dict, PLog s. RequestTunein
 			
-	if sid == None:							# Bsp. Der Feinmann-Translator http://www.dradio.de/wurf-tracks/112586.1420.mp3
+	if sid == None:							# Bsp. Der Feinmann-Translator https://www.dradio.de/wurf-tracks/112586.1420.mp3
 		sid = '0'
 	PLog('sid: ' + sid)
 	if sid.startswith('s') and len(sid) > 1:			# '0' = MyRadioStatios + notcompatible stations
@@ -2006,7 +2038,7 @@ def SearchInFolders(preset_id, ID):
 	username = str(SETTINGS.getSetting('username'))
 	
 	username = SETTINGS.getSetting('username')
-	url = 'http://opml.radiotime.com/Browse.ashx?c=presets&partnerId=RadioTime&serial=%s&username=%s' % (serial,username)	
+	url = 'https://opml.radiotime.com/Browse.ashx?c=presets&partnerId=RadioTime&serial=%s&username=%s' % (serial,username)	
 	page, msg = RequestTunein(FunctionName='SearchInFolders: Ordner-Liste laden', url=url)
 	if page == '':
 		msg1 = msg
@@ -2259,7 +2291,7 @@ def FolderMenuList(url, title, li=''):
 	for item in items:
 		# PLog('item: ' + item)	
 		typ,local_url,text,image,key,subtext,bitrate,preset_id,guide_id,playing,is_preset = get_details(line=item)	
-		PLog('Satz_FolderMenuList:')		
+		PLog('FolderMenuList_Satz:')		
 		PLog('%s | %s | %s |%s | %s' % (typ,text,subtext,playing,bitrate))
 		PLog('%s | %s | %s |%s' % (preset_id,guide_id,local_url,image))
 
@@ -2372,7 +2404,7 @@ def FolderMenu(title, ID, preset_id, checkFiles=None):
 	li = xbmcgui.ListItem()
 	li = home(li)							# Home-Button	
 	
-	preset_url = 'http://opml.radiotime.com/Browse.ashx?c=presets&partnerId=RadioTime&serial=%s&username=%s' % (serial,username)
+	preset_url = 'https://opml.radiotime.com/Browse.ashx?c=presets&partnerId=RadioTime&serial=%s&username=%s' % (serial,username)
 	page, msg = RequestTunein(FunctionName='FolderMenu: ID %s, Liste laden' % ID, url=preset_url)	
 	if page == '':
 		msg1 = msg
@@ -2564,12 +2596,12 @@ def SingleMRS(name, url, max_streams, image):
 		if summ.strip().startswith('|'):
 			summ = summ[3:]
 		
-		fmt='mp3'								# Format nicht immer  sichtbar - Bsp. http://addrad.io/4WRMHX. Ermitt-
+		fmt='mp3'								# Format nicht immer  sichtbar - Bsp. https://addrad.io/4WRMHX. Ermitt-
 		if 'aac' in url:						#	  lung in getStreamMeta (contenttype) hier bisher nicht genutzt
 			fmt='aac'
 		if url.endswith('.asf') or '=asf' in url: # Achtung: www.asfradio.com
 			fmt='asf'
-		if url.endswith('.ogg') : 				# .ogg in http://mp3.radiox.ch:8000/standard.ogg.m3u
+		if url.endswith('.ogg') : 				# .ogg in https://mp3.radiox.ch:8000/standard.ogg.m3u
 			fmt='ogg'
 		if 'flac' in url:
 			fmt='flac'
@@ -2656,7 +2688,7 @@ def RecordStart(url,title,title_org,image,summ,typ,bitrate, CB=''):		# Aufnahme 
 			MyDialog(msg1, '', '')
 			return 		
 					
-	# cmd-Bsp.: streamripper http://addrad.io/4WRMHX --quiet -d /tmp -u Mozilla/5.0
+	# cmd-Bsp.: streamripper https://addrad.io/4WRMHX --quiet -d /tmp -u Mozilla/5.0
 	#	30.05.2018 UserAgent hinzugefügt (Error: Access Forbidden (try changing the UserAgent)) -
 	#	einige Sender verweigern den Download beim Default Streamripper/1.x
 	#	Konfig-Alternative:  /var/lib/plexmediaserver/.config/streamripper/streamripper.ini	
@@ -2955,7 +2987,7 @@ def getStreamMeta(address):
 	status = 0
 
 	# Test auf angehängte Portnummer = zusätzl. Indikator für Stream, Anhängen von ; in StationList
-	#	aber nur, wenn Link direkt mit Portnummer oder Portnummer + / endet, Bsp. http://rs1.radiostreamer.com:8020/
+	#	aber nur, wenn Link direkt mit Portnummer oder Portnummer + / endet, Bsp. https://rs1.radiostreamer.com:8020/
 	hasPortNumber='false'
 	p = urlparse(address)				# p.netloc s. Permanent-Redirect-Url
 	if p.port and p.path == '':	
@@ -3036,7 +3068,7 @@ def getStreamMeta(address):
 		PLog(error)
 		return {"status": status, "metadata": None, "hasPortNumber": hasPortNumber, "shoutcast": shoutcast, "error": error}
 
-	except URLError as e:						# Bsp. RANA FM 88.5 http://216.221.73.213:8000
+	except URLError as e:						# Bsp. RANA FM 88.5 https://216.221.73.213:8000
 		error='Error, URL-Error: ' + str(e.reason)
 		PLog(error)
 		return {"status": status, "metadata": None, "hasPortNumber": hasPortNumber, "shoutcast": shoutcast, "error": error}
@@ -3158,7 +3190,7 @@ def shoutcastCheck(response, headers, itsOld):
 			title = re.search('%s(.*)%s' % (start, end), content[metaint:]).group(1)
 			title = re.sub("StreamUrl='.*?';", "", title).replace("';", "").replace("StreamUrl='", "")
 			title = re.sub("&artist=.*", "", title)
-			title = re.sub("http://.*", "", title)
+			title = re.sub("https://.*", "", title)
 			title.rstrip()
 		except Exception as err:
 			PLog("songtitle error: " + str(err))

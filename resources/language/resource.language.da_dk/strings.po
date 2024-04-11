@@ -75,6 +75,12 @@ msgid "Start of plugin only with My Radio Stations"
 msgstr "Start plugin med kun mine radio stationer"
 
 #: 
+msgctxt "#30206"
+#: "Label for option-field in Preferences"
+msgid "Start the first stream of a station directly"
+msgstr "Start første stream af en station direkte"
+
+#: 
 msgctxt "#30117"
 #: "Label for entry-field in Preferences"
 msgid "complete path to My Radio Stations"

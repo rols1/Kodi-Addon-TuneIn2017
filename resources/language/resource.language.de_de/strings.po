@@ -75,6 +75,12 @@ msgid "Start of plugin only with My Radio Stations"
 msgstr "Starte Plugin nur mit Meine Radiostationen"
 
 #: 
+msgctxt "#30206"
+#: "Label for option-field in Preferences"
+msgid "Start the first stream of a station directly"
+msgstr "starte ersten Stream einer Station direkt"
+
+#: 
 msgctxt "#30117"
 #: "Label for entry-field in Preferences"
 msgid "complete path to My Radio Stations"
@@ -145,10 +151,6 @@ msgctxt "#30501"
 msgid "Days until deletion"
 msgstr "Löschfrist (Tage)"
 
-msgctxt "#30205" 
-#: "Label for bool-field in Preferences "
-msgid "station not compatible? Try a new search"
-msgstr "Station nicht unterstützt? Starte neue Suche"
 
 
 
