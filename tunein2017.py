@@ -45,8 +45,8 @@ from resources.lib.util_tunein2017 import *
 
 # +++++ TuneIn2017  - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.7.5'	
-VDATE = '11.04.2024'
+VERSION =  '1.7.6'	
+VDATE = '25.11.2024'
 
 # 
 #	
@@ -778,6 +778,7 @@ def GetContent(url, title, offset=0, li='', container=''):
 		MyDialog(msg1, '', '')
 		return li
 
+	PLog("mark0")
 	PLog(page[:80])
 	# RSave('/tmp/Recent.html', py2_encode(page))	# Debug	
 	# PLog(page)
@@ -789,7 +790,10 @@ def GetContent(url, title, offset=0, li='', container=''):
 	# keys - Anpassung an unterschiedliche lower-/uper-Cases -> lower:
 	jsonObject = lower_key(jsonObject)
 	# string-Verarbeitung:
-	page = str(jsonObject)
+	if PYTHON2:
+		pass
+	else:
+		page = str(jsonObject)
 	page = (page.replace("'", '"').replace('": "', '":"'))	
 	#RSave('/tmp2/x_Recent.json', py2_encode(page))	# Debug	
 	PLog(page[:80])
