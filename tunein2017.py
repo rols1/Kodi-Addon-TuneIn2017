@@ -45,8 +45,8 @@ from resources.lib.util_tunein2017 import *
 
 # +++++ TuneIn2017  - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.7.6'	
-VDATE = '25.11.2024'
+VERSION =  '1.7.7'	
+VDATE = '09.03.2025'
 
 # 
 #	
@@ -1115,7 +1115,7 @@ def RequestTunein(FunctionName, url, GetOnlyHeader=None, GetOnlyRedirect=False):
 
 	msg=''
 	loc = Dict('load', 'loc')						# Bsp. fr, 	loc_browser nicht benötigt
-	PLog('loc: ' + loc)	
+	PLog('loc: ' + loc)
 
 	msg=''
 	PLog('page1:')			
@@ -1552,6 +1552,7 @@ def StreamTests(url_list,summ_org):
 		line_cnt = line_cnt + 1			
 		PLog('line %s (max. %s): %s' % (line_cnt, str(max_streams), line))
 		url = line
+		url_org=url
 
 		if url.startswith('http'):				# rtpm u.ä. ignorieren
 			if url.endswith('.mp3'):			# .mp3 bei getStreamMeta durchwinken
@@ -1573,7 +1574,7 @@ def StreamTests(url_list,summ_org):
 			else:
 				if ret.get('metadata'):					# Status 1: Stream ist up, Metadaten aktualisieren (nicht .mp3)
 					metadata = ret.get('metadata')
-					PLog('metadata:'); PLog(metadata)						
+					PLog('metadata: %s' % str(metadata))
 					bitrate = metadata.get('bitrate')	# bitrate aktualisieren, falls in Metadaten vorh.
 					if bitrate == None or bitrate == '':
 						bitrate = '0'					# wird nicht gegen Settings geprüft 
@@ -1599,15 +1600,16 @@ def StreamTests(url_list,summ_org):
 							summ = '%s | Bitrate: %s KB' % (summ_org, bitrate)		# altes summary ergänzen
 						summ=py2_decode(summ)
 						summ = repl_json_chars(summ)
-					PLog('summ: ' + summ)		
+					PLog('summ: ' + summ)
+					
 				if  ret.get('hasPortNumber') == 'true': # auch SHOUTcast ohne Metadaten möglich, Bsp. Holland FM Gran Canaria,
 					if url.endswith('/'):
 						url = '%s;' % url
 						PLog('url_add_semicol1')			
 					else:								# Stream mit Portnummer, aber ohne / am Urlende - Berücksichtigung
 						#  Icecast-Server. :
-						PLog('ret.get shoutcast: ' + ret.get('shoutcast'))
-						if 'Icecast' in ret.get('shoutcast'): 			# Bsp.  Sender Hi On Line,
+						PLog('ret.get shoutcast: %s' % str(ret.get('shoutcast')))
+						if 'Icecast' in str(ret.get('shoutcast')): 		# Bsp.  Sender Hi On Line,
 							pass										# 		https://mediaserv33.live-streams.nl:8036
 						else:											#  Bsp. Holland FM Gran Canaria,
 							url = '%s/;' % url							# 		https://stream01.streamhier.nl:9010
@@ -1630,10 +1632,15 @@ def StreamTests(url_list,summ_org):
 							#if 	'<b>Stream is up' in cont:			# 26.09.2018 früheres '.. up at' manchmal zu lang
 							#PLog('Shoutcast ohne Portnummer: <b>Stream is up at')
 							shoutcast = str(ret.get('shoutcast'))
-							PLog(ret.get('shoutcast'))
+							PLog('shoutcast: %s' % shoutcast)
 							if 'shoutcast' in shoutcast.lower(): # an Shoutcast-url /; anhängen
 								url = '%s/;' % url	
-								PLog('url_add_semicol3')			
+								PLog('url_add_semicol3')
+											
+
+			if "use_url_org" in ret.get('error'):				# eror durchgewinkt in getStreamMeta
+				PLog("use_url_org: %s not %s" % (url_org, url))
+				url = url_org
 																		
 			PLog('append: ' + url)	
 			PLog(summ); 									
@@ -1881,6 +1888,7 @@ def get_details(line):		# line=opml-Ergebnis im xml-Format, mittels Stringfunkti
 #		1. opml-Call mit sid zur Aufnahme in Recent (außer MyRadioStatios)
 #		2. Sprung  zu PlayAudio
 # 	CB enthält den Callback für PlayAudio (Verhinderung CGUIMediaWindow-Error)
+# 09.03.2025 skip_SSL_error hinzugefügt (Chance für Kodi-Player)
 #
 def PlayAudio_pre(url, title, thumb, Plot, header=None, url_template=None, FavCall='', sid=None, CB=''):
 	PLog('PlayAudio_pre:'); PLog(title); PLog(url); PLog(sid); PLog(Plot);
@@ -1899,9 +1907,10 @@ def PlayAudio_pre(url, title, thumb, Plot, header=None, url_template=None, FavCa
 		# 10.04.2024
 		securenet_url = 'Favorit_url_preset_id_%s' % sid
 		PLog("try_securenet_url")
-		url =  Dict("load", securenet_url)
-		if url:
-			return PlayAudio(url, title, thumb, Plot, header)
+		surl =  Dict("load", securenet_url)
+		if surl:								# False möglich
+			if surl.startswith("http"):			# .. nicht gefunden od. False möglich
+				return PlayAudio(url, title, thumb, Plot, header)
 			
 		
 		#url =  os.path.join("%s", 'Sounds', 'notcompatible.enUS.mp3') % (RESOURCES_PATH)			
@@ -1927,10 +1936,9 @@ def PlayAudio_pre(url, title, thumb, Plot, header=None, url_template=None, FavCa
 		url = unquote(url)
 		PLog('url_in_url: %s' %url)
 	
-	# Header-Check  
+	# Header-Check
 	#	page hier Dict, PLog s. RequestTunein
 	page, msg = RequestTunein(FunctionName='PlayAudio_pre, Header-Check', url=url,GetOnlyHeader=True)
-
 	if 'currently unavailable' in str(page):			# Bsp. icy-notice2: The resource requested is ..
 		url=GetLocalUrl()	
 		PLog('currently unavailable')
@@ -1960,15 +1968,20 @@ def PlayAudio_pre(url, title, thumb, Plot, header=None, url_template=None, FavCa
 	#	korrigiert falschen Semikolon-Anhang in StreamTests (url_add_semicol1)
 	# 	11.10.2020 leere new_url abgefangen
 	new_url, msg = RequestTunein(FunctionName='PlayAudio_pre, Header-Check', url=url,GetOnlyRedirect=True)
-	if new_url != url:
-		PLog('moved_or_empty: %s -> %s' % (url, new_url))
-	if new_url != url:
-		url = new_url
-		if new_url == "":									# Error in RequestTunein
-			msg1 = L('Fehler') 
-			msg2 = msg
-			MyDialog(msg1, msg2, '')
-			return 		
+	# selten: SSL-Error in python-Request nicht aber im Kodi-Player, z.B.  
+	#	The Blues Cove (https://radio.streemlion.com:2075/stream)
+	if "SSL:" in msg:									
+		PLog("skip_SSL_error: %s" % url)
+	else:
+		if new_url != url:
+			PLog('moved_or_empty: %s -> %s' % (url, new_url))
+		if new_url != url:
+			url = new_url
+			if new_url == "":							# Error in RequestTunein
+				msg1 = L('Fehler') 
+				msg2 = msg
+				MyDialog(msg1, msg2, '')
+				return 		
 			
 	# Checks überstanden -> audience-Call + -> Kodi-Player 
 	#	page hier Dict, PLog s. RequestTunein
@@ -2994,13 +3007,11 @@ def getStreamMeta(address):
 	#	aber nur, wenn Link direkt mit Portnummer oder Portnummer + / endet, Bsp. https://rs1.radiostreamer.com:8020/
 	hasPortNumber='false'
 	p = urlparse(address)				# p.netloc s. Permanent-Redirect-Url
-	if p.port and p.path == '':	
+	PLog(p.port); PLog(p.path)
+	if p.port:	
 		hasPortNumber='true'		
-	if p.port and p.path:
-		if address.endswith('/'):		# als path nur / erlaubt
-			hasPortNumber='true'
-	PLog('hasPortNumber: ' + hasPortNumber)	
-	
+	PLog('hasPortNumber: ' + hasPortNumber)				
+
 	request = Request(address)
 	user_agent = 'iTunes/9.1.1'
 	request.add_header('User-Agent', user_agent)
@@ -3009,28 +3020,28 @@ def getStreamMeta(address):
 	gcontext = ssl.create_default_context()
 	gcontext.check_hostname = False
 	gcontext.verify_mode = ssl.CERT_NONE
-	
+
+	new_url=''; response='';e=''
 	try:
-		new_url=''; response='';e=''
-		try:
-			response = urlopen(request, context=gcontext, timeout=UrlopenTimeout)
-			new_url = response.geturl()					# follow redirects, hier für Header-Auswertung, Kodi-Player
-		except Exception as e:
-			err = str(e)
-			PLog(err)
-			# Debug: Audiothek Rubrik Sport www.ardaudiothek.de/rubrik/sport/42914734 (301 Moved Permanently)
-			if "308:" in str(e) or "301:" in str(e):	# Permanent-Redirect-Url
-				new_url = e.hdrs.get("Location")
-				if new_url.startswith("http") == False:	# Serveradr. vorh.?
-					new_url = 'https://%s%s' % (p.netloc, new_url)
-				PLog("HTTP308_301_new_url: " + new_url)		
+		response = urlopen(request, context=gcontext, timeout=UrlopenTimeout)
+		new_url = response.geturl()					# follow redirects, hier für Header-Auswertung, Kodi-Player
+	except Exception as e:
+		err = str(e)
+		PLog(err)
+		# Debug: Audiothek Rubrik Sport www.ardaudiothek.de/rubrik/sport/42914734 (301 Moved Permanently)
+		if "308:" in str(e) or "301:" in str(e):	# Permanent-Redirect-Url
+			new_url = e.hdrs.get("Location")
+			if new_url.startswith("http") == False:	# Serveradr. vorh.?
+				new_url = 'https://%s%s' % (p.netloc, new_url)
+			PLog("HTTP308_301_new_url: " + new_url)						
+
+	PLog("new_url: " + new_url)	
+	if new_url == '':								# StreamTests OK, ohne metadata, unveränderte Url in StreamTests
+		error = err									#	Bsp. The Blues Cove (https://radio.streemlion.com:2075/stream)
+		PLog("skip_getHeaders_on_error")
+		return {"status": 1, "metadata": "", "hasPortNumber": hasPortNumber, "shoutcast": "", "error": "use_url_org"}
 		
-		PLog("new_url: " + new_url)	
-		if new_url == '':								# vorzeitiger Abbruch 
-			error = err
-			return {"status": status, "metadata": "", "hasPortNumber": hasPortNumber, "shoutcast": "", "error": error}
-			
-		
+	try:
 		headers = getHeaders(response)
 		# PLog(headers)
 				   
@@ -3040,6 +3051,10 @@ def getStreamMeta(address):
 			shoutcast = headers['X-Powered-By']
 		elif "icy-notice1" in headers:
 			shoutcast = headers['icy-notice2']
+		elif "icy-url" in headers:					# verhindert /; an houtcast-url in StreamTests
+			PLog("icy-url_found | use_url_org")
+			error = "use_url_org"
+			return {"status": 1, "metadata": "", "hasPortNumber": hasPortNumber, "shoutcast": "", "error": error}
 		else:
 			shoutcast = bool(1)
 

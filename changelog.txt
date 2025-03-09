@@ -7,6 +7,16 @@ CHANGE HISTORY 	Kodi-Addon-TuneIn2017 (previosly plugin for Plexmediaserver)
 			Plex-Forum:
 			https://forums.plex.tv/discussion/288260/rel-tunein2017
 	
+09.03.2025	1.7.7 	in rare cases Python's urllib library produces an SLL error, although 
+			the Kodi player can play the stream. In these cases, the addon skips the redirect 
+			check and the evaluation of the meta data and passes the stream unchanged to the 
+			Kodi player.
+			getStreamMeta: skip_getHeaders_on_error added (skip header evaluation on 
+			urllib.request-error.
+			StreamTests: string handling for ret.get('shoutcast') for bool results, use_url_org
+			added.
+			PlayAudio_pre: catch False-return for loading securenet_url, skip_SSL_error added.
+
 25.11.2024	1.7.6 GetContent: for Leia (python2.7.*) string-coding of the jsonObject excluded
 			(Search, music, podcasts and other menus remained blank).
 			
