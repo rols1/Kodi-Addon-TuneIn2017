@@ -6,7 +6,9 @@ CHANGE HISTORY 	Kodi-Addon-TuneIn2017 (previosly plugin for Plexmediaserver)
 			https://www.kodinerds.net/index.php/Thread/66559-RELEASE-Kodi-Addon-TuneIn2017
 			Plex-Forum:
 			https://forums.plex.tv/discussion/288260/rel-tunein2017
-	
+
+09.03.2025	1.7.8	StreamTests: string handling for None value in ret.get('error')
+
 09.03.2025	1.7.7 	in rare cases Python's urllib library produces an SLL error, although 
 			the Kodi player can play the stream. In these cases, the addon skips the redirect 
 			check and the evaluation of the meta data and passes the stream unchanged to the 

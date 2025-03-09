@@ -45,7 +45,7 @@ from resources.lib.util_tunein2017 import *
 
 # +++++ TuneIn2017  - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.7.7'	
+VERSION =  '1.7.8'	
 VDATE = '09.03.2025'
 
 # 
@@ -1637,8 +1637,7 @@ def StreamTests(url_list,summ_org):
 								url = '%s/;' % url	
 								PLog('url_add_semicol3')
 											
-
-			if "use_url_org" in ret.get('error'):				# eror durchgewinkt in getStreamMeta
+			if "use_url_org" in str(ret.get('error')):			# eror durchgewinkt in getStreamMeta
 				PLog("use_url_org: %s not %s" % (url_org, url))
 				url = url_org
 																		
