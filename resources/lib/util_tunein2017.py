@@ -441,11 +441,16 @@ def RSave(fname, page):
 	path = os.path.join(fname) # abs. Pfad
 	msg = ''					# Rückgabe leer falls OK
 	try:
-		with open(path,'w') as f:
-			f.write(page)		
+		if PYTHON2:
+			with open(path,'w') as f:
+				f.write(page)		
+		else:
+			with open(path,'w', encoding="utf-8") as f:
+				f.write(page)
+		
 	except Exception as exception:
 		msg = str(exception)
-		PLog(msg)
+		PLog('RSave_Exception: ' + msg)
 	return msg
 #----------------------------------------------------------------  
 # Bsp.: #EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=61000,CODECS="mp4a.40.2"
@@ -534,32 +539,59 @@ def stringextract(mFirstChar, mSecondChar, mString):  	# extrahiert Zeichenkette
 	#PLog(pos1); PLog(ind); PLog(pos2);  PLog(rString); 
 	return rString
 #---------------------------------------------------------------- 
-def blockextract(blockmark, mString):  	# extrahiert Blöcke begrenzt durch blockmark aus mString
-	#	blockmark bleibt Bestandteil der Rückgabe - im Unterschied zu split()
-	#	Rückgabe in Liste. Letzter Block reicht bis Ende mString (undefinierte Länge),
-	#		Variante mit definierter Länge siehe Plex-Plugin-TagesschauXL (extra Parameter blockendmark)
-	#	Verwendung, wenn xpath nicht funktioniert (Bsp. Tabelle EPG-Daten www.dw.com/de/media-center/live-tv/s-100817)
+# extrahiert Blöcke aus mString: Startmarke=blockmark, Endmarke=blockendmark 
+#	blockmark bleibt Bestandteil der Rückgabe - im Unterschied zu split()
+#	Block wird durch blockendmark begrenzt, falls belegt, sonst reicht 
+#		 letzter Block bis Ende mString (undefinierte Länge). 
+#	Rückgabe in Liste.
+def blockextract(blockmark, mString, blockendmark=''):  	
+	PLog("blockextract: " + blockmark); PLog(blockendmark)
+
 	rlist = []				
-	if 	blockmark == '' or 	mString == '':
-		PLog('blockextract: blockmark or mString leer')
+	if 	not blockmark or not mString:							# missing Params?
+		PLog('blockextract: blockmark_or_mString_empty')
 		return rlist
-	
-	pos = mString.find(blockmark)
-	if 	mString.find(blockmark) == -1:
+
+	pos = mString.find(blockmark)								# blockmark in haystack?
+	if 	pos == -1:
 		PLog('blockextract: blockmark <%s> nicht in mString enthalten' % blockmark)
 		# PLog(pos); PLog(blockmark);PLog(len(mString));PLog(len(blockmark));
 		return rlist
-	pos2 = 1
-	while pos2 > 0:
-		pos1 = mString.find(blockmark)						
-		ind = len(blockmark)
-		pos2 = mString.find(blockmark, pos1 + ind)		
-	
-		block = mString[pos1:pos2]	# extrahieren einschl.  1. blockmark
-		rlist.append(block)
-		# reststring bilden:
-		mString = mString[pos2:]	# Rest von mString, Block entfernt	
-	return rlist  
+
+	while True:
+		pos2=-1; block=""							
+		pos1 = mString.find(blockmark)
+		if pos1 == -1:
+			PLog('blockmark_not_found in next mString')
+			break
+		#PLog("mString: %s, pos1: %d" % (mString[:80], pos1))
+		
+		if blockendmark:
+			pos3 = mString.find(blockendmark, pos1 + len(blockmark))
+			if pos3 == -1:
+				block = mString[pos1:]  						# Block from blockmark to end of mString
+			else:
+				block = mString[pos1:pos3 + len(blockendmark)]  # Block Including blockendmark
+			#PLog("block: %s, pos3: %d" % (block[:80], pos3))
+		else:
+			pos2 = mString.find(blockmark, pos1 + len(blockmark))
+			if pos2 == -1:
+				block = mString[pos1:] 						 	# block from blockmark to end of mString
+				mString = ''
+			else:
+				block = mString[pos1:pos2]  					# Until the next blockmark
+
+		if block:
+			rlist.append(block)
+
+		if blockendmark and pos3 != -1:							# next haystack
+			mString = mString[pos3 + len(blockendmark):]
+		elif pos2 != -1:
+			mString = mString[pos2:]
+		else:
+			break
+
+	return rlist
 #----------------------------------------------------------------  
 def my_rfind(left_pattern, start_pattern, line):  # sucht ab start_pattern rückwärts + erweitert 
 #	start_pattern nach links bis left_pattern.

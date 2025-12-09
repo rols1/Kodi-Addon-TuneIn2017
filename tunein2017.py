@@ -45,8 +45,8 @@ from resources.lib.util_tunein2017 import *
 
 # +++++ TuneIn2017  - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.7.8'	
-VDATE = '09.03.2025'
+VERSION =  '1.7.9'	
+VDATE = '09.12.2025'
 
 # 
 #	
@@ -309,7 +309,7 @@ def Main():
 	page, msg = RequestTunein(FunctionName='Main', url=ROOT_URL)	# Hauptmenü von Webseite
 	PLog(len(page))
 
-	items = blockextract('common-module__link', page)				# Navigations-Menü linke Seite	21.10.2022		
+	items = blockextract('common-module__link___Mz1h3',page,"<div")	# Navigations-Menü linke Seite	07.12.2025		
 	if len(items) > 0:												# kein Abbruch, weiter mit MyRadioStations + Fav's
 		del items[0]			# Home löschen
 	else:
@@ -333,7 +333,7 @@ def Main():
 	# languages: Kat Sprachen o. Icons	
 	PLog(len(items)); 
 	for item in items:												# Tunein-Menüs + Icons zeigen
-		# PLog('item: ' + item)
+		PLog('item: ' + item)
 		url = 'https://tunein.com' + stringextract('href="', '"', item)	#  Bsp. href="/radio/local/"
 		key = url[:-1].split('/')[-1]
 		thumb = getMenuIcon(key)
@@ -495,8 +495,10 @@ def getMenuIcon(key):	# gibt zum key passendes Icon aus MENU_ICON zurück
 			icon = R('menu-sport.png')
 		#elif key == 'News-c57922':	
 		#	icon = R('menu-news.png')
-		elif key == 'News--Talk-c57922':	# 22.04.2021 News + Talk zusammengelegt
-			icon = R('menu-talk.png')
+		#elif key == 'News--Talk-c57922':				# 22.04.2021 News + Talk zusammengelegt
+		#	icon = R('menu-talk.png')
+		elif key == "Live-Stream-News-Radio-c57922":	# 09.12.2025 News + Talk: new key
+			icon = R('menu-news.png')						
 		elif key == 'podcasts':
 			icon = R('menu-pod.png')
 		elif key == 'regions':
@@ -784,8 +786,10 @@ def GetContent(url, title, offset=0, li='', container=''):
 	# PLog(page)
 	link_list = blockextract('__guideItemLink___', page) # Link-List außerhalb json-Bereich 22.10.2021
 	PLog("link_list: " + str(len(link_list)))
-	
-	jsonObject = get_Web_json(page)	
+	'''
+	Container = GetContainerJson(page)					# Alt.: Archiv/tunein2017_Search-Api.py
+	'''
+	jsonObject = get_Web_json(page)						# kein json-Objekt mehr, s. get_Web_json
 	PLog(page[:80])
 	# keys - Anpassung an unterschiedliche lower-/uper-Cases -> lower:
 	jsonObject = lower_key(jsonObject)
@@ -1217,8 +1221,8 @@ def get_Web_json(page):
 			PLog("get_Web_json_error1: " + str(exception))
 		return jsonObject
 		
-	#											# Web-Seite
-	mark1 = u'window.INITIAL_STATE='; mark2 = u';</script><script>'		
+	#											# Web-Seite, mark2: "users":{}};</script><script
+	mark1 = u'window.INITIAL_STATE='; mark2 = u';</script><script id="initialZustandStateEl'		
 	pos1 = page.find(mark1)
 	pos2 = page.find(mark2)
 	PLog(pos1); PLog(pos2)
@@ -1227,17 +1231,20 @@ def get_Web_json(page):
 		return jsonObject						# leer
 
 	page = page[pos1+len(mark1):pos2]
+	page = page.replace('\\"', '"')
 	page = page.replace('\\x3c', '<')			# < vor Link <a https://..
 	PLog(page[:100])
-	#RSave('/tmp2/x_tunein.json', page)	# Debug	
-		
+	PLog(page[-100:])
+
+	''''										# 08.12.2025 zu viele Fehler
 	try:
 		jsonObject = json.loads(page)
 		PLog("jsonObjects: %d" % len(jsonObject))
 	except Exception as exception:
-		PLog("get_Web_json_error2: " + str(exception))
-		
+		PLog("get_Web_json_error2: " + str(exception))	
 	return jsonObject
+	'''
+	return page
 		
 #-----------------------------
 # erzeugt neues Dict mit lower keys
