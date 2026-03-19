@@ -45,8 +45,8 @@ from resources.lib.util_tunein2017 import *
 
 # +++++ TuneIn2017  - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.7.9'	
-VDATE = '09.12.2025'
+VERSION =  '1.8.0'	
+VDATE = '19.03.2026'
 
 # 
 #	
@@ -119,7 +119,7 @@ MENU_ICON 	=  	{'menu-lokale.png', 'menu-musik.png', 'menu-sport.png', 'menu-new
 BASE_URL	= 'https://tunein.com'
 ROOT_URL 	= 'https://tunein.com/radio/home/'						
 USER_URL 	= 'https://opml.radiotime.com/Browse.ashx?c=presets&partnerId=RadioTime&username=%s'
-RECENTS_URL	= 'https://api.tunein.com/categories/recents?formats=%s&serial=%s&partnerId=RadioTime&version=3.31'
+RECENTS_URL	= 'https://api.tunein.com/categories/recents?formats=%s&serial=%s&partnerId=RadioTime&version=7.14.2'
 
 REPO_NAME		 	= 'Kodi-Addon-TuneIn2017'
 GITHUB_REPOSITORY 	= 'rols1/' + REPO_NAME
@@ -780,7 +780,6 @@ def GetContent(url, title, offset=0, li='', container=''):
 		MyDialog(msg1, '', '')
 		return li
 
-	PLog("mark0")
 	PLog(page[:80])
 	# RSave('/tmp/Recent.html', py2_encode(page))	# Debug	
 	# PLog(page)
@@ -819,7 +818,10 @@ def GetContent(url, title, offset=0, li='', container=''):
 					if 'DynamicPrompt' in title:			# 28.01.2023 bisher o. Auswertung
 						PLog("skip_DynamicPrompt")
 						continue
-					
+					if 'containerType":"Card' in index:				# ohne eigenen Inhalt, children folgen
+						PLog('skip: "children" in container_index')
+						continue
+
 					url=py2_encode(url); title=py2_encode(title);
 					fparams="&fparams={'url': '%s', 'title': '%s', 'container': '%s'}"  %\
 						(quote(url), quote(title), quote(title))
@@ -827,23 +829,23 @@ def GetContent(url, title, offset=0, li='', container=''):
 						fanart=R(ICON), thumb=R(ICON), fparams=fparams)
 				xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
 			
-	else:
+	else:													# 2. step: weiter mit Container
 		indices = blockextract('"type":"Container"', page)
-		for index in indices:								# 2. step: weiter mit Container
-			title = stringextract('"title":"', '"', index)
+		for item in indices:				
+			title = stringextract('"title":"', '"', item)
 			PLog("Container_title: " + title)
 			if container in title:
-				PLog("found_container: " + title)
-				page = index								# Block=Container 
+				PLog("found_container: %s, item: %s" % (title, item[:100]))
+				page = item								# Block -> Container 
 				break		
 
 	# Suche (27.12.2019), Untergruppen Sprachen: Block=index
 	if 'attributes=filter' or  'search/?query=' in url: 						
 		indices = blockextract('"index":', page)
 	else:
-		indices = blockextract('"token":', page)		# 05.12.2019 token ersetzt index 
+		indices = blockextract('"itemToken":', page)	# 05.12.2019 token ersetzt index 
 	page_cnt = len(indices)
-	PLog('"token":' in page)
+	PLog("has_token: %s" % str('"token":' in page))
 	
 	PLog('indices: %d, max_count: %d, offset: %d' % (page_cnt, max_count, offset))
 	if 	max_count:									# '' = 'Mehr..'-Option ausgeschaltet?
@@ -853,8 +855,9 @@ def GetContent(url, title, offset=0, li='', container=''):
 	PLog(len(indices))
 	
 		
-	subtitle=''; 	
+	subtitle=''; skip_list=[]	
 	li_cnt=0										# Anzahl items in loop - (getrennt für Links + Stations)
+	PLog("loop_indices:")
 	for index in indices:		
 		PLog('index: ' + index[:100])
 		# 03.12.2023 Tunein-Hinweis: Sendung erst später verfügbar	
@@ -871,7 +874,7 @@ def GetContent(url, title, offset=0, li='', container=''):
 		#	"expandableDescription" / "initialLinesCount" / "hasExpander":true
 		#	Bsp. Bill Burr's Monday Morning Podcast		
 		if "children" in index:									# ohne eigenen Inhalt, children folgen
-			PLog('skip: "children" in index')
+			PLog('skip: "children" in index')					# 	s.a. title in skip_list
 			continue
 
 		if	'"hasProgressBar":true' in index:					
@@ -890,6 +893,10 @@ def GetContent(url, title, offset=0, li='', container=''):
 				.replace('\\"', '*').replace('\\r\\n', ' '))
 		
 		title		= stringextract('"title":', '",', index)		# Sonderbhdl. wg. "\"Sticky Fingers\" ...
+		if title in skip_list:
+			continue
+		skip_list.append(title)
+		
 		title		= title[1:].replace('\\"', '"')	
 		subtitle	= stringextract('"subtitle":"', '"', index)		# Datum lokal
 		publishTime	= stringextract('"publishtime":"', '"', index)	# Format 2017-10-26T16:50:58
@@ -926,7 +933,8 @@ def GetContent(url, title, offset=0, li='', container=''):
 		PLog('Vars:')
 		PLog('target_id: ' + target_id) 	
 		PLog("%s | %s | %s | %s | %s | %s | %s"	% (myindex,mytype,title,subtitle,publishTime,seoName,FollowText))
-		PLog("%s | %s | %s | %s | %s | %s | %s"	% (ShareText,descr,linkfilter,preset_id,guideId,path,duration))
+		PLog("%s | %s | %s | preset_id: %s |" % (ShareText,descr,linkfilter,preset_id)) 
+		PLog("guideId: %s | path: %s | %s"	% (guideId,path,duration))
 			
 		if title in ShareText or subtitle in ShareText:		# Ergänzung: Höre .. auf TuneIn
 			ShareText = ''			
@@ -939,6 +947,7 @@ def GetContent(url, title, offset=0, li='', container=''):
 	# ------------------------------------------------------------------	
 	# 																	Callback Link
 	# ------------------------------------------------------------------
+		PLog("mytype: " + mytype)
 		# 24.10.2021 Berücksichtigung 'Container'
 		if mytype == 'Link' or mytype == 'Category' or mytype == 'Program' or mytype == 'Container':		# Callback Link
 			# die Url im Datensatz ist im Plugin nicht verwendbar ( api-Call -> profiles)
@@ -952,12 +961,15 @@ def GetContent(url, title, offset=0, li='', container=''):
 			#	Stream häufig nicht verfügbar (künftige od. zeitlich begrenzte Sendung). 
 			# 				
 			url_found = False
-			if preset_id == 'languages':		# nur mit linkfilter suchen (bei Tunein nur bei Languages)
+			if preset_id.startswith("l"):		# nur mit linkfilter suchen (bei Tunein nur bei Languages)
 				url_title = linkfilter
 			else:
+				if "-" in preset_id:
+					preset_id = preset_id.split("-")[0]					# p1523009-1 -> p1523009, wie Stations
 				url_title = "-%s/" % preset_id
 																	
-			PLog('url_title: ' + url_title)
+			PLog('url_title: %s, link_list: %d' % (url_title, len(link_list)))
+			PLog("mark0")
 			for link in link_list:
 				local_url = BASE_URL + stringextract('href="', '"', link)
 				PLog("url_title: %s, local_url: %s" % (url_title, local_url))
@@ -1033,6 +1045,12 @@ def GetContent(url, title, offset=0, li='', container=''):
 			# 19.07.2019: nach IP-Sperre Call erweitert mit serial + partnerId - s. StationList
 			# 26.11.2019: erneute Tests (Anlass: geoblock AFN) ohne serial + partnerId - anscheinend wieder OK 
 			# local_url = 'https://opml.radiotime.com/Tune.ashx?id=%s&formats=%s&serial=%s&partnerId=%s' % (preset_id, Dict('load', 'formats'), serial, partnerId)
+
+			if "-" in preset_id:						# s304612-2 -> s304612, sonst Error 404 "Invalid method"
+				p1=preset_id
+				preset_id = preset_id.split("-")[0]		# wie Container
+				PLog("preset_id_corrected: %s -> %s" %  (p1, preset_id))
+			
 			local_url = 'https://opml.radiotime.com/Tune.ashx?id=%s&formats=%s' % (preset_id, Dict('load', 'formats'))
 			PLog('Station_url: ' + local_url);	# PLog(image);	# Bei Bedarf
 			
@@ -1283,10 +1301,13 @@ def lower_key(mydict):
 # Hinw. TV-Links: die gelisteten TV-Links, werden beim opml-Call mit Error 400 abgewiesen. Im Web
 #	wird "ein Problem" angezeigt - laut dev-Tools wird der master.m3u8-Link ermittelt, aber der 
 #	enthaltene Audio-Link nicht.
+# 18.03.2026 preset_id's mit Postfix (s26779-5) führen zu Error 404 "Invalid method", Korrektur
+#	in GetContent (s. Callback Station).	
+#	Bei Bedarf &render=json in Tune.ashx-Call für mehr Output verwenden.
 #
 def StationList(url, title, image, summ, typ, bitrate, preset_id):
-	PLog('StationList: ' + url)
-	
+	PLog('StationList: %s, preset_id: %s' % (url, preset_id))
+		
 	# Callback-Params für PlayAudio, RecordStart, RecordStop
 	url=py2_encode(url); title=py2_encode(title); summ=py2_encode(summ); image=py2_encode(image);
 	fparams="{'url': '%s', 'title': '%s', 'summ': '%s', 'image': '%s', 'typ': '%s', 'bitrate': 'unknown',  'preset_id': '%s'}"  %\
@@ -1314,6 +1335,8 @@ def StationList(url, title, image, summ, typ, bitrate, preset_id):
 
 	if 'Tune.ashx?' in url:						# normaler TuneIn-Link zur Playlist o.ä.
 		cont, msg = RequestTunein(FunctionName='StationList, Tune.ashx-Call', url=url)
+		cont=py2_encode(cont)
+		
 		if cont == '':
 			msg1 = msg
 			PLog(msg1)
