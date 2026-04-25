@@ -81,6 +81,12 @@ msgid "Start the first stream of a station directly"
 msgstr "starte ersten Stream einer Station direkt"
 
 #: 
+msgctxt "#30207"
+#: "Label for option-field in Preferences"
+msgid "Show Premium Menu"
+msgstr "Zeige Premium-Menü"
+
+#: 
 msgctxt "#30117"
 #: "Label for entry-field in Preferences"
 msgid "complete path to My Radio Stations"

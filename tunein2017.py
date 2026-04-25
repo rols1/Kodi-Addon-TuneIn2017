@@ -45,8 +45,8 @@ from resources.lib.util_tunein2017 import *
 
 # +++++ TuneIn2017  - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.8.0'	
-VDATE = '19.03.2026'
+VERSION =  '1.8.1'	
+VDATE = '25.04.2026'
 
 # 
 #	
@@ -107,31 +107,31 @@ MENU_ICON 	=  	{'menu-lokale.png', 'menu-musik.png', 'menu-sport.png', 'menu-new
 					 'menu-talk.png', 'menu-audiobook.png', 'menu-pod.png', 
 				}
 
-# ab 18.04.2018, Version 1.1.9: Inhalte von Webseite statt opml-Browse-Call,
-#	zusätzliche API-Calls: api.tunein.com/categories, api.tunein.com/profiles.
-#	opml-Calls weiter verwendet für Fav's, Folders, audience_url, Account-Queries.
-#	formats=mp3,aac,ogg,flash,html - festgelegt in Main
-#	Ausnahme: RECENTS_URL (keine Ergebnisse mit Web-Url)
-# alte ROOT_URL 	= 'https://opml.radiotime.com/Browse.ashx?formats=%s'
-# 03.12.2023 Problem (nicht lösbar): Submenüs Sendungen bleiben leer, wenn tunein
-#	Werbung oder den Hinweis auf spätere Sendung vorschaltet.
+# Globale Variablen für Tunein:
+# partnerId		= 'RadioTime'	ab 19.07.2019 auf akt. Wert erweitert 
+partnerId		= 'RadioTime&version=6.29&itemUrlScheme=secure&reqAttempt=1'
+formats 		= 'mp3,aac,ogg,hls'
 
 BASE_URL	= 'https://tunein.com'
-ROOT_URL 	= 'https://tunein.com/radio/home/'						
-USER_URL 	= 'https://opml.radiotime.com/Browse.ashx?c=presets&partnerId=RadioTime&username=%s'
-RECENTS_URL	= 'https://api.tunein.com/categories/recents?formats=%s&serial=%s&partnerId=RadioTime&version=7.14.2'
+BASE_URL_API= 'https://api.tunein.com'
+ROOT_URL 	= 'https://tunein.com/radio/home/'	
+OPML_URL	= 'https://opml.radiotime.com/Browse.ashx?'					
+USER_URL 	= OPML_URL + 'c=presets&partnerId=RadioTime&username=%s'
+RECENTS_URL	= BASE_URL_API + '/categories/recents?formats=%s&serial=%s&partnerId=RadioTime&version=7.14.2'
+LOCAL_URL	= BASE_URL_API + '/categories/local?formats=%s&serial=%s&partnerId=RadioTime&version=7.14.2'
+SEARCH_URL	= BASE_URL_API + '/profiles?query=%s&isPrepopulateSearch=false&fullTextSearch=true&itemUrlScheme=secure&serial=%s&partnerId=%s&formats=%s'
+STATION_URL	= "https://opml.radiotime.com/Tune.ashx?id=%s&formats=%s"
+PRG_URL		= "http://opml.radiotime.com/Tune.ashx?c=pbrowse&id=%s&partnerId=RadioTime&version=7.14.2" 
+
+CAT_URL		= 'https://api.tunein.com/categories/%s?itemUrlScheme=secure&serial=%s&partnerId=%s&formats=%s'
 
 REPO_NAME		 	= 'Kodi-Addon-TuneIn2017'
 GITHUB_REPOSITORY 	= 'rols1/' + REPO_NAME
 REPO_URL 			= 'https://github.com/{0}/releases/latest'.format(GITHUB_REPOSITORY)
 
-# Globale Variablen für Tunein:
-# partnerId		= 'RadioTime'	ab 19.07.2019 auf akt. Wert erweitert 
-partnerId		= 'RadioTime&version=6.29&itemUrlScheme=secure&reqAttempt=1'
 
 # Start-Variablen aus Plex-Version
 UrlopenTimeout = 4			# Timeout sec, 24.01.2020 von 3 auf 4
-SearchWeb = True			# z.Z. Websuche statt opml-Call
 
 PLog('Addon: lade Code')
 PluginAbsPath 	= os.path.dirname(os.path.abspath(__file__))			# abs. Pfad für Dateioperationen
@@ -174,7 +174,7 @@ except:
 KODI_VERSION = xbmc.getInfoLabel('System.BuildVersion')
 
 PLog('Addon: ClearUp')
-ARDStartCacheTime = 300						# 5 Min.	
+CacheTime = 300						# 5 Min.	
  
 # Dict: Simpler Ersatz für Dict-Modul aus Plex-Framework
 days = int(SETTINGS.getSetting('DICT_store_days'))
@@ -246,13 +246,8 @@ def Main():
 		PLog('serial-ID erzeugt')									# 	wird nach Löschen Plugin-Cache neu erzeugt				
 	PLog('serial-ID: %s' % str(Dict('load','serial')))
 	SETTINGS.setSetting('serialid', serial)												
-	                  		
-	if 	not SETTINGS.getSetting('MyRadioStations'):						# mit Muster vorbelegen
-		MyRadioStations =  os.path.join("%s", "myradiostations-Mix.txt") % RESOURCES_PATH
-		SETTINGS.setSetting('MyRadioStations', MyRadioStations)
-		
+
 #-----------------------------										# 2. Menü
-	# title = L('Durchstoebern')									# Plex: oc-title2
 			
 	li = xbmcgui.ListItem()
 	li = home(li)													# Home-Button / Refresh	
@@ -262,43 +257,28 @@ def Main():
 	fparams="&fparams={'query': ''}"
 	addDir(li=li, label=title, action="dirList", dirID="Search", 
 		fanart=R(ICON_SEARCH), thumb=R(ICON_SEARCH), tagline=tagline, fparams=fparams)
-		
+
 	if len(username) > 0:
 		my_title = u'%s' % L('Meine Favoriten')
 		my_url = USER_URL % username								# nicht serial-ID! Verknüpfung mit Account kann fehlen
 		Dict('store','my_url', my_url)								# Verwend. in Favourit
-		if SETTINGS.getSetting('StartWithFavourits') == "true":		# Favoriten-Menü direkt + Updater-Modul einbinden
-			li, cnt = GetContent( url=my_url, title=my_title, offset=0, li=li)
-			li 		= Menu_update(li)
-			xbmcplugin.endOfDirectory(HANDLE)						# Ende
-		else:														# Favoriten-Button
-			my_url=py2_encode(my_url); title=py2_encode(title); 
-			fparams="&fparams={'url': '%s', 'title': '%s', 'offset': '0'}"  %\
-				(quote(my_url), quote(my_title))
-			addDir(li=li, label=my_title, action="dirList", dirID="GetContent", 
-				fanart=R('icon-tunein2017.png'), thumb=R('icon-tunein2017.png'), fparams=fparams)
-		
+		my_url=py2_encode(my_url); title=py2_encode(my_title); 
+		fparams="&fparams={'url': '%s', 'title': '%s'}"  %\
+			(quote(my_url), quote(my_title))
+		addDir(li=li, label=my_title, action="dirList", dirID="GetFolderContent", 
+			fanart=R('icon-tunein2017.png'), thumb=R('icon-tunein2017.png'), fparams=fparams)
+
 	MyRadioStations = SETTINGS.getSetting('MyRadioStations')		# eigene Liste mit Radiostationen, 
 	PLog('MyRadioStations: ' + str(MyRadioStations))				# (Muster in Resources)
-	if  SETTINGS.getSetting('UseMyRadioStations')	== 'true':
-		MyRadioStations = MyRadioStations.strip()	
-		if os.path.exists(MyRadioStations):
-				title = L("Meine Radiostationen")
-				summ = os.path.basename(MyRadioStations)
-				MyRadioStations=py2_encode(MyRadioStations);
-				fparams="&fparams={'path': '%s'}" % quote(MyRadioStations)
-				addDir(li=li, label=title, action="dirList", dirID="ListMRS", 
-					fanart=R(ICON_MYRADIO), thumb=R(ICON_MYRADIO), summary=summ, fparams=fparams)
-				
-				# nur MyRadioStations + Updater-Modul einbinden
-				if SETTINGS.getSetting('StartWithMyRadioStations') == "true":	# Nachrang hinter StartWithFavourits 								
-					li = Menu_update(li)
-					xbmcplugin.endOfDirectory(HANDLE)				# Ende						
-		else:				
-			msg1 = L("Meine Radiostationen") + ': ' + L("Datei nicht gefunden")	
-			msg2 = MyRadioStations
-			msg3 = L('Bitte den Eintrag in Einstellungen ueberpruefen!')
-			MyDialog(msg1, msg2, msg3)
+	MyRadioStations = MyRadioStations.strip()
+	PLog("MyRadioStations_exist: " + str(os.path.exists(MyRadioStations)))	
+	if os.path.exists(MyRadioStations):
+		title = L("Meine Radiostationen")
+		summ = os.path.basename(MyRadioStations)
+		MyRadioStations=py2_encode(MyRadioStations);
+		fparams="&fparams={'path': '%s'}" % quote(MyRadioStations)
+		addDir(li=li, label=title, action="dirList", dirID="ListMRS", 
+			fanart=R(ICON_MYRADIO), thumb=R(ICON_MYRADIO), summary=summ, fparams=fparams)
 				
 	formats = 'mp3,aac,ogg,flash,html,hls'
 	PLog(SETTINGS.getSetting('PlusAAC'))								
@@ -306,7 +286,7 @@ def Main():
 		formats = formats.replace(',aac', '')
 	Dict('store', 'formats', formats) 								# Verwendung: Trend, opml- und api-Calls
 
-	page, msg = RequestTunein(FunctionName='Main', url=ROOT_URL)	# Hauptmenü von Webseite
+	page, msg = RequestTunein(Func='Main', url=ROOT_URL)	# Hauptmenü von Webseite
 	PLog(len(page))
 
 	items = blockextract('common-module__link___Mz1h3',page,"<div")	# Navigations-Menü linke Seite	07.12.2025		
@@ -319,7 +299,8 @@ def Main():
 		MyDialog(msg1, msg2, msg3)
 		return li
 	
-	# Tunein-Navigationsmenü:	
+	# Tunein-Navigationsmenü:
+	# premium:	Tunein-Werbung, div. Formate
 	# local:	Ausgabe abhängig von IP-Lokalisierung bzw. Zuweisung im Menü "By Location", 
 	#				ohne Kat's - 12/2023 fehlt im Webmenü, unten angehängt
 	# recents:	abhängig von Konsum (ältere Sender einer serial-id entfallen), ohne Kat's 
@@ -331,14 +312,20 @@ def Main():
 	# regions:	Kat Regionen o. Icons, Kat Sender mit Icons (abhängig von IP-Lokalisierung) - Zuweisung
 	#				einer Region via Button für Menü "Local Radio" im Addon 
 	# languages: Kat Sprachen o. Icons	
-	PLog(len(items)); 
+	PLog("get_menu_items: %d" % len(items))
 	for item in items:												# Tunein-Menüs + Icons zeigen
 		PLog('item: ' + item)
-		url = 'https://tunein.com' + stringextract('href="', '"', item)	#  Bsp. href="/radio/local/"
-		key = url[:-1].split('/')[-1]
+		if "/audiobooks/" in item:									# href="/audiobooks/" ohne /radio/,
+			continue												#	kostenpflichtige Inhalte
+		key = stringextract('/radio/', '/"', item)
+		if "/podcasts/" in item:									# ohne /radio/
+			key = "podcasts"		
 		thumb = getMenuIcon(key)
 		if thumb == '':												# irrelevant menus (Login, Register,..)
 			continue
+
+		serial = Dict('load', 'serial')
+		url = CAT_URL % (key, serial, partnerId, formats)	
 		PLog("item_url: %s" % url);	PLog(key);	PLog(thumb);	
 		try:	
 			title = re.search('</div>(.*)</a>', item).group(1)		# Bsp. </div>Sport</a>
@@ -348,36 +335,40 @@ def Main():
 			title = key
 		title = title.replace('\\u002F', '/')
 		title = unescape(title)
+		title = title.capitalize()
+		label = title
+		if "-c57922" in title:										# Live-Stream-News-Radio-c57922
+			label = title.split("-c57922")[0]						# cut -c57922
+		if SETTINGS.getSetting('ShowPremiumMenu') == "false":	
+			if "Premium" in title:									# skip Premium with Setting
+				continue
 				
 		categories = 'Category'
-		if key == 'recents':										# Recents: Url-Anpassung erforderlich
-			categories = None
-			url = RECENTS_URL  										# % (formats, serial) in GetContent
 		url=py2_encode(url); title=py2_encode(title); 
 		fparams="&fparams={'url': '%s', 'title': '%s', 'offset': '0'}"  %\
 			(quote(url), quote(title))
-		addDir(li=li, label=title, action="dirList", dirID="GetContent", 
+		addDir(li=li, label=label, action="dirList", dirID="RequestHub", 
 			fanart=thumb, thumb=thumb, fparams=fparams)
 		
 		if key == "languages":										# menu end 
 			break
 	
 #-----------------------------	
-	title  = L("Lokale Sender")										# fehlt im Webmenü
-	url = "/radio/local/"; thumb = getMenuIcon("local")
+	title  = L("Lokale Sender")										# -> RequestHub
+	url = LOCAL_URL
+	thumb = getMenuIcon("local")
 	url=py2_encode(url); title=py2_encode(title); 
 	fparams="&fparams={'url': '%s', 'title': '%s', 'offset': '0'}"  %\
 		(quote(url), quote(title))
-	addDir(li=li, label=title, action="dirList", dirID="GetContent", 
+	addDir(li=li, label=title, action="dirList", dirID="RequestHub", 
 		fanart=thumb, thumb=thumb, fparams=fparams)
-
 
 #-----------------------------	
 	PLog(SETTINGS.getSetting('UseRecording'))						# Check laufende Aufnahmen 
 	pid = Dict('load', 'PID')
 	PLog(pid)
-	if SETTINGS.getSetting('UseRecording') == "true":	# Recording-Option: Aufnahme-Menu bei aktiven Aufnahmen einbinden
-		if len(pid) > 0 and pid != False:						
+	if SETTINGS.getSetting('UseRecording') == "true":				# Recording-Option: Aufnahme-Menu 
+		if len(pid) > 0 and pid != False:							# 	bei aktiven Aufnahmen einbinden				
 			title = L("Laufende Aufnahmen")
 			title=py2_encode(title);
 			fparams="&fparams={'title': '%s'}"  % quote(title)
@@ -385,11 +376,9 @@ def Main():
 				fanart=R(MENU_RECORDS), thumb=R(MENU_RECORDS), fparams=fparams)
 						       
 #-----------------------------	
-#	li = Menu_update(li)											# Updater-Modul einbinden
-
 	repo_url = 'https://github.com/{0}/releases/'.format(GITHUB_REPOSITORY)
 	call_update = False
-	if SETTINGS.getSetting('InfoUpdate') == 'true': 	# Updatehinweis beim Start des Addons 
+	if SETTINGS.getSetting('InfoUpdate') == 'true': 				# Updatehinweis beim Start des Addons 
 		ret = updater.update_available(VERSION)
 		if ret[0] == False:		
 			msg1 = L("Github ist nicht errreichbar")
@@ -401,7 +390,7 @@ def Main():
 			int_lc = ret[1]			# Version aktuell
 			latest_version = ret[2]	# Version Github, Format 1.4.1
 			PLog(type(int_lv)); PLog(type(int_lc));
-			if int(int_lv) > int(int_lc):					# Update-Button "installieren" zeigen
+			if int(int_lv) > int(int_lc):							# Update-Button "installieren" zeigen
 				call_update = True
 				title = L('neues Update vorhanden') +  ' - ' + L('jetzt installieren')
 				summary = L('Plugin Version:') + " " + VERSION + ', Github Version: ' + latest_version
@@ -412,7 +401,7 @@ def Main():
 				addDir(li=li, label=title, action="dirList", dirID="resources.lib.updater.update", fanart=R(ICON_UPDATER_NEW), 
 					thumb=R(ICON_UPDATER_NEW), fparams=fparams, summary=summary)
 			
-	if call_update == False:							# Update-Button "Suche" zeigen	
+	if call_update == False:										# Update-Button "Suche" zeigen	
 		title = L('Plugin Update') + " | " + L('Plugin Version:') + VERSION + ' - ' + VDATE 	 
 		summary=L('Suche nach neuen Updates starten')
 		tagline=L('Bezugsquelle') + ': ' + REPO_URL			
@@ -421,7 +410,7 @@ def Main():
 			thumb=R(ICON_MAIN_UPDATER), fparams=fparams, summary=summary, tagline=tagline)
 					
 #-----------------------------	
-	# Lang_Test=True					# Menü-Test Plugin-Sprachdatei
+	# Lang_Test=True												# Menü-Test Plugin-Sprachdatei
 	Lang_Test=False		
 	if Lang_Test:
 		fparams="&fparams={}"  
@@ -493,10 +482,6 @@ def getMenuIcon(key):	# gibt zum key passendes Icon aus MENU_ICON zurück
 			icon = R('menu-musik.png')
 		elif key == 'sports':
 			icon = R('menu-sport.png')
-		#elif key == 'News-c57922':	
-		#	icon = R('menu-news.png')
-		#elif key == 'News--Talk-c57922':				# 22.04.2021 News + Talk zusammengelegt
-		#	icon = R('menu-talk.png')
 		elif key == "Live-Stream-News-Radio-c57922":	# 09.12.2025 News + Talk: new key
 			icon = R('menu-news.png')						
 		elif key == 'podcasts':
@@ -505,9 +490,9 @@ def getMenuIcon(key):	# gibt zum key passendes Icon aus MENU_ICON zurück
 			icon = R('menu-orte.png')
 		elif key == 'languages':
 			icon = R('menu-sprachen.png')
-		elif key == 'premium':
+		elif key == 'premium':							# 17.04.2026 nicht mehr genutzt (Web)
 			icon = R('menu-pro.png')
-		#elif key == 'audiobooks':			# scheinbar nur Premium-Inhalte
+		#elif key == 'audiobooks':						# offenbar nur Premium-Inhalte
 		#	icon = R('menu-audiobook.png')
 		else:
 			icon = ''
@@ -536,39 +521,32 @@ def Search(query=''):
 				query = ''
 			else:
 				query = search_list[ret]
-	
-	
+
 	if  query == '':
 		query = get_keyboard_input()	# Modul util
 		if  query == None or query.strip() == '':
 			return Main()
 	
-	li = xbmcgui.ListItem()
-	li = home(li)						# Home-Button
 	
 	query = query.strip()
 	query_org = query					# unquoted speichern
-	oc_title2 = L('Suche nach') + ' >%s<' % query
-	PLog(SearchWeb)
-	if SearchWeb == True:
-		query = quote(py2_encode(query))							# Web-Variante
-		url = 'https://tunein.com/search/?query=%s' % query		
-		PLog('url: ' + url)
-		li, cnt = GetContent(url=url, title=oc_title2, offset=0, li=li)
-	else:		
-		query = query.replace(' ', '+')								# opml-Variante - z.Z. nicht genutzt
-		url = 'https://opml.radiotime.com/Search.ashx?query=%s&formats=%s' % (query,Dict('load', 'formats'))	
+	oc_title2 = L('Suche nach') + ' [B]%s[/B]' % query
 
-		query = quote(py2_encode(query), "utf-8")
-		PLog('url: ' + url)
-		li, cnt = GetContentOPML(url=url, title=oc_title2, offset=0, li=li)			
+	query = quote(py2_encode(query))
+	serial = Dict('load', 'serial')
+	SEARCH_URL	= BASE_URL_API + '/profiles?query=%s&isPrepopulateSearch=false&fullTextSearch=true&itemUrlScheme=secure&serial=%s&partnerId=%s&formats=%s'
+	search_url = SEARCH_URL % (query, serial, partnerId, formats)
+	PLog('search_url: ' + search_url)
 	
-	if cnt == 0:
+	ID = "Search"
+	page, msg = RequestTunein(ID, search_url)
+	cnt=0
+	if page:
+		ContainerGet(oc_title2, search_url, page)	
+	else:
 		title = L('Keine Suchergebnisse zu')
 		msg1 = L(title) 
 		msg2 = unquote(query)
-		# MyDialog(msg1, msg2, '')									# Austausch 06.02.2020
-		#return li		
 		xbmcgui.Dialog().notification(msg1,msg2,R(ICON),5000)	
 		return	
 		
@@ -583,74 +561,279 @@ def Search(query=''):
 		query_recent = py2_encode(query_recent)
 		RSave(query_file, query_recent)								# withcodec: code-error	
 		
-	xbmcplugin.endOfDirectory(HANDLE)	
-#-----------------------------
-
-# SetLocation (Aufruf GetContent): Region für Lokales Radio manuell setzen/entfernen
-def SetLocation(url, title, region, myLocationRemove):	
-	PLog('SetLocation: %s' % region)
-	PLog('myLocationRemove: ' + myLocationRemove)
-
-	if myLocationRemove == 'True':
-		Dict('store', 'myLocation', None)
-		msg1 = L('Lokales Radio entfernt') + ' | '	 + L('neu setzen im Menue Orte')
-	else:
-		Dict('store', 'myLocation', url) 
-		msg1 = L('Lokales Radio gesetzt auf') + ': %s' % region
-	MyDialog(msg1, '', '')
-	return
+	xbmcplugin.endOfDirectory(HANDLE)
 
 #-----------------------------
-# GetContentOPML wie in letzter Plex-Version nicht verwendet
-#	GetContentOPML wertete opml-Calls aus (Ergenisse im xml-
-#	Format).
-# def GetContentOPML(title, url, offset=0, li=''):
-#-----------------------------
-
-# GetContent aufgerufen via Browser-Url, nicht via opml-Request (s. GetContentOPML)
-# 	Die Auswertung erfolgt mittels Stringfunktionen, da die Ausgabe weder im xml- noch im json-Format
-#		erzwungen werden kann.
-#	Bei Recents wird statt des opm-Calls ein api-Call verwendet. Der Output unterscheidet sich in den
-#		Anfangsbuchstaben der Parameter - s. uppercase / lowercase.
-#	Unterscheidung Link / Station mittels mytype ("type")
+# Aufrufer: Main - Verteiler für Menüaufrufe, außer Search
 #
-def GetContent(url, title, offset=0, li='', container=''):
-	PLog('GetContent:'); PLog(url); PLog(offset); PLog(title); 
-	PLog(li); PLog(container);
-	offset = int(offset)
-	title = py2_encode(title)
-	title_org = title
-	oc_title2 = title
-	url_org = url
+def RequestHub(title, url, offset):
+	PLog('RequestHub: %s, %s, offset: %s' % (title, url, offset))	
 	
-	if li == '':								# eigene Liste 
-		endOfDirectory = True 
-		li = xbmcgui.ListItem()
-		li = home(li)							# Home-Button
-	else:										# Aufrufer-Liste
-		endOfDirectory = False	
-	PLog(endOfDirectory);	
+	# +++++++++++++++++++++++++++++++++++++++++++++++++ 
+	if "Live-stream-news-radio-c57922" in title:					# -> FolderMenuList xml
+		guide_id = title.split("radio-")[-1]
+		url = OPML_URL + "id=" + guide_id
+		PLog("opml_url: " + url)
+		FolderMenuList(url, title)									# Home_Menü dort
+		return	
+	
+	# +++++++++++++++++++++++++++++++++++++++++++++++++	-> Container-Auswertung json
+	
+	ID = "RequestHub"												# Recents, Languages, local: direkt zum Container
+	url_list = [ 'categories/recents', 'categories/languages',
+			'categories/local'
+		]
+	for u in url_list:
+		if u in url:
+			PLog("take_url: " + url)			
+			ContainerHub(ID, url, index="1")
+			break
+	else:	
+		ContainerGet(title, url)
+	
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)		
+	
+#-----------------------------
+# Container-Auswertung für Container[index]
+#	Station=Sender + Topic=Podcast/Hörbuch -> StationList
+#	Program=Sendung -> FolderMenuList (xml-Auswertung)
+#
+def ContainerHub(ID, url, index):
+	PLog('ContainerHub: %s | index: %s' % (ID, index))
 
-	if url == None or url == '':
-		msg1 = 'GetContent: Url ' + L("nicht gefunden")	
-		PLog(msg1)
-		MyDialog(msg1, '', '')
-		return li
-	if offset:
-		oc_title2 = title_org + ' | %s...' % offset			
+	page, msg = RequestTunein(ID, url)
+	if not page:
+		msg1 = L('Fehler') + " ContainerHub:"
+		msg2=msg
+		xbmcgui.Dialog().notification(msg1,msg2,R(ICON),3000)	
+		return
 
-	serial = Dict('load', 'serial')
-	username = SETTINGS.getSetting('username')
-	local_url=''; callNoOPML=False
+	try:		
+		obs = json.loads(page)
+		if "Items" in obs:											# Items 1. Key bei Suche
+			Container = obs["Items"]
+		myCont=[]
+		for cont in Container:
+			if index in str(cont["Index"]):
+				PLog("Container_found: index %s" % index)
+				ctype = cont["ContainerType"]
+				PLog("ContainerType: %s" % ctype)					# dto. enthaltene Children außer "Top Ergebnisse"
+				myCont = cont
+				break		
+	except Exception as exception:
+		PLog("ContainerHub_error: " + str(exception))
+		
+	li = xbmcgui.ListItem()
+	li = home(li)										# Home-Button	
+	
+	items = myCont["Children"]
+	PLog("Children: %d" % len(items))
+	for item in items:
+		typ = item["Type"]
+		PLog("item_typ: " + typ)
+		# Program: guide_id aus Key Play
+		guide_id,title,tag,image,summ,islive,profurl = get_child_json(item)	
+		PLog('Satz_Container:') 
+		PLog("profurl: " + profurl)								
+		# bitrate: dummy 
+		title=py2_encode(title); summ=py2_encode(summ);
+		image=py2_encode(image); 
+		if  typ == "Station" or typ == "Topic":
+			url = STATION_URL  % (guide_id, formats)				# profurl: weitere Metaddaten, keine Streams			
+			url=py2_encode(url); 
+			fparams="&fparams={'url': '%s', 'title': '%s', 'summ': '%s', 'image': '%s', 'typ': '%s', 'bitrate': 'unknown',  'preset_id': '%s'}"  %\
+				(quote(url), quote(title), quote(summ), quote(image), typ, guide_id)
+			addDir(li=li, label=title, action="dirList", dirID="StationList", 
+				fanart=image, thumb=image, tagline=tag, summary=summ, fparams=fparams)
 
-	max_count = int(SETTINGS.getSetting('maxPageContent'))	# max. Anzahl Einträge ab offset
+		elif typ == "Program":
+			url = "http://opml.radiotime.com/Tune.ashx?c=pbrowse&id=%s&partnerId=RadioTime&version=6.29" % guide_id
+			PLog("opml_url: " + url)
+			url=py2_encode(url); 
+			fparams="&fparams={'title': '%s', 'url': '%s'}"  % (quote(title), quote(url))
+			addDir(li=li, label=title, action="dirList", dirID="FolderMenuList", 
+				fanart=image, thumb=image, tagline=tag, summary=summ, fparams=fparams)
+				
+		elif typ == "Category":
+			url = OPML_URL + "id=%s&partnerId=%s" % (guide_id, partnerId)
+			PLog("opml_url: " + url)
+			url=py2_encode(url); 			
+			fparams="&fparams={'title': '%s', 'url': '%s'}"  % (quote(title), quote(url))
+			addDir(li=li, label=title, action="dirList", dirID="FolderMenuList", 
+				fanart=image, thumb=image, tagline=tag, summary=summ, fparams=fparams)
 
-	# ------------------------------------------------------------------	
-	# Favoriten-Ordner,  Custom Url											Favoriten-Ordner
-	# ------------------------------------------------------------------
+		elif typ == "Link":											# childs von languages
+			url = profurl											# unverändert -> ContainerHub mit 
+			PLog("profurl: " + url)									#	index 1 -> Stations
+			ID = "ContainerHub"
+			url=py2_encode(url); 			
+			fparams="&fparams={'ID': '%s', 'url': '%s', 'index': '1'}"  % (ID, quote(url))
+			addDir(li=li, label=title, action="dirList", dirID="ContainerHub", 
+				fanart=image, thumb=image, tagline=tag, summary=summ, fparams=fparams)
+
+		elif typ == "Prompt":
+			page = tag				
+			textviewer(title, page)									# nur title + subtitel
+			return													# direkt zurück														
+			
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
+
+#-----------------------------
+# Container-Liste, für Search (mit page), RequestHub
+# DictID + url werden weitergereicht
+# Abgleich in ContainerHub via Index (GuideId kann fehlen)
+#
+def ContainerGet(title, url, page=""):
+	PLog('ContainerGet: %s' % title)
+	PLog(url)
+	title_org=title
+	ID = "ContainerGet"
+	
+	if not page:
+		page, msg = RequestTunein(ID, url)
+		if not page:
+			msg1 = L('Fehler') + " ContainerHub:"
+			msg2=msg
+			xbmcgui.Dialog().notification(msg1,msg2,R(ICON),3000)	
+			return	
+
+	li = xbmcgui.ListItem()
+	li = home(li)							# Home-Button
+
+	try:
+		obs = json.loads(page)
+		ptitle=""
+		if "Header" in obs:								# Seitentitel vorhanden?
+			if "Title" in obs["Header"]:				# leer in Premium
+				ptitle=  obs["Header"]["Title"]
+		if "Items" in obs:								# Items 1. Key bei Suche
+			Container = obs["Items"]
+		anz =  len(Container)
+		PLog("Container: %d, ptitle: %s" % (anz, ptitle))
+	except Exception as exception:
+		anz=0
+		PLog("ContainerGetJsonerror: " + str(exception))
+	if anz == 0:
+		return
+		
+	cnt=0
+	for cont in Container:
+		index = cont["Index"]							# Abgleich in ContainerHub 
+		typ = cont["Type"]
+		if "Title" in cont:								# bei Fehlen -> ptitle, z.B. Recents
+			title = cont["Title"]
+		else:
+			title = ptitle
+		if "DynamicPrompt" in title:					# Werbung Premium
+			continue
+		title = (title.replace(u'(', u'<').replace(u')', u'>'))	
+		title = repl_json_chars(title)					# repl_json_chars korrig. nur 1 Klammer
+		anz = len(cont["Children"])
+		tag = "%s | %s | Anzahl: %d" % (title_org, title, anz)
+		
+		PLog("Satz1:")
+		PLog(index); PLog(title); PLog(anz);
+		
+		url=py2_encode(url);
+		fparams="&fparams={ 'ID': '%s', 'url': '%s', 'index': '%s'}"  %\
+			(ID, quote(url), index)
+		addDir(li=li, label=title, action="dirList", dirID="ContainerHub", 
+			tagline=tag, fanart=R(ICON), thumb=R(ICON), fparams=fparams)
+		cnt = cnt + 1
+ 		
+	xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
+
+#-----------------------------
+# Aufruf: ContainerHub 
+# Auswertung json-Sätze aus api-Calls
+#
+def get_child_json(item):
+	PLog("get_child_json:")
+	PLog(str(item)[:80])
+	typ = item["Type"]
+	PLog("typ: " + typ)
+	
+	guide_id="";title="";subtitle="";image="";descr="";followtext="";
+	islive=""; shareurl="";profurl="";seotitle=""
+	tag=""; image=""; summ=""; human=""
+		
+	if "GuideId" in item:
+		guide_id = item["GuideId"]
+	if "Title" in item:	
+		title = item["Title"]
+	else:
+		title = item["AccessibilityTitle"]
+	if "Subtitle" in item:
+		subtitle = item["Subtitle"]							# ev. mit descr identisch
+	
+	if typ == "Prompt":										# Special Premium, title+tag -> textviewer:
+		title = title.replace("{0}", "")
+		tag = subtitle
+		return guide_id,title,tag,image,summ,islive,profurl
+
+	Actions 	= item["Actions"]
+	if "Follow" in Actions:									# fehlt in Regions
+		# follower 	= Actions["Follow"]["FollowerCount"]	# 14653
+		followtext 	= Actions["Follow"]["FollowText"]		# 14,7K Favoriten
+	
+	if "Play" in item:
+		Play = Actions["Play"]
+		islive 		= Play["IsLive"]
+		guide_id = Play["GuideId"]							# Station: p229527, Program: t398945321
+		if "StartTime" in Play:								# Programs
+			start 	= Play["StartTime"]						# 2024-05-09T04:34:00
+			human	= time_translate(start)
+			PLog("human: " + human)
+	
+	if "Profile" in item:									# fehlt in childs von language
+		Profile	 	= Actions["Profile"]
+		profurl 	= Profile["Url"]
+	elif "Browse" in Actions:
+		if "Url" in Actions["Browse"]:		
+			profurl = Actions["Browse"]["Url"]
+	
+	if "SEOInfo" in item:									# seo-Infos auch in Profile möglich
+		seotitle = item["SEOInfo"]["Title"]
+
+	if "Description" in item:
+		descr 		= item["Description"]
+	if "Image" in item:
+		image 		= item["Image"]
+	if image == '':
+		image = R(ICON) 
+		
+	tag = "[B]%s[/B]" % followtext
+	if human:
+		tag = "%s | %s" % (tag, human)
+	if seotitle:
+		tag = "%s | %s" % (tag, seotitle)
+	if subtitle in descr:
+		subtitle = ""
+	if subtitle and subtitle not in tag:
+		tag = "%s | %s" % (tag, subtitle)
+
+	summ = descr
+	title 	= repl_json_chars(title)
+	tag 	= repl_json_chars(tag)
+	summ	= repl_json_chars(summ)
+	summ 	= summ.replace("\n","||")
+				
+	PLog("guide_id: %s, title: %s, subtitle: %s, profurl: %s" % (guide_id,title,subtitle,profurl))
+	PLog("tag: %s, image: %s, summ: %s" % (tag,image,summ))
+	PLog("islive: %s" % (islive))
+	return guide_id,title,tag,image,summ,islive,profurl
+	
+#-----------------------------
+# GetFolderContent ersetzt die frühere Folder-Steuerung in GetContent
+#
+def GetFolderContent(url, title):
+	PLog('GetFolderContent:'); PLog(url); PLog(title);
+	
+	li = xbmcgui.ListItem()					# Home-Button in FolderMenuList
+	
 	if "c=presets" in url:
 		PLog("c=presets: " + url)
-		li = FolderMenuList(url=url, title=title, li=li)
+		FolderMenuList(url=url, title=title)
 		
 		if SETTINGS.getSetting('UseFavourites') == "true":
 			PLog('Folder + Custom Menues')
@@ -673,7 +856,7 @@ def GetContent(url, title, offset=0, li='', container=''):
 				fanart=R(ICON_FOLDER_REMOVE), thumb=R(ICON_FOLDER_REMOVE), summary=summ, fparams=fparams)						
 			
 
-	# ------------------------------------------------------------------	 Custom Url	
+		# ------------------------------------------------------------------	 Custom Url	
 			# Button für Custom Url 
 			# Einstellungen:  Felder Custom Url/Name müssen ausgefüllt sein, Custom Url mit http starten
 			#	Custom Url wird hier nur hinzugefügt - Verschieben + Löschen erfolgt als Favorit in
@@ -710,410 +893,6 @@ def GetContent(url, title, offset=0, li='', container=''):
 						fanart=R(MENU_CUSTOM_ADD), thumb=R(MENU_CUSTOM_ADD), summary=summ, fparams=fparams)
 						
 		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-		return		# ohne return weiter trotz endOfDirectory!
-
-	# ------------------------------------------------------------------	
-	# Anpassung RECENTS_URL an Formate (Einstellungen) und serial-ID		RECENTS_URL
-	# ------------------------------------------------------------------
-	if 'categories/recents' in url:		# s. Zuweisung in Main
-		formats = Dict('load', 'formats'); serial = Dict('load', 'serial')
-		# PLog(formats); PLog(serial);
-		url = url % (formats, serial)
-		# PLog(url)
-	# ------------------------------------------------------------------	
-	# Anpassung Url Local Radio: Title2 oc, Url setzen, Remove-Button		Local Radio
-	# ------------------------------------------------------------------
-	skip_SetLocation = False; myLocationRemove = False
-	if url.endswith('/radio/local/'):			# Local Radio
-		if SETTINGS.getSetting('UseMyLocation') == "true":	
-			if Dict('load', 'myLocation'):				# Region gesetzt - Url anpassen
-				url = Dict('load', 'myLocation')		
-				skip_SetLocation = True
-				myLocationRemove = True
-				region = stringextract('/radio/', '-r', url)
-				oc_title2 = oc_title2 + ' (%s)' % region
-				oc_title2=py2_encode(oc_title2)
-				PLog("region: %s, oc_title2: %s" % (region, oc_title2) )
-	
-	if myLocationRemove:							# Local Radio: Remove-Button
-		if SETTINGS.getSetting('UseMyLocation') == "true":	
-			if Dict('load', 'myLocation'):			# Region gesetzt
-				summ = L('neu setzen im Menue Orte')
-				thumb=R(ICON_MYLOCATION_REMOVE)
-				info_title = L('entferne Lokales Radio') + ': >%s<' % region
-				url=py2_encode(url); info_title=py2_encode(info_title); region=py2_encode(region);			
-				fparams="&fparams={'url': '%s', 'title': '%s', 'region': '%s', 'myLocationRemove': 'True'}"  %\
-					(quote(url), quote(info_title), quote(region))
-				addDir(li=li, label=info_title, action="dirList", dirID="SetLocation", 
-					fanart=thumb, thumb=thumb, summary=summ, tagline=oc_title2, fparams=fparams)
-							
-	# ------------------------------------------------------------------
-	# Anpassungen für UseMyLocation: Set-Button								UseMyLocation
-	# ------------------------------------------------------------------	
-	if SETTINGS.getSetting('UseMyLocation') == "true" and skip_SetLocation == False:					
-		url_split = url.split('-')[-1]				# Bsp. ../radio/Africa-r101215/
-		try:
-			url_id = re.search('(\d+)', url_split).group(1)
-		except:
-			url_id = None
-		PLog("UseMyLocation: " + url_split); PLog(url_id)	
-		if  url_id and url_split.startswith('r'):	# show myLocation-button to set region manually
-			# summ = L('neu setzen im Menue Orte')
-			summ = ''
-			thumb=R(ICON_MYLOCATION) 
-			region = stringextract('/radio/', '-r', url)
-			info_title = L('setze Lokales Radio auf') + ': >%s<' % region
-			url=py2_encode(url); info_title=py2_encode(info_title); region=py2_encode(region);						
-			fparams="&fparams={'url': '%s', 'title': '%s', 'region': '%s', 'myLocationRemove': 'False'}"  %\
-				(quote(url), quote(info_title), quote(region))
-			addDir(li=li, label=info_title, action="dirList", dirID="SetLocation", 
-				fanart=thumb, thumb=thumb, summary=summ, tagline=oc_title2, fparams=fparams)
-	
-	# ------------------------------------------------------------------	
-	# 																		Get Content
-	# ------------------------------------------------------------------	
-	PLog('content_url: ' + url)	
-	page, msg = RequestTunein(FunctionName='GetContent', url=url)
-	# RSave('/tmp/x.html', py2_encode(page))		# Debug: Save html-Content	
-	if page == '':	
-		msg1 = msg
-		MyDialog(msg1, '', '')
-		return li
-
-	PLog(page[:80])
-	# RSave('/tmp/Recent.html', py2_encode(page))	# Debug	
-	# PLog(page)
-	link_list = blockextract('__guideItemLink___', page) # Link-List außerhalb json-Bereich 22.10.2021
-	PLog("link_list: " + str(len(link_list)))
-	'''
-	Container = GetContainerJson(page)					# Alt.: Archiv/tunein2017_Search-Api.py
-	'''
-	jsonObject = get_Web_json(page)						# kein json-Objekt mehr, s. get_Web_json
-	PLog(page[:80])
-	# keys - Anpassung an unterschiedliche lower-/uper-Cases -> lower:
-	jsonObject = lower_key(jsonObject)
-	# string-Verarbeitung:
-	if PYTHON2:
-		pass
-	else:
-		page = str(jsonObject)
-	page = (page.replace("'", '"').replace('": "', '":"'))	
-	#RSave('/tmp2/x_Recent.json', py2_encode(page))	# Debug	
-	PLog(page[:80])
-
-	# ------------------------------------------------------------------	
-	# 																	Callback Container-Titel
-	# ------------------------------------------------------------------
-	# mögliche Container in page detektieren + listen (step  1),
-	#	gewählten Container in page finden + separieren  (step  2)
-	if container == '':										# 1. step: Container-Titel listen
-		if '"type":"Container"' in page:
-			indices = blockextract('"type":"Container"', page)
-			if len(indices) > 1:							# keine Liste bei nur 1 Container
-				for index in indices:
-					#if 'NFL Football Radio' in index:		# Debug
-					#	PLog(index)
-					title = stringextract('"title":"', '"', index)
-					PLog("Container_title: " + title)
-					if 'DynamicPrompt' in title:			# 28.01.2023 bisher o. Auswertung
-						PLog("skip_DynamicPrompt")
-						continue
-					if 'containerType":"Card' in index:				# ohne eigenen Inhalt, children folgen
-						PLog('skip: "children" in container_index')
-						continue
-
-					url=py2_encode(url); title=py2_encode(title);
-					fparams="&fparams={'url': '%s', 'title': '%s', 'container': '%s'}"  %\
-						(quote(url), quote(title), quote(title))
-					addDir(li=li, label=title, action="dirList", dirID="GetContent", 
-						fanart=R(ICON), thumb=R(ICON), fparams=fparams)
-				xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)
-			
-	else:													# 2. step: weiter mit Container
-		indices = blockextract('"type":"Container"', page)
-		for item in indices:				
-			title = stringextract('"title":"', '"', item)
-			PLog("Container_title: " + title)
-			if container in title:
-				PLog("found_container: %s, item: %s" % (title, item[:100]))
-				page = item								# Block -> Container 
-				break		
-
-	# Suche (27.12.2019), Untergruppen Sprachen: Block=index
-	if 'attributes=filter' or  'search/?query=' in url: 						
-		indices = blockextract('"index":', page)
-	else:
-		indices = blockextract('"itemToken":', page)	# 05.12.2019 token ersetzt index 
-	page_cnt = len(indices)
-	PLog("has_token: %s" % str('"token":' in page))
-	
-	PLog('indices: %d, max_count: %d, offset: %d' % (page_cnt, max_count, offset))
-	if 	max_count:									# '' = 'Mehr..'-Option ausgeschaltet?
-		delnr = min(page_cnt, offset)
-		del indices[:delnr]
-		PLog(delnr)				
-	PLog(len(indices))
-	
-		
-	subtitle=''; skip_list=[]	
-	li_cnt=0										# Anzahl items in loop - (getrennt für Links + Stations)
-	PLog("loop_indices:")
-	for index in indices:		
-		PLog('index: ' + index[:100])
-		# 03.12.2023 Tunein-Hinweis: Sendung erst später verfügbar	
-		if '"type":"Prompt"' in index:
-			accessTitle = stringextract('accessibilitytitle":"', '"', index)
-			if accessTitle:
-				msg1 = accessTitle
-				PLog("accessTitle: " + accessTitle)
-				xbmcgui.Dialog().notification('TuneIn:',msg1,R(ICON),3000, sound=False)
-				#MyDialog(msg1, '', '')					# nervt: Probiere TuneIn Premium..
-				return
-		
-		# einleitenden Container überspringen, dto. hasButtonStrip":true / "hasIconInSubtitle":false /
-		#	"expandableDescription" / "initialLinesCount" / "hasExpander":true
-		#	Bsp. Bill Burr's Monday Morning Podcast		
-		if "children" in index:									# ohne eigenen Inhalt, children folgen
-			PLog('skip: "children" in index')					# 	s.a. title in skip_list
-			continue
-
-		if	'"hasProgressBar":true' in index:					
-			PLog('skip: "hasProgressBar":true in index')
-			continue
-		
-			
-		# 05.12.2019 preset_id stimmt nicht mehr mit id für Fav überein - Austausch mit target_id
-		# preset_id 	= stringextract('"id":"', '"', index)		# dto. targetItemId, scope, guideId -> url
-		target_id 	= stringextract('"targetitemid":"', '"', index)	# 
-		guideId 	= stringextract('"guideid":"', '"', index)		# Bsp. t121001218 -> opml-url zum mp3-Quelle
-		preset_id 	= stringextract('"id":"', '"', index)			# dto. targetItemId, scope, guideId -> url
-		
-		# url-Korrektur u.a.
-		index = (index.replace('\\u002F', '/').replace('\u003E', '').replace('\u003C', '')
-				.replace('\\"', '*').replace('\\r\\n', ' '))
-		
-		title		= stringextract('"title":', '",', index)		# Sonderbhdl. wg. "\"Sticky Fingers\" ...
-		if title in skip_list:
-			continue
-		skip_list.append(title)
-		
-		title		= title[1:].replace('\\"', '"')	
-		subtitle	= stringextract('"subtitle":"', '"', index)		# Datum lokal
-		publishTime	= stringextract('"publishtime":"', '"', index)	# Format 2017-10-26T16:50:58
-		seoName		= stringextract('"seoname":"', '"', index)		# -> url-Abgleich
-		if '"description"' in index:
-			descr		= stringextract('"description":"', '"', index)	
-		else:
-			descr		= stringextract('"text":"', '"', index)		# description
-		duration	= stringextract('"duration":"', '"', index)
-
-		#if 'Religious Music' in index:									# Debug: Datensatz
-		#	PLog(index)
-		
-		myindex	= stringextract('"index":"', '"', index)	
-		mytype	= stringextract('"type":"', '"', index)	
-		image	= stringextract('"image":"', '"', index)		# Javascript Unicode escape \\u002F
-		if image == '':
-			image=R(ICON)
-		FollowText	= stringextract('"followtext":"', '"', index)
-		ShareText	= stringextract('"sharetext":"', '"', index)
-		path 		= stringextract('"path":"', '"', index)		# -> url_title - url-Abgleich
-		if path.startswith("http") == False:
-			path = stringextract('"url":"', '"', index)	
-		linkfilter 	= stringextract('"filter":"', '"', index)	# dto.
-		linkfilter	= 'filter%3D' + linkfilter
-		
-		play_part	= stringextract('"play"', '}', index)		# Check auf abspielbaren Inhalt in Programm
-		# PLog(play_part)
-		sec_gId		=  stringextract('"guideid":"', '"', play_part)# macht ev. Programm/Category zur Station		
-		if sec_gId.startswith('t') or  sec_gId.startswith('s'):
-			 guideId = sec_gId
-			 
-			
-		PLog('Vars:')
-		PLog('target_id: ' + target_id) 	
-		PLog("%s | %s | %s | %s | %s | %s | %s"	% (myindex,mytype,title,subtitle,publishTime,seoName,FollowText))
-		PLog("%s | %s | %s | preset_id: %s |" % (ShareText,descr,linkfilter,preset_id)) 
-		PLog("guideId: %s | path: %s | %s"	% (guideId,path,duration))
-			
-		if title in ShareText or subtitle in ShareText:		# Ergänzung: Höre .. auf TuneIn
-			ShareText = ''			
-		if seoName in title:								# seoName = Titel
-			seoName = ''
-
-		mytype = mytype.title()
-		title=title.replace(u'(', u'<').replace(u')', u'>')	# klappt nicht in repl_json_chars
-		title=repl_json_chars(title) 
-	# ------------------------------------------------------------------	
-	# 																	Callback Link
-	# ------------------------------------------------------------------
-		PLog("mytype: " + mytype)
-		# 24.10.2021 Berücksichtigung 'Container'
-		if mytype == 'Link' or mytype == 'Category' or mytype == 'Program' or mytype == 'Container':		# Callback Link
-			# die Url im Datensatz ist im Plugin nicht verwendbar ( api-Call -> profiles)
-			# 	daher verwenden wir die fertigen Links aus dem linken Menü der Webseite ('guide-item__guideItemLink
-			#	Die Links mixt Tunein mit preset_id, guideId, linkfilter. 
-			#	Zusätzl. Problem: die Link-Sätze enthalten Verweis auf Folgesatz mit preset_id 
-			#	(Bsp. data-nextGuideItem="c100000625")
-			# Bisher sicherste Identifizierung (vorher über den Titel = title): Abgleich mit preset_id am
-			#	Ende des Links. Bei Sprachen verwendet Tunein (außer bei Bashkirisch) nur linkfilter im Link.
-			# Sätze überspringen (url == local_url) - Link zu Station zwar möglich (dann in guideId), aber 
-			#	Stream häufig nicht verfügbar (künftige od. zeitlich begrenzte Sendung). 
-			# 				
-			url_found = False
-			if preset_id.startswith("l"):		# nur mit linkfilter suchen (bei Tunein nur bei Languages)
-				url_title = linkfilter
-			else:
-				if "-" in preset_id:
-					preset_id = preset_id.split("-")[0]					# p1523009-1 -> p1523009, wie Stations
-				url_title = "-%s/" % preset_id
-																	
-			PLog('url_title: %s, link_list: %d' % (url_title, len(link_list)))
-			PLog("mark0")
-			for link in link_list:
-				local_url = BASE_URL + stringextract('href="', '"', link)
-				PLog("url_title: %s, local_url: %s" % (url_title, local_url))
-				PLog(url_title in url_org)
-				if url_title in local_url:
-					if url_title not in url_org:						# Selbstreferenz			
-						PLog('url_found: ' + local_url)
-						url_found = True
-						link_list.remove(link)							# Sätze mit ident. linkfilter möglich
-						break
-					
-			if not url_found: 					# Tunein-Info, übersetzt -  mögl.: will be available on ..
-				msg1 = ('skip: no preset_id in link for: %s | %s' % (title,preset_id)) 
-				PLog(msg1); PLog(preset_id); PLog(local_url)
-				if 'index":1,"type":"Prompt"' in page:
-					pos = page.find('index":1,"type":"Prompt"')
-					PLog(pos)
-					msg2 = page[pos:pos+200]
-					msg2 = stringextract('title":"', '"', msg2)
-					msg1 = title
-					PLog(msg2)
-					#MyDialog(msg1, msg2, '')							# 22.10.2021
-				continue
-											
-			PLog('Link_url: %s, url_org: %s' % (local_url, url_org)); # PLog(image);	# Bei Bedarf
-			if url == local_url:					# Rekursion vermeiden
-				'''
-				PLog('try_with_guideId')			# nicht genutzt - viele nicht verfügbare Stationen
-				if guideId:							# wie Tunein-Web: erneuter Versuch mit guideId
-					url = 'https://api.tunein.com/profiles/%s/contents?formats=mp3,aac,ogg,hls&serial=%s&partnerId=%s' % (guideId, serial, partnerId)	
-					GetContent(url=url, title=title_org, li=li)
-					return	
-				else:
-				'''
-				PLog('skip: url=local_url')									
-				continue
-		
-			if url == local_url:					# Rekursion vermeiden
-				PLog('skip: url=local_url')
-				continue
-				
-				
-			if local_url == '':					# bei Programmcontainern möglich 
-				PLog('skip: empty local_url')
-				continue			
-			
-			link_offset = offset				# Reset offset bei Verzeichniswechsel
-			if local_url != url_org:			
-				link_offset = 0
-				
-			summ 	= 	subtitle			# summary -> subtitle od. FollowText
-			summ_mehr = L('Mehr...')
-			local_url=py2_encode(local_url); title=py2_encode(title);
-			fparams="&fparams={'url': '%s', 'title': '%s', 'offset': '%s'}"  %\
-				(quote(local_url), quote(title), link_offset)
-			addDir(li=li, label=title, action="dirList", dirID="GetContent", 
-				fanart=R(ICON), thumb=R(ICON), summary=summ_mehr, fparams=fparams)
-			li_cnt = li_cnt + 1	
-
-	# ------------------------------------------------------------------	
-	# 																	Callback Station
-	# ------------------------------------------------------------------	
-		if mytype == 'Station' or mytype == 'Topic':					
-			if preset_id.startswith('p'):
-				preset_id = guideId				# mp3-Quelle in guideId., Bsp. t109814382
-			else:
-				if target_id:					# 25.08.2020 target_id bei Pocasts ev. leer
-					preset_id = target_id
-				else:
-					PLog('target_id_empty, use preset_id %s' % preset_id)	
-					
-			# local_url = 'https://opml.radiotime.com/Tune.ashx?id=%s&formats=%s' % (preset_id, Dict('load', 'formats'))
-			# 19.07.2019: nach IP-Sperre Call erweitert mit serial + partnerId - s. StationList
-			# 26.11.2019: erneute Tests (Anlass: geoblock AFN) ohne serial + partnerId - anscheinend wieder OK 
-			# local_url = 'https://opml.radiotime.com/Tune.ashx?id=%s&formats=%s&serial=%s&partnerId=%s' % (preset_id, Dict('load', 'formats'), serial, partnerId)
-
-			if "-" in preset_id:						# s304612-2 -> s304612, sonst Error 404 "Invalid method"
-				p1=preset_id
-				preset_id = preset_id.split("-")[0]		# wie Container
-				PLog("preset_id_corrected: %s -> %s" %  (p1, preset_id))
-			
-			local_url = 'https://opml.radiotime.com/Tune.ashx?id=%s&formats=%s' % (preset_id, Dict('load', 'formats'))
-			PLog('Station_url: ' + local_url);	# PLog(image);	# Bei Bedarf
-			
-			summ 	= 	subtitle			# summary -> subtitle od. FollowText
-			if len(summ) < 11 and descr:	# summary: falls Datum mit description ergänzen
-				summ = summ + ' | %s' % descr
-				
-			tagline = FollowText			# Bsp. 377,5K Favoriten od. 16:23 (Topic)
-			if duration:
-				tagline = ' %s | %s' % (duration, FollowText)
-			if title == '':					# Bsp. Lokale Nachrichten / Das Magazin
-				title = seoName
-					
-			if tagline.endswith('| '): tagline = tagline[:-3]	# Ende:   | löschen
-			summ = summ.replace(' |', '')						# Start:  | löschen
-			summ=repl_json_chars(summ); 
-				
-			PLog('Satz_Station/Topic:') 								
-			# bitrate: dummy 
-			title=py2_encode(title); summ=py2_encode(summ);
-			local_url=py2_encode(local_url); image=py2_encode(image); 
-			fparams="&fparams={'url': '%s', 'title': '%s', 'summ': '%s', 'image': '%s', 'typ': 'Station', 'bitrate': 'unknown',  'preset_id': '%s'}"  %\
-				(quote(local_url), quote(title), quote(summ), quote(image), preset_id)
-			addDir(li=li, label=title, action="dirList", dirID="StationList", 
-				fanart=image, thumb=image, summary=summ, tagline=tagline, fparams=fparams)
-						
-			li_cnt = li_cnt + 1										
-				
-		if max_count:
-			# Mehr Seiten anzeigen:		
-			cnt = li_cnt + offset		# 
-			PLog('Mehr_Test: %s | %s | %s | %s' % (max_count, li_cnt, cnt, page_cnt))
-			
-			if cnt >= page_cnt:			# Gesamtzahl erreicht - Abbruch
-				offset=0
-				break					# Schleife beenden
-			elif li_cnt+1 >= max_count:	# Mehr, wenn max_count erreicht
-				offset = offset + max_count 
-				title = L('Mehr...') + title_org
-				summ_mehr = L('Mehr...') + '(max.: %s)' % page_cnt
-				
-				url=py2_encode(url); title_org=py2_encode(title_org); 
-				fparams="&fparams={'url': '%s', 'title': '%s', 'offset': '%s'}"  %\
-					(quote(url), quote(title_org), offset)
-				addDir(li=li, label=title, action="dirList", dirID="GetContent", 
-					fanart=R(ICON_MEHR), thumb=R(ICON_MEHR), summary=summ_mehr, fparams=fparams)
-				break					# Schleife beenden		
-								
-		# break	# Debug Stop
-	PLog('li_cnt: ' + str(li_cnt))
-	PLog(endOfDirectory)	
-	if endOfDirectory == True:		
-#		if li_cnt == 0:
-#			if subtitle:					# Hinweis auf künftige Sendung möglich (keine akt. Sendung)
-#				title_org = title_org + " | %s" % subtitle	
-#			msg1 = L('keine Eintraege gefunden') + ": " + title_org 
-#			msg1 = py2_encode(msg1)
-#			PLog(msg1)
-#			MyDialog(msg1, '', '')	
-#			return li						# verursacht zwar Directory-Error, bleibt aber in der Liste.
-		xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True) 
-	else:
-		return li, li_cnt	
 	
 #-----------------------------
 # RequestTunein: die sprachliche Zuordnung steuern wir über die Header Accept-Language und 
@@ -1130,7 +909,7 @@ def GetContent(url, title, offset=0, li='', container=''):
 #
 # 24.08.2020 GetOnlyRedirect hinzugefügt für Tests in PlayAudio_pre:
 #
-def RequestTunein(FunctionName, url, GetOnlyHeader=None, GetOnlyRedirect=False):
+def RequestTunein(Func, url, GetOnlyHeader=None, GetOnlyRedirect=False):
 	PLog('RequestTunein: ' + url)
 	if url.startswith("http") == False:
 		url = "https://tunein.com" + url
@@ -1142,14 +921,15 @@ def RequestTunein(FunctionName, url, GetOnlyHeader=None, GetOnlyRedirect=False):
 	msg=''
 	PLog('page1:')			
 	try:																# Step 1: urllib2.Request
-		PLog("RequestTunein, step 1, called from %s" % FunctionName)
+		PLog("RequestTunein, step 1, called from %s" % Func)
 		req = Request(url)	
 		req.add_header('User-Agent', 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.3')
 		# Quelle Language-Werte: Chrome-HAR
 		# req.add_header('Accept-Language',  'da_DK, en;q=0.9, da_DK;q=0.7')	# Debug
-		req.add_header('Accept-Language',  '%s, en;q=0.9, %s;q=0.7'	% (loc, loc))
-			
+		req.add_header('Accept-Language',  '%s, en;q=0.9, %s;q=0.7'	% (loc, loc))		
 		req.add_header('CONSENT', loc)				# loc_browser ebenfalls nicht benötigt
+		req.add_header('Accept', 'application/json')	
+
 		# gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)  # insecure
 		gcontext = ssl.create_default_context()
 		gcontext.check_hostname = False
@@ -1179,7 +959,7 @@ def RequestTunein(FunctionName, url, GetOnlyHeader=None, GetOnlyRedirect=False):
 			ret.close()
 			PLog(page[:200])
 	except Exception as exception:
-		error_txt = "RequestTunein1: %s-1: %s" % (FunctionName, str(exception))
+		error_txt = "RequestTunein1: %s-1: %s" % (Func, str(exception))
 		error_txt = error_txt + ' | ' + url				 			 	 
 		msg =  error_txt
 		PLog(msg)
@@ -1190,7 +970,7 @@ def RequestTunein(FunctionName, url, GetOnlyHeader=None, GetOnlyRedirect=False):
 		PLog('page2:')			
 		msg=''			
 		try:																# Step 2: urllib2.Request mit Zertifikat
-			PLog("RequestTunein, step 2, called from %s" % FunctionName)
+			PLog("RequestTunein, step 2, called from %s" % Func)
 			cafile = os.path.join("%s", "xbmc_cacert.pem") % RESOURCES_PATH # 
 			if SETTINGS.getSetting('UseSystemCertifikat') == "true":	# Bsp. "/etc/certbot/live/rols1.xxx.de/fullchain.pem"
 				if os.path.exists(SETTINGS.getSetting('SystemCertifikat')) == "true":	
@@ -1213,7 +993,7 @@ def RequestTunein(FunctionName, url, GetOnlyHeader=None, GetOnlyRedirect=False):
 				page = ret.read()
 			PLog(page[:160])
 		except Exception as exception:
-			error_txt = "RequestTunein2: %s-2: %s" % (FunctionName, str(exception)) 
+			error_txt = "RequestTunein2: %s-2: %s" % (Func, str(exception)) 
 			error_txt = error_txt + ' | ' + url				 			 	 
 			msg =  error_txt
 			PLog(msg)
@@ -1222,60 +1002,6 @@ def RequestTunein(FunctionName, url, GetOnlyHeader=None, GetOnlyRedirect=False):
 	if page:				
 		page = page.decode('utf-8')	
 	return page, msg
-	
-#-----------------------------
-# ermittelt json-Inhalt der Webseite
-# bei Fehlschlag Rückgabe []
-# Aufruf GetContent
-#
-def get_Web_json(page):
-	PLog('get_Web_json:')
-	jsonObject=[]
-	if page.startswith("{"):						# json-Inhalt
-		try:
-			jsonObject = json.loads(page)
-			PLog("jsonObjects: %d" % len(jsonObject))
-		except Exception as exception:
-			PLog("get_Web_json_error1: " + str(exception))
-		return jsonObject
-		
-	#											# Web-Seite, mark2: "users":{}};</script><script
-	mark1 = u'window.INITIAL_STATE='; mark2 = u';</script><script id="initialZustandStateEl'		
-	pos1 = page.find(mark1)
-	pos2 = page.find(mark2)
-	PLog(pos1); PLog(pos2)
-	if pos1 < 0 or pos2 < 0:
-		PLog("json-Daten fehlen")
-		return jsonObject						# leer
-
-	page = page[pos1+len(mark1):pos2]
-	page = page.replace('\\"', '"')
-	page = page.replace('\\x3c', '<')			# < vor Link <a https://..
-	PLog(page[:100])
-	PLog(page[-100:])
-
-	''''										# 08.12.2025 zu viele Fehler
-	try:
-		jsonObject = json.loads(page)
-		PLog("jsonObjects: %d" % len(jsonObject))
-	except Exception as exception:
-		PLog("get_Web_json_error2: " + str(exception))	
-	return jsonObject
-	'''
-	return page
-		
-#-----------------------------
-# erzeugt neues Dict mit lower keys
-def lower_key(mydict):
-	if type(mydict) is dict:
-		newdict = {}
-		for key, item in mydict.items():
-			newdict[key.lower()] = lower_key(item)
-		return newdict
-	elif type(mydict) is list:
-		return [lower_key(obj) for obj in mydict]
-	else:
-		return mydict
 
 #-----------------------------
 # Auswertung der Streamlinks. Aufrufe ohne Playliste starten mit Ziffer 4:
@@ -1307,6 +1033,7 @@ def lower_key(mydict):
 #
 def StationList(url, title, image, summ, typ, bitrate, preset_id):
 	PLog('StationList: %s, preset_id: %s' % (url, preset_id))
+	summ = summ.replace("||", "\n")											# get_child_json		
 		
 	# Callback-Params für PlayAudio, RecordStart, RecordStop
 	url=py2_encode(url); title=py2_encode(title); summ=py2_encode(summ); image=py2_encode(image);
@@ -1334,7 +1061,8 @@ def StationList(url, title, image, summ, typ, bitrate, preset_id):
 				xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=True)	
 
 	if 'Tune.ashx?' in url:						# normaler TuneIn-Link zur Playlist o.ä.
-		cont, msg = RequestTunein(FunctionName='StationList, Tune.ashx-Call', url=url)
+		PLog("get_streams_via_Tune_ashx")
+		cont, msg = RequestTunein(Func='StationList, Tune.ashx-Call', url=url)
 		cont=py2_encode(cont)
 		
 		if cont == '':
@@ -1357,7 +1085,7 @@ def StationList(url, title, image, summ, typ, bitrate, preset_id):
 			serial = Dict('load', 'serial')	
 			audience = '%3Ball%3BVZ_Altice%3B'	# unquote:	;all;VZ_Altice; (ganzer Call aus chrome-dev-tools)		
 			tvaudio_url = 'https://opml.radiotime.com/Tune.ashx?audience=%s&id=%s&render=json&formats=mp3,aac,ogg,hls&type=station&serial=%s&partnerId=%s' % (audience, preset_id, serial, partnerId)
-			cont, msg = RequestTunein(FunctionName='StationList, tvaudio-Call', url=tvaudio_url)
+			cont, msg = RequestTunein(Func='StationList, tvaudio-Call', url=tvaudio_url)
 			# PLog(cont)
 			if 'url":' in cont:  											# json auswerten 
 				json_url = stringextract('url": "', '"', cont) 				# mp3, m3u8 (auch andere?)
@@ -1385,12 +1113,12 @@ def StationList(url, title, image, summ, typ, bitrate, preset_id):
 		PLog('Tune.ashx_content: ' + cont)
 	else:										# ev. CustomUrl - key="presetUrls"> (direkter Link zur Streamquelle),
 		cont = url								# sowie url's aus GetContent- 
-		PLog('custom_content: ' + cont)
+		PLog('get_custom_content: ' + cont)
 		
 	if url.endswith("notcompatible.enUS.mp3"):	# Check securenetsystems-Url
 		PLog("check_securenetsystems_url:")
 		local_url = 'https://opml.radiotime.com/Tune.ashx?id=%s&formats=%s' % (preset_id, Dict('load', 'formats'))
-		cont, msg = RequestTunein(FunctionName='StationList, Tune.ashx-Call', url=local_url)
+		cont, msg = RequestTunein(Func='StationList, Tune.ashx-Call', url=local_url)
 		PLog('securenetsystems_url: ' + cont)
 			
 		
@@ -1456,11 +1184,12 @@ def StationList(url, title, image, summ, typ, bitrate, preset_id):
 	i=1
 	PLog("buttons:")
 	for line in url_list:
-		PLog(line)
+		PLog("line: " + line)
 		url   = line.split('|||')[0]
 		summ  = line.split('|||')[1]
 		server = url[:80] + '...'
-		summ  = '%s | %s' % (summ, server)
+		parsed_url = urlparse(url)
+		summ  = '%s | %s' % (summ, parsed_url.netloc)
 		if summ.strip().startswith('|'):
 			summ = summ[2:]
 			
@@ -1493,7 +1222,7 @@ def StationList(url, title, image, summ, typ, bitrate, preset_id):
 			(quote_plus(url), quote_plus(title), quote_plus(image), quote(summ), preset_id)
 		addDir(li=li, label=title, action="dirList", dirID="PlayAudio_pre", fanart=image, thumb=image, 
 			fparams=fparams, summary=summ)
-		PLog("fparams: " + fparams)	
+		PLog("fparams: " + unquote_plus(fparams))	
 			
 	if SETTINGS.getSetting('UseRecording') == "true" and err_flag == False:	# Aufnahme- und Stop-Button
 		title = L("Aufnahme") + ' | ' + L("starten")		
@@ -1586,6 +1315,7 @@ def StreamTests(url_list,summ_org):
 
 		if url.startswith('http'):				# rtpm u.ä. ignorieren
 			if url.endswith('.mp3'):			# .mp3 bei getStreamMeta durchwinken
+				PLog("skip_getStreamMeta_for_mp3")
 				st=1; ret={}
 			else:
 				ret = getStreamMeta(url)		# Sonderfälle: Shoutcast, Icecast usw. Bsp. https://rs1.radiostreamer.com:8020,
@@ -1612,16 +1342,15 @@ def StreamTests(url_list,summ_org):
 					if int(bitrate) <  int(SETTINGS.getSetting('minBitrate')):	# Bitrate-Settings berücksichtigen
 						if bitrate != '0':				# 22.09.2020 skip Vergleich, falls bitrate fehlt od. None
 							continue
-					
+			
 					try:
 						# mögl.: UnicodeDecodeError: 'utf8' codec can't decode..., Bsp.
 						#	'song': 'R\r3\x90\x86\x11\xd7[\x14\xa6\xe1k...
-						song = metadata.get('song')		
-						song = song.decode('utf-8')	
-						song = unescape(song)
-					except:
+						song = metadata.get('song')	
+					except Exception as e:
+						PLog("song_error: " + str(e))
 						song=''
-						
+	
 					PLog('song: ' + song); 
 					if song.find('adw_ad=') == -1:		# ID3-Tags (Indiz: adw_ad=) verwerfen
 						if bitrate and song:							
@@ -1705,7 +1434,7 @@ def get_pls(url):               # Playlist extrahieren
 				break
 												# 1. Versuch (2-step)
 		if 	isInFormatList:	# .pls auch im Pfad möglich, Bsp. AFN: ../AFNE_WBN.pls?DIST=TuneIn&TGT=..
-			cont, msg = RequestTunein(FunctionName='get_pls - isInFormatList', url=url)
+			cont, msg = RequestTunein(Func='get_pls - isInFormatList', url=url)
 		cont = cont.strip()
 		if '.ts?sd=' in cont:					# skip Einzelstream: m3u8-Datei mit ts-Segmenten, 
 			pls = url_org						# 	Aufruf aus ListMRS möglich
@@ -1793,7 +1522,7 @@ def get_m3u(url):               # m3u extrahieren - Inhalte mehrerer Links werde
 		#	oder Radio Soma https://www.radiosoma.com/RadioSoma_107.9_MHz.m3u
 		if url.startswith('http') and '.m3u' in url:	
 			try:									
-				req, msg = RequestTunein(FunctionName='get_m3u', url=url)
+				req, msg = RequestTunein(Func='get_m3u', url=url)
 				req = unquote(req).strip()	
 				# PLog(req)	
 			except: 	
@@ -1823,7 +1552,7 @@ def get_ice_json(url):               # Streamdetails aus json-Datei ermitteln
 	for url in urls:
 		if url.startswith('http') and '&render=json' in url:
 			try:									
-				req, msg = RequestTunein(FunctionName='get_ice_json', url=url)
+				req, msg = RequestTunein(Func='get_ice_json', url=url)
 				req = unquote(req).strip()	
 				# PLog(req)	
 			except: 	
@@ -1847,7 +1576,7 @@ def get_ice_json(url):               # Streamdetails aus json-Datei ermitteln
 #	
 def get_tv_audio_url(url):
 	PLog('get_tv_audio_url:')
-	page, msg = RequestTunein(FunctionName='get_tv_audio_url', url=url)
+	page, msg = RequestTunein(Func='get_tv_audio_url', url=url)
 	lines = page.splitlines()
 	lines.pop(0)		# 1. Zeile entfernen (#EXTM3U)
 	
@@ -1967,7 +1696,7 @@ def PlayAudio_pre(url, title, thumb, Plot, header=None, url_template=None, FavCa
 	
 	# Header-Check
 	#	page hier Dict, PLog s. RequestTunein
-	page, msg = RequestTunein(FunctionName='PlayAudio_pre, Header-Check', url=url,GetOnlyHeader=True)
+	page, msg = RequestTunein(Func='PlayAudio_pre, Header-Check', url=url,GetOnlyHeader=True)
 	if 'currently unavailable' in str(page):			# Bsp. icy-notice2: The resource requested is ..
 		url=GetLocalUrl()	
 		PLog('currently unavailable')
@@ -1996,7 +1725,7 @@ def PlayAudio_pre(url, title, thumb, Plot, header=None, url_template=None, FavCa
 	# Redirect-Check 
 	#	korrigiert falschen Semikolon-Anhang in StreamTests (url_add_semicol1)
 	# 	11.10.2020 leere new_url abgefangen
-	new_url, msg = RequestTunein(FunctionName='PlayAudio_pre, Header-Check', url=url,GetOnlyRedirect=True)
+	new_url, msg = RequestTunein(Func='PlayAudio_pre, Header-Check', url=url,GetOnlyRedirect=True)
 	# selten: SSL-Error in python-Request nicht aber im Kodi-Player, z.B.  
 	#	The Blues Cove (https://radio.streemlion.com:2075/stream)
 	if "SSL:" in msg:									
@@ -2026,7 +1755,7 @@ def PlayAudio_pre(url, title, thumb, Plot, header=None, url_template=None, FavCa
 		audience_url='https://opml.radiotime.com/Tune.ashx?audience=Tunein2017&id=%s&render=json&formats=%s&type=station&serial=%s&partnerId=RadioTime&version=3.31'
 		audience_url = audience_url % (sid, Dict('load', 'formats'),Dict('load', 'serial'))
 		PLog('audience_url: ' + audience_url)
-		page, msg = RequestTunein(FunctionName='PlayAudio, audience_url', url=audience_url)
+		page, msg = RequestTunein(Func='PlayAudio, audience_url', url=audience_url)
 		PLog(page[:30])									# falls OK: "status": "200"
 		if page == '':
 			PLog('audience-opml-Call fehlgeschlagen: ' + msg)							
@@ -2080,12 +1809,11 @@ def SearchInFolders(preset_id, ID):
 	preset_id = str(preset_id)			# None-Schutz (sollte hier nicht mehr vorkommen)
 	PLog('preset_id: ' + preset_id)
 	PLog('ID: ' + ID)
-	serial = Dict('load', 'serial')	
 	username = str(SETTINGS.getSetting('username'))
 	
 	username = SETTINGS.getSetting('username')
-	url = 'https://opml.radiotime.com/Browse.ashx?c=presets&partnerId=RadioTime&serial=%s&username=%s' % (serial,username)	
-	page, msg = RequestTunein(FunctionName='SearchInFolders: Ordner-Liste laden', url=url)
+	url = USER_URL  % username
+	page, msg = RequestTunein(Func='SearchInFolders: Ordner-Liste laden', url=url)
 	if page == '':
 		msg1 = msg
 		PLog(msg1)
@@ -2118,7 +1846,7 @@ def SearchInFolders(preset_id, ID):
 				ordner_url = unescape(ordner_url) 
 				foldername = stringextract('title=', '&', ordner_url)
 				guide_id = stringextract('guide_id=', '&', ordner_url)
-				page, msg = RequestTunein(FunctionName='SearchInFolders: Ordner-Inhalt laden', url=ordner_url)
+				page, msg = RequestTunein(Func='SearchInFolders: Ordner-Inhalt laden', url=ordner_url)
 				if preset_id in page:
 					return True, foldername, guide_id, str(foldercnt)				
 		
@@ -2144,12 +1872,12 @@ def SearchInProfile(ID, preset_id):
 
 	sidExist,foldername,guide_id,foldercnt = SearchInFolders(preset_id, ID='preset_id') # vorhanden, Ordner-ID?
 	# url: Profil laden, Filter: Ordner favoriteId - nur json-Format möglich
-	url = 'https://api.tunein.com/profiles/me/follows?folderId=%s&filter=favorites&formats=%s&serial=%s&partnerId=RadioTime' %\
+	url = BASE_URL_API + '/profiles/me/follows?folderId=%s&filter=favorites&formats=%s&serial=%s&partnerId=RadioTime' %\
 		(guide_id, Dict('load', 'formats'), serial)	
 		
 	favoriteId = guide_id
 	if ID == 'favoriteId':
-		page, msg = RequestTunein(FunctionName='SearchInProfile: favoriteId suchen', url=url)
+		page, msg = RequestTunein(Func='SearchInProfile: favoriteId suchen', url=url)
 		if page == '':
 			msg1 = msg
 			MyDialog(msg1, '', '')
@@ -2200,7 +1928,7 @@ def Favourit(ID, preset_id, folderId):
 	#	verknüpfte Geräte: https://tunein.com/devices/
 	query_url = 'https://opml.radiotime.com/Account.ashx?c=query&partnerId=%s&serial=%s' % (partnerId,serial)
 	# PLog(query_url)
-	page, msg = RequestTunein(FunctionName='Favourit - association-test', url=query_url)	# 1. Query
+	page, msg = RequestTunein(Func='Favourit - association-test', url=query_url)	# 1. Query
 	if page == '':							# Netzwerk-Problem
 		msg1 = msg
 		MyDialog(msg1, '', '')							
@@ -2222,7 +1950,7 @@ def Favourit(ID, preset_id, folderId):
 		join_url = ('https://opml.radiotime.com/Account.ashx?c=join&partnerId=%s&username=%s&password=%s&serial=%s' 
 					% (partnerId,username,password,serial))
 
-		page, msg = RequestTunein(FunctionName='Favourit - join', url=join_url)				# 2. Join (is_joined=False)
+		page, msg = RequestTunein(Func='Favourit - join', url=join_url)				# 2. Join (is_joined=False)
 		if page == '':	
 			msg1 = msg
 			PLog(msg1)
@@ -2273,7 +2001,7 @@ def Favourit(ID, preset_id, folderId):
 		fav_url = ('https://opml.radiotime.com/favorites.ashx?render=xml&c=%s&id=%s&formats=%s&serial=%s&partnerId=%s' 
 				% (ID, preset_id, Dict('load', 'formats'), serial, partnerId))
 
-	page, msg = RequestTunein(FunctionName="Favourit - ID=%s" % ID, url=fav_url)		# 3. Add / Remove
+	page, msg = RequestTunein(Func="Favourit - ID=%s" % ID, url=fav_url)		# 3. Add / Remove
 	if page == '':	
 		msg1 = msg
 		PLog(msg1)
@@ -2306,21 +2034,17 @@ def Favourit(ID, preset_id, folderId):
 		xbmcgui.Dialog().notification('TuneIn:',msg2,R(ICON),5000)	# Fertig-Info
 
 #-----------------------------
-# Direktaufruf von GetContent (mit li) oder rekursiv (ohne li), falls 
+# Aufruf ContainerHub oder rekursiv, falls 
 # 	get_details als typ=link ermittelt
 # 
 # ID = folderId, url mit serial-id vorbelegt	
-def FolderMenuList(url, title, li=''):	
+def FolderMenuList(url, title):	
 	PLog('FolderMenuList: ' + url)
 	
-	if li == '':								# eigene Liste
-		endOfDirectory = True 
-		li = xbmcgui.ListItem()
-		li = home(li)							# Home
-	else:
-		endOfDirectory = False					# Aufrufer-Liste
+	li = xbmcgui.ListItem()
+	li = home(li)							# Home
 	
-	page, msg = RequestTunein(FunctionName='FolderMenu: Liste laden', url=url)	
+	page, msg = RequestTunein(Func='FolderMenuList: Liste laden', url=url)	
 	if page == '':
 		msg1 = msg
 		PLog(msg1)
@@ -2365,10 +2089,8 @@ def FolderMenuList(url, title, li=''):
 			addDir(li=li, label=text, action="dirList", dirID="StationList", 
 				fanart=image, thumb=image, summary=subtext, tagline=playing, fparams=fparams)			
 						
-	if endOfDirectory == True:
-		xbmcplugin.endOfDirectory(HANDLE)
-	else:
-		return li	
+	xbmcplugin.endOfDirectory(HANDLE)
+
 #-----------------------------
 # Ordner hinzufügen/löschen
 #	ID steuert: 'addFolder' / 'removeFolder' 
@@ -2405,7 +2127,7 @@ def Folder(ID, title, foldername, folderId):
 		folder_url = ('https://opml.radiotime.com/favorites.ashx?render=xml&c=%s&folderId=%s&formats=%s&serial=%s&partnerId=%s' 
 					% (ID, folderId, Dict('load', 'formats'), serial, partnerId))	
 						
-	page, msg = RequestTunein(FunctionName='Folder: %s' % ID, url=folder_url)
+	page, msg = RequestTunein(Func='Folder: %s' % ID, url=folder_url)
 	if page == '':
 		msg1 = msg
 		PLog(msg1)
@@ -2444,14 +2166,13 @@ def FolderMenu(title, ID, preset_id, checkFiles=None):
 	PLog('FolderMenu:')
 	PLog('ID: ' + ID)
 	preset_id = py2_encode(preset_id)
-	serial = Dict('load', 'serial')
 	username = str(SETTINGS.getSetting('username'))
 	
 	li = xbmcgui.ListItem()
 	li = home(li)							# Home-Button	
 	
-	preset_url = 'https://opml.radiotime.com/Browse.ashx?c=presets&partnerId=RadioTime&serial=%s&username=%s' % (serial,username)
-	page, msg = RequestTunein(FunctionName='FolderMenu: ID %s, Liste laden' % ID, url=preset_url)	
+	preset_url = USER_URL % username
+	page, msg = RequestTunein(Func='FolderMenu: ID %s, Liste laden' % ID, url=preset_url)	
 	if page == '':
 		msg1 = msg
 		PLog(msg1)
@@ -2466,7 +2187,7 @@ def FolderMenu(title, ID, preset_id, checkFiles=None):
 				folderId 	= stringextract('guide_id="', '"', rubrik)	# Bsp. "f3"
 				furl 		=  stringextract('URL="', '"', rubrik)
 				furl		= unescape(furl)							# wie in SearchInFolders
-				page, msg = RequestTunein(FunctionName='FolderMenu: %s, Inhalt laden' % foldername, url=furl)	
+				page, msg = RequestTunein(Func='FolderMenu: %s, Inhalt laden' % foldername, url=furl)	
 				items_cnt =  len(blockextract('URL=', page))		# outline unscharf
 				PLog(items_cnt)
 				
@@ -2585,7 +2306,7 @@ def SingleMRS(name, url, max_streams, image):
 							
 	if 'Tune.ashx?' in url:						# TuneIn-Link ebenfalls ermöglichen, Inhalt laden
 		try:
-			url_list, msg = RequestTunein(FunctionName='SingleMRS', url=url)
+			url_list, msg = RequestTunein(Func='SingleMRS', url=url)
 		except Exception as exception:			
 			url_list = ''
 		if url_list == '' or 'error' in url_list:
@@ -2684,7 +2405,7 @@ def RecordStart(url,title,title_org,image,summ,typ,bitrate, CB=''):		# Aufnahme 
 		Download(url, title_org, dest_path, dfname)
 		return
 	
-	new_url, msg = RequestTunein(FunctionName='RecordStart', url=url,GetOnlyRedirect=True)
+	new_url, msg = RequestTunein(Func='RecordStart', url=url,GetOnlyRedirect=True)
 	if new_url != url:
 		url = new_url
 		if new_url == "":									# Error in RequestTunein
@@ -3062,31 +2783,39 @@ def getStreamMeta(address):
 			new_url = e.hdrs.get("Location")
 			if new_url.startswith("http") == False:	# Serveradr. vorh.?
 				new_url = 'https://%s%s' % (p.netloc, new_url)
-			PLog("HTTP308_301_new_url: " + new_url)						
+			PLog("HTTP308_301_new_url: " + new_url)
+		if "404:" in str(e):						# 	HTTP Error 404: Not Found	
+			error = str(e)		
+			return {"status": status, "metadata": None, "hasPortNumber": hasPortNumber, "shoutcast": shoutcast, "error": error}
 
 	PLog("new_url: " + new_url)	
 	if new_url == '':								# StreamTests OK, ohne metadata, unveränderte Url in StreamTests
 		error = err									#	Bsp. The Blues Cove (https://radio.streemlion.com:2075/stream)
 		PLog("skip_getHeaders_on_error")
-		return {"status": 1, "metadata": "", "hasPortNumber": hasPortNumber, "shoutcast": "", "error": "use_url_org"}
+		return {"status": 0, "metadata": "", "hasPortNumber": hasPortNumber, "shoutcast": "", "error": "use_url_org"}
 		
 	try:
-		headers = getHeaders(response)
-		# PLog(headers)
+		headers = getHeaders(response)				# Debug -> dict_headers:
 				   
-		if "server" in headers:
-			shoutcast = headers['server']
+		if "server" in headers or "Server" in headers:
+			if "server" in headers:
+				shoutcast = headers['server']
+			else:
+				shoutcast = headers['Server']
 		elif "X-Powered-By" in headers:
 			shoutcast = headers['X-Powered-By']
 		elif "icy-notice1" in headers:
 			shoutcast = headers['icy-notice2']
-		elif "icy-url" in headers:					# verhindert /; an houtcast-url in StreamTests
-			PLog("icy-url_found | use_url_org")
-			error = "use_url_org"
-			return {"status": 1, "metadata": "", "hasPortNumber": hasPortNumber, "shoutcast": "", "error": error}
+		elif "icy-url" in headers:					# verhindert /; an shoutcast-url in StreamTests
+			icy_url = headers["icy-url"]			# kann leer sein
+			if icy_url:
+				PLog("icy-url_found | use_url_org")
+				error = "use_url_org"
+				return {"status": 1, "metadata": "", "hasPortNumber": hasPortNumber, "shoutcast": "", "error": error}
 		else:
 			shoutcast = bool(1)
 
+		PLog("shoutcast: " + str(shoutcast))
 		if isinstance(shoutcast, bool):
 			if shoutcast is True:
 				status = 1
@@ -3109,6 +2838,7 @@ def getStreamMeta(address):
 			metadata = False
 		response.close()
 		error=''
+		PLog("metadata:" + str(metadata))
 		return {"status": status, "metadata": metadata, "hasPortNumber": hasPortNumber, "shoutcast": shoutcast, "error": error}
 
 	except HTTPError as e:	
@@ -3157,8 +2887,8 @@ def getHeaders(response):
 			item_headers = dict_headers['item']
 		
 	txt_headers = response.info()
-	PLog(dict_headers)
-	PLog(item_headers)
+	PLog("dict_headers: " + str(dict_headers))
+	PLog("item_headers: " + str(item_headers))
 
 	headers=''
 	if is_empty(dict_headers) is False:
@@ -3210,10 +2940,11 @@ def shoutcastCheck(response, headers, itsOld):
 			
 	else:
 		if 'icy-br' in headers:
-			bitrate = headers['icy-br'].split(",")[0]
+			bitrate = headers['icy-br']
+			PLog("icy-br_bitrate: " + bitrate)
 		else:
 			bitrate = None
-		if 'icy-metaint' in headers:
+		if 'icy-metaint' in headers:								# bei Musik: Songtitel im Bytestrom
 			icy_metaint_header = headers['icy-metaint']
 		else:
 			icy_metaint_header = None
@@ -3226,25 +2957,30 @@ def shoutcastCheck(response, headers, itsOld):
 
 	if icy_metaint_header is not None:
 		metaint = int(icy_metaint_header)
-		PLog("icy metaint: " + str(metaint))
+		PLog("icy_metaint: " + str(metaint))
 		read_buffer = metaint + 255
 		content = response.read(read_buffer)
-		# RSave("/tmp/icy_content", content)	# Debug
+		#RSave("/tmp2/icy_content", str(content))	# Debug
 
 		start = "StreamTitle='"
 		end = "';"
 
+		content_metaint = str(content[metaint:])
+		content_metaint = content_metaint.replace("\\'", '"')		# b'\x03StreamTitle=\'www.ndr.de/infospezial\';..
+		PLog("content_metaint: " + content_metaint)
 		try: 
-			title = re.search('%s(.*)%s' % (start, end), content[metaint:]).group(1)
-			title = re.sub("StreamUrl='.*?';", "", title).replace("';", "").replace("StreamUrl='", "")
-			title = re.sub("&artist=.*", "", title)
-			title = re.sub("https://.*", "", title)
-			title.rstrip()
+			title=""
+			if "Title='" in content_metaint:
+				title = stringextract("Title='", ";", content_metaint)
+			if 'Title="' in content_metaint:
+				title = stringextract('Title="', ';', content_metaint)
 		except Exception as err:
 			PLog("songtitle error: " + str(err))
-			title = content[metaint:].split("'")[1]
+			title = ""
+		title = title.replace("'", "")
+		PLog("song_title: " + title)
 
-		return {'song': title, 'bitrate': bitrate, 'contenttype': contenttype.rstrip()}
+		return {"song": title, "bitrate": bitrate, "contenttype": contenttype.rstrip()}
 	else:
 		PLog("No metaint")
 		return False
@@ -3462,22 +3198,6 @@ PLog('HANDLE: ' + str(HANDLE))
 
 PluginAbsPath = os.path.dirname(os.path.abspath(__file__))
 PLog('PluginAbsPath: ' + PluginAbsPath)
-
-# Callbackadressen für PlayAudio, Ablage der Args jeweils in den Funktionen
-'''
-Modul_Main = sys.modules[__name__]
-PLog(Modul_Main)
-fadr = getattr(Modul_Main, 'StationList')	
-Dict('store', 'StationList', fadr)
-fadr = getattr(Modul_Main, 'SingleMRS')	
-Dict('store', 'SingleMRS', fadr)
-fadr = getattr(Modul_Main, 'RecordsList')	
-Dict('store', 'RecordsList', fadr)
-fadr = getattr(Modul_Main, 'RecordStart')	
-Dict('store', 'RecordsList', fadr)
-fadr = getattr(Modul_Main, 'RecordStop')	
-Dict('store', 'RecordsList', fadr)
-'''
 
 PLog('Addon: Start')
 if __name__ == '__main__':

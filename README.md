@@ -31,12 +31,6 @@ INSTALLATION:
 - start addon and make the appropriate settings
 - [Add-on manager Kodi wicki, section 5 How to install from a ZIP file, with pictures](https://kodi.wiki/view/Add-on_manager) 
 
-Want to help translate this plugin?
-===================  
-https://poeditor.com/join/project/SKrMQklJVu <br>
-This page contains pictures and context-descriptions for the terms:<br>
-https://github.com/rols1/TuneIn2017/wiki/Pictures-and-Contexts-for-the-Localisation-Project
-
 ### Contributors:
 * Tommy Mikkelsen - Danish
 * Przemo - Polish
@@ -55,7 +49,6 @@ Options:
 * Recording Option with Streamripper: [see more](https://github.com/rols1/TuneIn2017/wiki/Download-Option-with-Streamripper) 
 * Favourites and Folders (Tunein-Account required)
 * MyRadioStations - without any access to tunein (in combination with option StartWithMyRadioStations). Sample file with more infos comes with plugin in ```../plugin.audio.tunein2017/resources/myradiostations-Mix.txt```
-* Local radio (manually setting, only effective in plugin)
 * integrated slideshow
 
 Credits:

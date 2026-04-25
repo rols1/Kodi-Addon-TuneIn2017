@@ -41,6 +41,7 @@ import pickle			# persistente Variablen/Objekte
 import re				# u.a. Reguläre Ausdrücke, z.B. in CalculateDuration
 import base64			# zusätzliche url-Kodierung für addDir/router
 import string	
+import datetime			# time_translate
 
 # Globals
 NAME		= 'TuneIn2017'
@@ -352,7 +353,6 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 	PLog('addDir - summary: {0}, tagline: {1}, mediatype: {2}, cmenu: {3}'.format(summary, tagline, mediatype, cmenu))
 	
 	li.setLabel(label)			# Kodi Benutzeroberfläche: Arial-basiert für arabic-Font erf.
-	PLog('summary, tagline: %s, %s' % (summary, tagline))
 	Plot = ''
 	if tagline:								
 		Plot = tagline
@@ -374,6 +374,7 @@ def addDir(li, label, action, dirID, fanart, thumb, fparams, summary='', tagline
 	PLog('HANDLE: ' + str(HANDLE))
 	url = PLUGIN_URL+"?action="+action+"&dirID="+dirID+"&fanart="+fanart+"&thumb="+thumb+quote_plus(fparams)
 	PLog("addDir_url: " + unquote_plus(url))
+	PLog("addDir_fparams: " + unquote_plus(fparams))
 		
 		
 	xbmcplugin.addDirectoryItem(handle=HANDLE,url=url,listitem=li,isFolder=isFolder)
@@ -487,26 +488,34 @@ def repl_char(cut_char, line):	# problematische Zeichen in Text entfernen, wenn 
 		#PLog(cut_char); PLog(pos); PLog(line_l); PLog(line_r); PLog(line_ret)	# bei Bedarf	
 	return line_ret
 #----------------------------------------------------------------
+# für json.loads (z.B.. in router) json-Zeichen in line entfernen, insbesondere
+#	Hochkommata (Problem bei Dictbildung)
 #	doppelte utf-8-Enkodierung führt an manchen Stellen zu Sonderzeichen
 #  	14.04.2019 entfernt: (':', ' ')
-def repl_json_chars(line):	# für json.loads (z.B.. in router) json-Zeichen in line entfernen
+# 	07.11.2024 entfernt html-utf-8-Icons (Symbole Popcorn, TV usw)
+# 	22.09.2025 Steuerzeichen \t aufgenommen
+#	18.04.2026 aus ardundzdf übernommen (Modul util)
+def repl_json_chars(line):
+	#PLog("repl_json_chars: " + line)	
 	line_ret = line
 	#PLog(type(line_ret))
-	for r in	((u'"', u''), (u'\\', u''), (u'\'', u'')
-		, (u'&', u'und'), ('(u', u'<'), (u'(', u'<'),  (u')', u'>'), (u'∙', u'|')
-		, (u'„', u'>'), (u'“', u'<'), (u'”', u'>'),(u'°', u' Grad')
-		, (u'\r', u''), (u'#', u'*')):			
+	for r in	((u'"', u''), (u"'", ''), (u'\\', u''), (u'\'', u''), (u'%5C', u'')
+		, (u'&', u'und'), (u'(', u'<'), (u')', u'>'), (u'∙', u'|'), (u"´", u'.') 
+		, (u'„', u'>'), (u'“', u'<'), (u'”', u'>'),(u'°', u' Grad'), (u'u00b0', u' Grad')
+		, (u'\r', u''), (u'#', u'*'), (u'u003e', u''), (u'❤', u'love'), (u'%C3%A9', u'é')		# u'u003e' 	-> u'®'
+		, (u'uD83C', u''), (u'uDF7F', u''), (u'uD63D', u''), (u'uDF7A', u'')					# 🍿,  📺
+		, (u'\t', u' '), (u'©', u'cr')
+		):
 		line_ret = line_ret.replace(*r)
-	
-	return line_ret
 
+	return line_ret
 #---------------------------------------------------------------- 
 # strip-Funktion, die auch Zeilenumbrüche innerhalb des Strings entfernt
 #	\s [ \t\n\r\f\v - s. https://docs.python.org/3/library/re.html
 def mystrip(line):	
 	line_ret = line	
 	line_ret = re.sub(r"\s+", " ", line)	# Alternative für strip + replace
-	# PLog(line_ret)		# bei Bedarf
+	#PLog(line_ret)		# bei Bedarf
 	return line_ret
 #----------------------------------------------------------------  	
 # DirectoryNavigator - Nutzung des Kodi-builtin, der Code der PMS-Version kann entfallen
@@ -677,18 +686,6 @@ def transl_json(line):	# json-Umlaute übersetzen
 		line = line.replace(*r)
 	return line	
 #---------------------------------------------------------------- 
-# aus Kodi-Addon-ARDundZDF, Modul util
-def repl_json_chars(line):	# für json.loads (z.B.. in router) json-Zeichen in line entfernen
-	line_ret = line
-	#PLog(type(line_ret))
-	for r in	((u'"', u''), (u'\\', u''), (u'\'', u'')
-		, (u'&', u'und'), ('(u', u'<'), (u')', u'>'),  (u'∙', u'|')
-		, (u'„', u'>'), (u'“', u'<'), (u'”', u'>'),(u'°', u' Grad')
-		, (u'\r', u'')):			
-		line_ret = line_ret.replace(*r)
-	
-	return line_ret
-#---------------------------------------------------------------- 
 # Dateinamen für Downloads 
 # erzeugt - hoffentlich - sichere Dateinamen (ohne Extension)
 # zugeschnitten auf Titelerzeugung in meinen Plugins 
@@ -760,6 +757,13 @@ def humanbytes(B):
 	elif TB <= B:
 	  return '{0:.2f} TB'.format(B/TB)
 #---------------------------------------------------------------- 
+def time_translate(timecode):
+	date_format = "%Y-%m-%dT%H:%M:%S"			# 2024-05-09T04:34:00
+	t = datetime.datetime.fromtimestamp(time.mktime(time.strptime(timecode, date_format)))
+	human = t.strftime("%d.%m.%Y %H:%M") 
+	return human
+
+#---------------------------------------------------------------- 
 # Format seconds	86400	(String, Int, Float)
 # Rückgabe:  		1d, 0h, 0m, 0s	
 def seconds_translate(seconds):
@@ -787,6 +791,18 @@ def get_keyboard_input():
 		return ""
 	inp = kb.getText() # User Eingabe
 	return inp		
+#--------------------------------------------------
+# Globale Textviewer-Funktion (aus ardundzdf.py)
+# 
+def textviewer(title, page, usemono=True):
+	PLog('textviewer:')
+	
+	if PYTHON3:
+		xbmcgui.Dialog().textviewer(title, page, usemono=usemono)
+	else:
+		xbmcgui.Dialog().textviewer(title, page)
+	
+	return
 #----------------------------------------------------------------
 # Locale.LocalString( steht in Kodi nicht zur Verfügung. Um
 #	die vorh. Sprachdateien (json-Format) unverändert nutzen zu

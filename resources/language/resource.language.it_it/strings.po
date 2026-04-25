@@ -80,6 +80,11 @@ msgctxt "#30206"
 msgid "Start the first stream of a station directly"
 msgstr "Avviare direttamente il primo flusso di una stazione"
 
+msgctxt "#30207"
+#: "Label for option-field in Preferences"
+msgid "Show Premium Menu"
+msgstr "Mostra menu Premium"
+
 #: 
 msgctxt "#30117"
 #: "Label for entry-field in Preferences"
