@@ -45,8 +45,8 @@ from resources.lib.util_tunein2017 import *
 
 # +++++ TuneIn2017  - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.8.1'	
-VDATE = '25.04.2026'
+VERSION =  '1.8.2'	
+VDATE = '04.05.2026'
 
 # 
 #	
@@ -289,7 +289,7 @@ def Main():
 	page, msg = RequestTunein(Func='Main', url=ROOT_URL)	# Hauptmenü von Webseite
 	PLog(len(page))
 
-	items = blockextract('common-module__link___Mz1h3',page,"<div")	# Navigations-Menü linke Seite	07.12.2025		
+	items = blockextract('leftSide-module__navigationMenuItem',page,"<div")	# Navigations-Menü linke Seite	03.05.2026		
 	if len(items) > 0:												# kein Abbruch, weiter mit MyRadioStations + Fav's
 		del items[0]			# Home löschen
 	else:
