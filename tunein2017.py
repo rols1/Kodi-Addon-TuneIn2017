@@ -45,8 +45,8 @@ from resources.lib.util_tunein2017 import *
 
 # +++++ TuneIn2017  - Addon Kodi-Version, migriert von der Plexmediaserver-Version +++++
 
-VERSION =  '1.8.2'	
-VDATE = '04.05.2026'
+VERSION =  '1.8.3'	
+VDATE = '13.05.2026'
 
 # 
 #	
@@ -285,21 +285,22 @@ def Main():
 	if  SETTINGS.getSetting('PlusAAC') == "false":					# Performance, aac nicht bei allen Sendern 
 		formats = formats.replace(',aac', '')
 	Dict('store', 'formats', formats) 								# Verwendung: Trend, opml- und api-Calls
-
+	'''
 	page, msg = RequestTunein(Func='Main', url=ROOT_URL)	# Hauptmenü von Webseite
 	PLog(len(page))
-
-	items = blockextract('leftSide-module__navigationMenuItem',page,"<div")	# Navigations-Menü linke Seite	03.05.2026		
-	if len(items) > 0:												# kein Abbruch, weiter mit MyRadioStations + Fav's
-		del items[0]			# Home löschen
-	else:
-		msg1 = L('Fehler')
-		msg2 = ROOT_URL
-		msg3 = L('Ursache unbekannt')								# ohne Tunein-Menüs weiter
-		MyDialog(msg1, msg2, msg3)
+	if not page:
+		msg1 = L('Fehler') + " Tunein:"
+		msg2 = msg	
+		MyDialog(msg1, msg2, "")
 		return li
-	
+	'''
+	MenuList = ["explorer",  "recents", "music", "sports", 
+				"Live-Stream-News-Radio-c57922", "podcasts", 
+				"regions", "languages" 
+				]
 	# Tunein-Navigationsmenü:
+	# 13.05.2026 nach mehrfachen Änderungen durch Tunein verwendet das Addon
+	#	eine Menüliste statt Extraktion aus der Webseite 
 	# premium:	Tunein-Werbung, div. Formate
 	# local:	Ausgabe abhängig von IP-Lokalisierung bzw. Zuweisung im Menü "By Location", 
 	#				ohne Kat's - 12/2023 fehlt im Webmenü, unten angehängt
@@ -312,29 +313,22 @@ def Main():
 	# regions:	Kat Regionen o. Icons, Kat Sender mit Icons (abhängig von IP-Lokalisierung) - Zuweisung
 	#				einer Region via Button für Menü "Local Radio" im Addon 
 	# languages: Kat Sprachen o. Icons	
-	PLog("get_menu_items: %d" % len(items))
-	for item in items:												# Tunein-Menüs + Icons zeigen
+	PLog("get_menu_items: %d" % len(MenuList))
+	for item in MenuList:											# Tunein-Menüs + Icons zeigen
 		PLog('item: ' + item)
-		if "/audiobooks/" in item:									# href="/audiobooks/" ohne /radio/,
+		if "audiobooks" in item:									# href="/audiobooks/" ohne /radio/,
 			continue												#	kostenpflichtige Inhalte
-		key = stringextract('/radio/', '/"', item)
-		if "/podcasts/" in item:									# ohne /radio/
-			key = "podcasts"		
+		key = item
 		thumb = getMenuIcon(key)
+		PLog("item: %s, key: %s, thumb: %s" % (item, key, thumb))
 		if thumb == '':												# irrelevant menus (Login, Register,..)
 			continue
 
 		serial = Dict('load', 'serial')
 		url = CAT_URL % (key, serial, partnerId, formats)	
-		PLog("item_url: %s" % url);	PLog(key);	PLog(thumb);	
-		try:	
-			title = re.search('</div>(.*)</a>', item).group(1)		# Bsp. </div>Sport</a>
-			title = cleanhtml(title)
-			PLog("title: " + title)
-		except:
-			title = key
-		title = title.replace('\\u002F', '/')
-		title = unescape(title)
+		PLog("item_url: %s" % url);	
+
+		title = unescape(key)
 		title = title.capitalize()
 		label = title
 		if "-c57922" in title:										# Live-Stream-News-Radio-c57922
@@ -343,15 +337,11 @@ def Main():
 			if "Premium" in title:									# skip Premium with Setting
 				continue
 				
-		categories = 'Category'
 		url=py2_encode(url); title=py2_encode(title); 
 		fparams="&fparams={'url': '%s', 'title': '%s', 'offset': '0'}"  %\
 			(quote(url), quote(title))
 		addDir(li=li, label=label, action="dirList", dirID="RequestHub", 
 			fanart=thumb, thumb=thumb, fparams=fparams)
-		
-		if key == "languages":										# menu end 
-			break
 	
 #-----------------------------	
 	title  = L("Lokale Sender")										# -> RequestHub
